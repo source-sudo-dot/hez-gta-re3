@@ -1078,23 +1078,30 @@ void psPostRWinit(void)
 			int monX, monY;
 			glfwGetMonitorPos(monitor, &monX, &monY);
 
+			// One row of pixels taller than the monitor, hanging off the bottom edge.
+			// A window covering a monitor to the pixel is taken off the desktop compositor
+			// by the driver and presented like exclusive fullscreen, and every alt tab then
+			// costs the seconds of black screen borderless is meant to save.  The extra row
+			// is never on screen.
+			const int width = mode->width;
+			const int height = mode->height + 1;
+
 			// Hand the window back to the desktop first.  librw makes a real fullscreen
 			// window for an exclusive video mode, and GLFW minimises one of those the
 			// moment it loses focus, which is the black screen alt tabbing gives.  Passing
 			// no monitor turns it into an ordinary window, and does nothing if it already
 			// is one.  Then take the frame off and lay it over the monitor.
-			glfwSetWindowMonitor(PSGLOBAL(window), nil, monX, monY,
-				mode->width, mode->height, GLFW_DONT_CARE);
+			glfwSetWindowMonitor(PSGLOBAL(window), nil, monX, monY, width, height, GLFW_DONT_CARE);
 			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_AUTO_ICONIFY, GLFW_FALSE);
 			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_DECORATED, GLFW_FALSE);
 			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_RESIZABLE, GLFW_FALSE);
 			glfwSetWindowPos(PSGLOBAL(window), monX, monY);
-			glfwSetWindowSize(PSGLOBAL(window), mode->width, mode->height);
+			glfwSetWindowSize(PSGLOBAL(window), width, height);
 
-			RsGlobal.maximumWidth = mode->width;
-			RsGlobal.maximumHeight = mode->height;
-			RsGlobal.width = mode->width;
-			RsGlobal.height = mode->height;
+			RsGlobal.maximumWidth = width;
+			RsGlobal.maximumHeight = height;
+			RsGlobal.width = width;
+			RsGlobal.height = height;
 
 			PSGLOBAL(fullScreen) = FALSE;
 		}
