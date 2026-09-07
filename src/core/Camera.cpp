@@ -247,7 +247,7 @@ CCamera::Init(void)
 	m_fMouseAccelHorzntl = 0.0025f;
 	m_fMouseAccelVertical = 0.0025f;
 #endif
-	m_f3rdPersonCHairMultX = 0.4f;
+	m_f3rdPersonCHairMultX = 0.5f;
 	m_f3rdPersonCHairMultY = 0.4f;
 }
 
@@ -672,6 +672,30 @@ CCamera::Process(void)
 		SetMotionBlurAlpha(Min((int)(shakeStrength*255.0f) + 25, 150));
 	if(Cams[ActiveCam].Mode == CCam::MODE_1STPERSON && FindPlayerVehicle() && FindPlayerVehicle()->GetUp().z < 0.2f)
 		SetMotionBlur(230, 230, 230, 215, MOTION_BLUR_LIGHT_SCENE);
+
+	// Take a few degrees of field of view away while Target/Aim is held on foot and
+	// give them back when it is let go.  Cams[ActiveCam].FOV is moved with it because
+	// Find3rdPersonCamTargetVector() and CWeapon::Fire() work out where the crosshair
+	// points from that value, so the shot would leave the crosshair without it.
+	// The blend is worked out per rendered frame, so it takes the same time at any
+	// frame rate.  AimZoomDegrees in re3.ini sets the amount, 0 turns it off.
+	static float aimFovOffset = 0.0f;
+	bool aimZoom =
+		m_fAimZoomDegrees > 0.0f &&
+		Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED &&
+		FindPlayerPed() != nil &&
+		FindPlayerVehicle() == nil &&
+		FindPlayerPed()->GetWeapon()->m_eWeaponType != WEAPONTYPE_UNARMED &&
+		CPad::GetPad(0)->GetTarget();
+
+	float aimFovTarget = aimZoom ? m_fAimZoomDegrees : 0.0f;
+	float aimFovBlend = Clamp(0.15f * CTimer::GetTimeStep(), 0.0f, 1.0f);
+	aimFovOffset += (aimFovTarget - aimFovOffset) * aimFovBlend;
+
+	if(aimFovOffset > 0.001f && Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED){
+		FOV -= aimFovOffset;
+		Cams[ActiveCam].FOV -= aimFovOffset;
+	}
 
 	CalculateDerivedValues();
 	CDraw::SetFOV(FOV);

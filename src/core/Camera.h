@@ -484,6 +484,9 @@ public:
 	float m_fMouseAccelVertical;// acceleration multiplier for 1st person controls
 	float m_f3rdPersonCHairMultX;
 	float m_f3rdPersonCHairMultY;
+	// degrees of field of view the on-foot camera loses while Target/Aim is held,
+	// AimZoomDegrees under [Display] in re3.ini, 0 turns the zoom off
+	static float m_fAimZoomDegrees;
 
 
 	CCam Cams[3];

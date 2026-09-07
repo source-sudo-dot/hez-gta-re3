@@ -874,7 +874,7 @@ psSelectDevice()
 	RwEngineGetVideoModeInfo(&vm, GcurSelVM);
 
 #ifdef IMPROVED_VIDEOMODE
-	if (FrontEndMenuManager.m_nPrefsWindowed)
+	if ((FrontEndMenuManager.m_nPrefsWindowed || CMenuManager::m_bBorderless) && bestWndMode >= 0)
 		GcurSelVM = bestWndMode;
 
 	// Now GcurSelVM is 0 but vm has sizes(and fullscreen flag) of the video mode we want, that's why we changed the rwVIDEOMODEEXCLUSIVE conditions below
@@ -924,7 +924,7 @@ psSelectDevice()
 		RsGlobal.width = FrontEndMenuManager.m_nPrefsWidth;
 		RsGlobal.height = FrontEndMenuManager.m_nPrefsHeight;
 		
-		PSGLOBAL(fullScreen) = !FrontEndMenuManager.m_nPrefsWindowed;
+		PSGLOBAL(fullScreen) = !FrontEndMenuManager.m_nPrefsWindowed && !CMenuManager::m_bBorderless;
 #endif
 
 #ifdef MULTISAMPLING
@@ -1047,6 +1047,51 @@ void psPostRWinit(void)
 
 	if(!(vm.flags & rwVIDEOMODEEXCLUSIVE))
 		glfwSetWindowSize(PSGLOBAL(window), RsGlobal.maximumWidth, RsGlobal.maximumHeight);
+
+#ifdef IMPROVED_VIDEOMODE
+	// Borderless fullscreen.  The window is kept out of the exclusive video mode above,
+	// so all that is left is taking the frame off and laying it over the monitor it is
+	// on.  Borderless=1 under [VideoMode] in re3.ini.
+	if(CMenuManager::m_bBorderless){
+		int winX, winY;
+		glfwGetWindowPos(PSGLOBAL(window), &winX, &winY);
+
+		// the monitor holding the top left corner of the window, or the primary one
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		int numMonitors = 0;
+		GLFWmonitor **monitors = glfwGetMonitors(&numMonitors);
+		for(int i = 0; i < numMonitors; i++){
+			const GLFWvidmode *monMode = glfwGetVideoMode(monitors[i]);
+			if(monMode == nil)
+				continue;
+			int monX, monY;
+			glfwGetMonitorPos(monitors[i], &monX, &monY);
+			if(winX >= monX && winX < monX + monMode->width &&
+			   winY >= monY && winY < monY + monMode->height){
+				monitor = monitors[i];
+				break;
+			}
+		}
+
+		const GLFWvidmode *mode = monitor ? glfwGetVideoMode(monitor) : nil;
+		if(mode != nil){
+			int monX, monY;
+			glfwGetMonitorPos(monitor, &monX, &monY);
+
+			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_DECORATED, GLFW_FALSE);
+			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_RESIZABLE, GLFW_FALSE);
+			glfwSetWindowPos(PSGLOBAL(window), monX, monY);
+			glfwSetWindowSize(PSGLOBAL(window), mode->width, mode->height);
+
+			RsGlobal.maximumWidth = mode->width;
+			RsGlobal.maximumHeight = mode->height;
+			RsGlobal.width = mode->width;
+			RsGlobal.height = mode->height;
+
+			PSGLOBAL(fullScreen) = FALSE;
+		}
+	}
+#endif
 
 	// Make sure all keys are released
 	CPad::GetPad(0)->Clear(true);

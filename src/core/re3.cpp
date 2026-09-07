@@ -479,10 +479,12 @@ bool LoadINISettings()
 	ReadIniIfExists("VideoMode", "Height", &FrontEndMenuManager.m_nPrefsHeight);
 	ReadIniIfExists("VideoMode", "Depth", &FrontEndMenuManager.m_nPrefsDepth);
 	ReadIniIfExists("VideoMode", "Subsystem", &FrontEndMenuManager.m_nPrefsSubsystem);
+	ReadIniIfExists("VideoMode", "Borderless", &CMenuManager::m_bBorderless);
 	// Windowed mode is loaded below in CUSTOM_FRONTEND_OPTIONS section
 #else
 	ReadIniIfExists("Graphics", "VideoMode", &FrontEndMenuManager.m_nDisplayVideoMode);
 #endif
+	ReadIniIfExists("Display", "AimZoomDegrees", &CCamera::m_fAimZoomDegrees);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -580,10 +582,12 @@ void SaveINISettings()
 	StoreIni("VideoMode", "Height", FrontEndMenuManager.m_nPrefsHeight);
 	StoreIni("VideoMode", "Depth", FrontEndMenuManager.m_nPrefsDepth);
 	StoreIni("VideoMode", "Subsystem", FrontEndMenuManager.m_nPrefsSubsystem);
+	StoreIni("VideoMode", "Borderless", CMenuManager::m_bBorderless);
 	// Windowed mode is loaded below in CUSTOM_FRONTEND_OPTIONS section
 #else
 	StoreIni("Graphics", "VideoMode", FrontEndMenuManager.m_nDisplayVideoMode);
 #endif
+	StoreIni("Display", "AimZoomDegrees", CCamera::m_fAimZoomDegrees);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

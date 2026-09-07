@@ -721,6 +721,8 @@ public:
 
 #ifdef CUTSCENE_BORDERS_SWITCH
 	static bool m_PrefsCutsceneBorders;
+	// borderless fullscreen, Borderless=1 under [VideoMode] in re3.ini
+	static bool m_bBorderless;
 #endif
 
 #ifndef MASTER

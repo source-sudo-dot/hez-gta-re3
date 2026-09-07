@@ -353,8 +353,9 @@ void CHud::Draw()
 		/*
 			Draw Crosshairs
 		*/
-		if (TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam() &&
-		    (!CPad::GetPad(0)->GetLookBehindForPed() || TheCamera.m_bPlayerIsInGarage) || Mode == CCam::MODE_1STPERSON_RUNABOUT) {
+		if ((CPad::GetPad(0)->GetTarget() &&
+		     TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam() &&
+		     (!CPad::GetPad(0)->GetLookBehindForPed() || TheCamera.m_bPlayerIsInGarage)) || Mode == CCam::MODE_1STPERSON_RUNABOUT) {
 			if (FindPlayerPed() && !FindPlayerPed()->EnteringCar()) {
 				if ((WeaponType >= WEAPONTYPE_COLT45 && WeaponType <= WEAPONTYPE_M16) || WeaponType == WEAPONTYPE_FLAMETHROWER)
 					DrawCrossHairPC = true;

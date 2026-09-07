@@ -34,6 +34,8 @@ bool CCamera::bFreeCam = false;
 int nPreviousMode = -1;
 #endif
 
+float CCamera::m_fAimZoomDegrees = 5.0f;
+
 #define m_fMultiHori -0.8f
 #define m_fMultiVert 0.8f
 

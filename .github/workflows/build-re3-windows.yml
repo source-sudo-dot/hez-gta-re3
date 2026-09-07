@@ -1,0 +1,40 @@
+name: build re3 for windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - aim-crosshair-borderless
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download glfw
+        run: |
+          curl -L -o glfw.zip https://github.com/glfw/glfw/releases/download/3.3.2/glfw-3.3.2.bin.WIN64.zip
+          7z x glfw.zip
+
+      - name: Build
+        run: |
+          ./premake5.exe vs2019 --with-librw --no-full-paths --glfwdir64=glfw-3.3.2.bin.WIN64
+          msbuild -m build/re3.sln /property:Configuration=Release /property:Platform=win-amd64-librw_gl3_glfw-oal
+          mv bin/win-amd64-librw_gl3_glfw-oal/Release/re3.exe gamefiles/
+          mv vendor/mpg123/dist/Win64/libmpg123-0.dll gamefiles/
+          mv vendor/openal-soft/dist/Win64/OpenAL32.dll gamefiles/
+
+      - name: Pack
+        shell: bash
+        run: (cd gamefiles && 7z a ../re3-windows-amd64.zip .)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: re3-windows-amd64
+          path: re3-windows-amd64.zip

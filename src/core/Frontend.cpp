@@ -130,6 +130,7 @@ int hoveredBottomBarOption = -1;
 
 #ifdef CUTSCENE_BORDERS_SWITCH
 bool CMenuManager::m_PrefsCutsceneBorders = true;
+bool CMenuManager::m_bBorderless = false;
 #endif
 
 #ifdef MULTISAMPLING
