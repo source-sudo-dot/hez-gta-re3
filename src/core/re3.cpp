@@ -485,6 +485,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Graphics", "VideoMode", &FrontEndMenuManager.m_nDisplayVideoMode);
 #endif
 	ReadIniIfExists("Display", "AimZoomDegrees", &CCamera::m_fAimZoomDegrees);
+	ReadIniIfExists("Display", "AimDisablesFreeCam", &CCamera::bAimDisablesFreeCam);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -588,6 +589,7 @@ void SaveINISettings()
 	StoreIni("Graphics", "VideoMode", FrontEndMenuManager.m_nDisplayVideoMode);
 #endif
 	StoreIni("Display", "AimZoomDegrees", CCamera::m_fAimZoomDegrees);
+	StoreIni("Display", "AimDisablesFreeCam", CCamera::bAimDisablesFreeCam);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);
@@ -1088,7 +1090,7 @@ extern bool gbRenderWorld2;
 		extern int16 DebugCamMode;
 		DebugMenuAddVarBool8("Cam", "Use mouse Cam", &CCamera::m_bUseMouse3rdPerson, nil);
 #ifdef FREE_CAM
-		DebugMenuAddVarBool8("Cam", "Free Cam", &CCamera::bFreeCam, nil);
+		DebugMenuAddVarBool8("Cam", "Free Cam", &CCamera::bFreeCamSetting, nil);
 #endif
 		DebugMenuAddVarBool8("Cam", "Print Debug Code", &PrintDebugCode, nil);
 		DebugMenuAddVar("Cam", "Cam Mode", &DebugCamMode, nil, 1, 0, CCam::MODE_EDITOR, nil);

@@ -1087,7 +1087,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 	if (pointedGun == 2) pointedGun = 1;
 
 	// Rotate player/arm when shooting. We don't have auto-rotation anymore
-	if (CCamera::m_bUseMouse3rdPerson && CCamera::bFreeCam && !padUsed->GetTarget() &&
+	if (CCamera::m_bUseMouse3rdPerson && CCamera::bFreeCam &&
 		m_nSelectedWepSlot == m_currentWeapon && m_nMoveState != PEDMOVE_SPRINT) {
 
 		// Weapons except throwable and melee ones
@@ -1160,7 +1160,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 			// what??
 			if (!m_pPointGunAt
 #ifdef FREE_CAM
-				|| ((!CCamera::bFreeCam || padUsed->GetTarget()) && CCamera::m_bUseMouse3rdPerson)
+				|| (!CCamera::bFreeCam && CCamera::m_bUseMouse3rdPerson)
 #else
 				|| CCamera::m_bUseMouse3rdPerson
 #endif
@@ -1386,7 +1386,7 @@ CPlayerPed::ProcessControl(void)
 			if (!RpAnimBlendClumpGetFirstAssociation(GetClump(), ASSOC_BLOCK)) {
 				if (TheCamera.Cams[0].Using3rdPersonMouseCam()
 #ifdef FREE_CAM
-					&& (!CCamera::bFreeCam || padUsed->GetTarget())
+					&& !CCamera::bFreeCam
 #endif
 					) {
 					if (padUsed)

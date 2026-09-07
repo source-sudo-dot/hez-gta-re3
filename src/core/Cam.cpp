@@ -31,6 +31,8 @@ int16 DebugCamMode;
 
 #ifdef FREE_CAM
 bool CCamera::bFreeCam = false;
+bool CCamera::bFreeCamSetting = false;
+bool CCamera::bAimDisablesFreeCam = true;
 int nPreviousMode = -1;
 #endif
 

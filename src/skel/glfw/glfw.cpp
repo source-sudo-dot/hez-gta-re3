@@ -1078,6 +1078,14 @@ void psPostRWinit(void)
 			int monX, monY;
 			glfwGetMonitorPos(monitor, &monX, &monY);
 
+			// Hand the window back to the desktop first.  librw makes a real fullscreen
+			// window for an exclusive video mode, and GLFW minimises one of those the
+			// moment it loses focus, which is the black screen alt tabbing gives.  Passing
+			// no monitor turns it into an ordinary window, and does nothing if it already
+			// is one.  Then take the frame off and lay it over the monitor.
+			glfwSetWindowMonitor(PSGLOBAL(window), nil, monX, monY,
+				mode->width, mode->height, GLFW_DONT_CARE);
+			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_AUTO_ICONIFY, GLFW_FALSE);
 			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_DECORATED, GLFW_FALSE);
 			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_RESIZABLE, GLFW_FALSE);
 			glfwSetWindowPos(PSGLOBAL(window), monX, monY);

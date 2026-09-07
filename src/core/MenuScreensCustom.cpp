@@ -56,7 +56,7 @@
 #endif
 
 #ifdef FREE_CAM
-	#define FREE_CAM_TOGGLE MENUACTION_CFO_SELECT, "FEC_FRC", { new CCFOSelect((int8*)&TheCamera.bFreeCam, "Display", "FreeCam", off_on, 2, false) },
+	#define FREE_CAM_TOGGLE MENUACTION_CFO_SELECT, "FEC_FRC", { new CCFOSelect((int8*)&TheCamera.bFreeCamSetting, "Display", "FreeCam", off_on, 2, false) },
 #else
 	#define FREE_CAM_TOGGLE
 #endif
@@ -154,7 +154,7 @@ void RestoreDefDisplay(int8 action) {
 		CMenuManager::m_PrefsCutsceneBorders = true;
 	#endif
 	#ifdef FREE_CAM
-		TheCamera.bFreeCam = false;
+		TheCamera.bFreeCamSetting = false;
 	#endif
 	#ifdef PED_CAR_DENSITY_SLIDERS
 		CIniFile::LoadIniFile();

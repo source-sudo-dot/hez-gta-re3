@@ -558,7 +558,13 @@ public:
 
 	static bool m_bUseMouse3rdPerson;
 #ifdef FREE_CAM
+	// bFreeCam is what the game acts on and is worked out once per logical frame in
+	// UpdatePadInput().  bFreeCamSetting is the FreeCam option in the menu and re3.ini.
 	static bool bFreeCam;
+	static bool bFreeCamSetting;
+	// hold Target/Aim on foot and the free camera steps aside for the classic
+	// controls, AimDisablesFreeCam under [Display] in re3.ini
+	static bool bAimDisablesFreeCam;
 #endif
 
 	// High level and misc

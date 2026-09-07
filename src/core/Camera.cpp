@@ -798,6 +798,17 @@ CCamera::Process(void)
 void
 CCamera::UpdatePadInput(void)
 {
+	// The free camera steps aside while Target/Aim is held on foot, so the player is
+	// controlled the way he is with FreeCam off: he turns to face the camera and the
+	// stick moves him relative to it.  This has to be the one flag the whole game reads,
+	// or the camera, the player control and the weapon code end up on different paths and
+	// the player runs off at an angle the stick cannot correct.
+	bFreeCam = bFreeCamSetting;
+	if(bFreeCamSetting && bAimDisablesFreeCam &&
+	   FindPlayerPed() != nil && FindPlayerVehicle() == nil &&
+	   CPad::GetPad(0)->GetTarget())
+		bFreeCam = false;
+
 	if(CTimer::GetIsPaused())
 		return;
 	if(CPad::GetPad(0)->CycleCameraModeUpJustDown())
