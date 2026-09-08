@@ -709,9 +709,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 #ifdef DETECT_JOYSTICK_MENU
 		MENUACTION_CHANGEMENU,	"FEC_JOD", { nil, SAVESLOT_NONE, MENUPAGE_DETECT_JOYSTICK },
 #endif
-		MENUACTION_CFO_SLIDER,	"FEZ_DZ", { new CCFOSlider(&CPad::m_fStickDeadzone, "Controller", "StickDeadzone", 0.0f, 0.5f) },
-		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f) },
-		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f) },
+		MENUACTION_CHANGEMENU,	"FEZ_STK", { nil, SAVESLOT_NONE, MENUPAGE_STICK_SETTINGS },
 		MENUACTION_CHANGEMENU,	"FET_AMS", { nil, SAVESLOT_NONE, MENUPAGE_MOUSE_CONTROLS },
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_PC },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
@@ -931,6 +929,17 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 #endif
+
+	// MENUPAGE_STICK_SETTINGS
+	{ "FEZ_STK", MENUPAGE_CONTROLLER_PC, MENUPAGE_CONTROLLER_PC,
+		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 60, 24, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
+
+		MENUACTION_CFO_SLIDER,	"FEZ_DZ", { new CCFOSlider(&CPad::m_fStickDeadzone, "Controller", "StickDeadzone", 0.0f, 0.4f, nil, 40, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f, nil, 56, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) },
+		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
+	},
 
    // MENUPAGE_UNK
    { "", MENUPAGE_NONE, MENUPAGE_NONE, nil, nil,

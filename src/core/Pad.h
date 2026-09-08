@@ -253,6 +253,7 @@ public:
 	static float m_fStickDeadzone;
 	static float m_fStickSensitivity;
 	static float m_fStickAimSensitivity;
+	static float m_fStickCurve;
 	static void ApplyStickDeadzone(float &x, float &y);
 	static float GetLookStickSensitivity(void);
 	bool TargetJustDown(void);

@@ -2712,6 +2712,7 @@ int16 CPad::SniperModeLookUpDown(void)
 float CPad::m_fStickDeadzone = 0.15f;
 float CPad::m_fStickSensitivity = 1.0f;
 float CPad::m_fStickAimSensitivity = 0.5f;
+float CPad::m_fStickCurve = 2.0f;
 
 // Take the dead zone out of the stick as a circle rather than per axis, and stretch
 // what is left back over the whole range.  Cutting each axis on its own and leaving the
@@ -2733,13 +2734,14 @@ CPad::ApplyStickDeadzone(float &x, float &y)
 	y = y / len * scaled;
 }
 
-// Square the stick so a small push turns the camera slowly and the speed builds up
-// towards the edge.  The dead zone is already gone by the time this runs.
+// Bend the stick so a small push turns the camera slowly and the speed builds up
+// towards the edge.  The dead zone is already gone by the time this runs.  A curve of
+// 1 is a straight line, 2 is squared, and higher makes the middle slower still.
 static float
 ShapeLookStickAxis(float axis)
 {
 	float mag = Min(Abs(axis), 1.0f);
-	mag = SQR(mag) * CPad::GetLookStickSensitivity();
+	mag = Pow(mag, Max(CPad::m_fStickCurve, 1.0f)) * CPad::GetLookStickSensitivity();
 	return axis < 0.0f ? -mag : mag;
 }
 

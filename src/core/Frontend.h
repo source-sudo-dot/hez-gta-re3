@@ -24,6 +24,8 @@
 
 #define MENUSLIDER_X 256.0f
 #define MENUSLIDER_UNK 256.0f
+// where the printed value of a slider sits, from the right edge
+#define MENUSLIDER_VALUE_X 80.0f
 
 #define MENUSLIDER_BARS 16
 #define MENUSLIDER_LOGICAL_BARS MENUSLIDER_BARS
@@ -249,6 +251,7 @@ enum eMenuScreen
 #ifdef DETECT_JOYSTICK_MENU
 	MENUPAGE_DETECT_JOYSTICK,
 #endif
+	MENUPAGE_STICK_SETTINGS,
 
 #endif
 	MENUPAGE_UNK, // originally 58. Custom screens are inserted above, because last screen in CMenuScreens should always be empty to make CFO work
@@ -538,15 +541,22 @@ struct CCFOSlider : CCFO
 	ChangeFuncFloat changeFunc;
 	float min;
 	float max;
+	// how many presses it takes to go from one end to the other.  The bar is drawn with
+	// MENUSLIDER_BARS blocks whatever this is, so a slider can be finer than it looks.
+	int steps;
+	// print the number next to the bar, for the ones where the exact value matters
+	bool showValue;
 
 	CCFOSlider() {};
-	CCFOSlider(float* value, const char* saveCat, const char* save, float min, float max, ChangeFuncFloat changeFunc = nil){
+	CCFOSlider(float* value, const char* saveCat, const char* save, float min, float max, ChangeFuncFloat changeFunc = nil, int steps = MENUSLIDER_LOGICAL_BARS, bool showValue = false){
 		this->value = value;
 		this->saveCat = saveCat;
 		this->save = save;
 		this->changeFunc = changeFunc;
 		this->min = min;
 		this->max = max;
+		this->steps = steps;
+		this->showValue = showValue;
 	}
 };
 

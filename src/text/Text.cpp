@@ -102,6 +102,8 @@ static struct {
 	{ "FEZ_SN", "STICK SENSITIVITY" },
 	{ "FEZ_AS", "STICK SENS. WHILE AIMING" },
 	{ "FEZ_WW", "WEAPON WHEEL" },
+	{ "FEZ_CV", "STICK CURVE" },
+	{ "FEZ_STK", "STICK SETTINGS" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

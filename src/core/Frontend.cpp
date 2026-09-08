@@ -949,7 +949,7 @@ CMenuManager::CheckSliderMovement(int value)
 	{
 		CMenuScreenCustom::CMenuEntry &option = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption];
 		float oldValue = *(float*)option.m_CFOSlider->value;
-		*(float*)option.m_CFOSlider->value += value * ((option.m_CFOSlider->max - option.m_CFOSlider->min) / MENUSLIDER_LOGICAL_BARS);
+		*(float*)option.m_CFOSlider->value += value * ((option.m_CFOSlider->max - option.m_CFOSlider->min) / Max(option.m_CFOSlider->steps, 1));
 		*(float*)option.m_CFOSlider->value = Clamp(*(float*)option.m_CFOSlider->value, option.m_CFOSlider->min, option.m_CFOSlider->max);
 
 		if (*(float*)option.m_CFOSlider->value != oldValue && option.m_CFOSlider->changeFunc)
@@ -1833,6 +1833,20 @@ CMenuManager::Draw()
 				case MENUACTION_CFO_SLIDER:
 					CMenuScreenCustom::CMenuEntry &option = aScreens[m_nCurrScreen].m_aEntries[i];
 					ProcessSlider((*(float*)option.m_CFOSlider->value - option.m_CFOSlider->min) / (option.m_CFOSlider->max - option.m_CFOSlider->min), HOVEROPTION_INCREASE_CFO_SLIDER, HOVEROPTION_DECREASE_CFO_SLIDER, MENU_X_LEFT_ALIGNED(170.0f), SCREEN_WIDTH);
+					// The bar is sixteen blocks whatever the slider's step count is, so a fine
+					// one cannot be read off it.  Print the number for those.
+					if (option.m_CFOSlider->showValue) {
+						char valueStr[16];
+						wchar valueUni[16];
+						sprintf(valueStr, "%.2f", *(float*)option.m_CFOSlider->value);
+						AsciiToUnicode(valueStr, valueUni);
+						bool wasCentred = CFont::Details.centre;
+						CFont::SetCentreOff();
+						CFont::SetRightJustifyOff();
+						CFont::PrintString(MENU_X_RIGHT_ALIGNED(MENUSLIDER_VALUE_X), MENU_Y(bitAboveNextItemY), valueUni);
+						if (wasCentred)
+							CFont::SetCentreOn();
+					}
 					break;
 #endif
 			}
