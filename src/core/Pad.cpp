@@ -2734,15 +2734,29 @@ CPad::ApplyStickDeadzone(float &x, float &y)
 	y = y / len * scaled;
 }
 
-// Bend the stick so a small push turns the camera slowly and the speed builds up
-// towards the edge.  The dead zone is already gone by the time this runs.  A curve of
-// 1 is a straight line, 2 is squared, and higher makes the middle slower still.
-static float
-ShapeLookStickAxis(float axis)
+// Bend the stick along its length, not each axis on its own, so a small push turns the
+// camera slowly and the speed builds up towards the edge.  Curving the axes apart makes
+// the diagonals slow: at full tilt each axis only reads 0.707, squaring that leaves
+// half, and the two halves come back out at 0.707 of a straight push, so the stick
+// feels like a cross with the corners cut off.  Working on the length keeps the speed
+// the same in every direction.  A curve of 1 is a straight line, 2 is squared, higher
+// makes the middle slower still.  The dead zone is already gone by the time this runs.
+static void
+ShapeLookStick(float &outX, float &outY)
 {
-	float mag = Min(Abs(axis), 1.0f);
-	mag = Pow(mag, Max(CPad::m_fStickCurve, 1.0f)) * CPad::GetLookStickSensitivity();
-	return axis < 0.0f ? -mag : mag;
+	float x = CPad::GetPad(0)->NewState.RightStickX / 128.0f;
+	float y = CPad::GetPad(0)->NewState.RightStickY / 128.0f;
+
+	float len = Sqrt(SQR(x) + SQR(y));
+	if(len < 0.0001f){
+		outX = 0.0f;
+		outY = 0.0f;
+		return;
+	}
+
+	float shaped = Pow(Min(len, 1.0f), Max(CPad::m_fStickCurve, 1.0f)) * CPad::GetLookStickSensitivity();
+	outX = x / len * shaped;
+	outY = y / len * shaped;
 }
 
 // A second sensitivity for while Target/Aim is held on foot, so the camera can be
@@ -2763,25 +2777,31 @@ int16 CPad::LookAroundLeftRight(void)
 	if ( GetLookBehindForPed() )
 		return 0;
 
-	return (int16)( ShapeLookStickAxis(GetPad(0)->NewState.RightStickX / 128.0f) * STICK_LOOK_RANGE );
+	float x, y;
+	ShapeLookStick(x, y);
+
+	return (int16)( x * STICK_LOOK_RANGE );
 }
 
 int16 CPad::LookAroundUpDown(void)
 {
-	float axis = GetPad(0)->NewState.RightStickY;
-
-#ifdef FIX_BUGS
-	axis = -axis;
-#endif
-#ifdef INVERT_LOOK_FOR_PAD
-	if (CPad::bInvertLook4Pad)
-		axis = -axis;
-#endif
-
 	if ( GetLookBehindForPed() )
 		return 0;
 
-	return (int16)( ShapeLookStickAxis(axis / 128.0f) * STICK_LOOK_RANGE );
+	float x, y;
+	ShapeLookStick(x, y);
+
+	// the shaping is done on the stick as it is, the direction is turned round after it
+	// so the length, and with it the speed, is the same whichever way the axis points
+#ifdef FIX_BUGS
+	y = -y;
+#endif
+#ifdef INVERT_LOOK_FOR_PAD
+	if (CPad::bInvertLook4Pad)
+		y = -y;
+#endif
+
+	return (int16)( y * STICK_LOOK_RANGE );
 }
 
 
