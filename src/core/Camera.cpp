@@ -803,8 +803,13 @@ CCamera::UpdatePadInput(void)
 	// stick moves him relative to it.  This has to be the one flag the whole game reads,
 	// or the camera, the player control and the weapon code end up on different paths and
 	// the player runs off at an angle the stick cannot correct.
+	// Only in the ordinary on foot camera.  The sniper, rocket launcher and M16 have
+	// first person cameras of their own, and CamControl() reads bFreeCam to decide
+	// whether a look around should throw the player into first person: switching it off
+	// under them meant a nudge of the right stick dropped the scope.
 	bFreeCam = bFreeCamSetting;
 	if(bFreeCamSetting && bAimDisablesFreeCam &&
+	   Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED &&
 	   FindPlayerPed() != nil && FindPlayerVehicle() == nil &&
 	   CPad::GetPad(0)->GetTarget())
 		bFreeCam = false;
