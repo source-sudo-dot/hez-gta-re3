@@ -36,6 +36,7 @@
 #include "HandlingMgr.h"
 #include "Heli.h"
 #include "Hud.h"
+#include "WeaponInfo.h"
 #include "WeaponWheel.h"
 #include "IniFile.h"
 #include "Lights.h"
@@ -725,6 +726,7 @@ void CGame::ReInitGameObjectVariables(void)
 {
 	CGameLogic::InitAtStartOfGame();
 	CWeaponWheel::Init();
+	CWeaponInfo::ApplyMoveWhileShooting();
 #ifdef PS2_MENU
 	if ( !TheMemoryCard.m_bWantToLoad )
 #endif

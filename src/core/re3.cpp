@@ -25,6 +25,7 @@
 #include "Console.h"
 #include "Debug.h"
 #include "Hud.h"
+#include "WeaponInfo.h"
 #include "WeaponWheel.h"
 #include "SceneEdit.h"
 #include "Pad.h"
@@ -489,6 +490,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "AimDisablesFreeCam", &CCamera::bAimDisablesFreeCam);
 	ReadIniIfExists("Display", "WeaponWheel", &CWeaponWheel::bEnabled);
 	ReadIniIfExists("Controller", "StickDebug", &CPad::m_bStickDebug);
+	ReadIniIfExists("Display", "MoveWhileShooting", &CWeaponInfo::bMoveWhileShooting);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -595,6 +597,7 @@ void SaveINISettings()
 	StoreIni("Display", "AimDisablesFreeCam", CCamera::bAimDisablesFreeCam);
 	StoreIni("Display", "WeaponWheel", CWeaponWheel::bEnabled);
 	StoreIni("Controller", "StickDebug", CPad::m_bStickDebug);
+	StoreIni("Display", "MoveWhileShooting", CWeaponInfo::bMoveWhileShooting);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

@@ -42,6 +42,10 @@ public:
 
 	static void Initialise(void);
 	static void LoadWeaponData(void);
+
+	// MoveWhileShooting under [Display] in re3.ini
+	static bool bMoveWhileShooting;
+	static void ApplyMoveWhileShooting(void);
 	static CWeaponInfo *GetWeaponInfo(eWeaponType weaponType);
 	static eWeaponFire FindWeaponFireType(char *name);
 	static eWeaponType FindWeaponType(char *name);

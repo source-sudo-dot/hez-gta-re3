@@ -105,6 +105,7 @@ static struct {
 	{ "FEZ_WW", "WEAPON WHEEL" },
 	{ "FEZ_CV", "STICK CURVE" },
 	{ "FEZ_STK", "STICK SETTINGS" },
+	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

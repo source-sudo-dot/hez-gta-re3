@@ -157,6 +157,29 @@ CWeaponInfo::LoadWeaponData(void)
 		aWeaponInfo[weaponType].m_nModelId = modelId;
 		aWeaponInfo[weaponType].m_Flags = flags;
 	}
+
+	ApplyMoveWhileShooting();
+}
+
+bool CWeaponInfo::bMoveWhileShooting = false;
+
+// Only the pistol and the uzi carry CANAIM_WITHARM in weapon.dat.  Without it the
+// whole body plays the firing animation and the player is planted where he stands;
+// with it the animation is held at its loop start and the arm is pointed on its own,
+// so he can walk and fire the way he can with the small guns.  Handing the flag to the
+// shotgun, the AK and the M16 lets them be fired on the move as well.  Their left hand
+// is not animated onto the weapon while this is on, which is the price for it.
+void
+CWeaponInfo::ApplyMoveWhileShooting(void)
+{
+	static const int heavyGuns[] = { WEAPONTYPE_SHOTGUN, WEAPONTYPE_AK47, WEAPONTYPE_M16 };
+
+	for(int i = 0; i < ARRAY_SIZE(heavyGuns); i++){
+		if(bMoveWhileShooting)
+			aWeaponInfo[heavyGuns[i]].m_Flags |= WEAPONFLAG_CANAIM_WITHARM;
+		else
+			aWeaponInfo[heavyGuns[i]].m_Flags &= ~WEAPONFLAG_CANAIM_WITHARM;
+	}
 }
 
 eWeaponType

@@ -28,6 +28,7 @@
 #include "Pad.h"
 #include "ControllerConfig.h"
 #include "IniFile.h"
+#include "WeaponInfo.h"
 #include "CarCtrl.h"
 #include "Population.h"
 
@@ -60,6 +61,8 @@
 #else
 	#define FREE_CAM_TOGGLE
 #endif
+
+#define MOVE_WHILE_SHOOTING_TOGGLE MENUACTION_CFO_SELECT, "FEZ_MWS", { new CCFOSelect((int8*)&CWeaponInfo::bMoveWhileShooting, "Display", "MoveWhileShooting", off_on, 2, false, MoveWhileShootingChange) },
 
 #ifdef PS2_ALPHA_TEST
 	#define DUALPASS_SELECTOR MENUACTION_CFO_SELECT, "FEM_2PR", { new CCFOSelect((int8*)&gPS2alphaTest, "Graphics", "PS2AlphaTest", off_on, 2, false) },
@@ -289,6 +292,11 @@ wchar* MultiSamplingDraw(bool *disabled, bool userHovering) {
 }
 #endif
 
+void MoveWhileShootingChange(int8 before, int8 after)
+{
+	CWeaponInfo::ApplyMoveWhileShooting();
+}
+
 #ifdef IMPROVED_VIDEOMODE
 const char* screenModes[] = { "FED_FLS", "FED_WND" };
 void ScreenModeAfterChange(int8 before, int8 after)
@@ -469,6 +477,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		DUALPASS_SELECTOR
 		CUTSCENE_BORDERS_TOGGLE
 		FREE_CAM_TOGGLE
+		MOVE_WHILE_SHOOTING_TOGGLE
 		POSTFX_SELECTORS
 		// re3.cpp inserts here pipeline selectors if neo/neo.txd exists and EXTENDED_PIPELINES defined
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
@@ -482,6 +491,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		DENSITY_SLIDERS
 		CUTSCENE_BORDERS_TOGGLE
 		FREE_CAM_TOGGLE
+		MOVE_WHILE_SHOOTING_TOGGLE
 		MENUACTION_SUBTITLES,	"FED_SUB", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
 		MENUACTION_CFO_SELECT,	"FEM_EHU", { new CCFOSelect((int8*)&CDraw::ms_bExtendHud, "Display", "ExtendHud", off_on, 2, false) },
 		MENUACTION_CFO_DYNAMIC,	"FET_DEF", { new CCFODynamic(nil, nil, nil, nil, RestoreDefDisplay) },
