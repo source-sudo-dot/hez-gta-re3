@@ -24,6 +24,7 @@ public:
 	int16 Square, Triangle, Cross, Circle;
 	int16 LeftShock, RightShock;
 	int16 NetworkTalk;
+	int16 WeaponWheel;
 	float GetLeftStickX(void) { return LeftStickX/32767.0f; };
 	float GetLeftStickY(void) { return LeftStickY/32767.0f; };
 	float GetRightStickX(void) { return RightStickX/32767.0f; };
@@ -32,7 +33,7 @@ public:
 	bool CheckForInput();
 	void Clear(void);
 };
-VALIDATE_SIZE(CControllerState, 0x2A);
+VALIDATE_SIZE(CControllerState, 0x2C);
 
 class CMouseControllerState
 {
@@ -244,6 +245,7 @@ public:
 	bool CycleWeaponLeftJustDown(void);
 	bool CycleWeaponRightJustDown(void);
 	bool GetTarget(void);
+	bool GetWeaponWheel(void);
 	bool TargetJustDown(void);
 	bool JumpJustDown(void);
 	bool GetSprint(void);

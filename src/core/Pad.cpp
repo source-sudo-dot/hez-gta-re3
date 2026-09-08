@@ -367,6 +367,7 @@ CControllerState::Clear(void)
 	Square = Triangle = Cross = Circle = 0;
 	LeftShock = RightShock = 0;
 	NetworkTalk = 0;
+	WeaponWheel = 0;
 }
 
 void CKeyboardState::Clear()
@@ -1766,6 +1767,14 @@ bool CPad::GetLookBehindForCar(void)
 		return false;
 
 	return !!(NewState.RightShoulder2 && NewState.LeftShoulder2);
+}
+
+bool CPad::GetWeaponWheel(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	return !!NewState.WeaponWheel;
 }
 
 bool CPad::GetLookBehindForPed(void)

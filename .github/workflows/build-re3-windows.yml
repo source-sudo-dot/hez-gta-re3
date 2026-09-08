@@ -1,10 +1,10 @@
-name: build re3 for windows
+﻿name: build re3 for windows
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - aim-crosshair-borderless
+      - weapon-wheel
 
 jobs:
   build:

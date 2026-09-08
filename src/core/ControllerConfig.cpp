@@ -415,6 +415,7 @@ void CControllerConfigManager::InitDefaultControlConfigJoyPad(uint32 buttons)
 		IF_BTN_IN_RANGE(7)
 			SetControllerKeyAssociatedWithAction(PED_CENTER_CAMERA_BEHIND_PLAYER,    7, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_CHANGE_RADIO_STATION,       7, JOYSTICK);
+			SetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL,                   7, JOYSTICK);
 		IF_BTN_IN_RANGE(6)
 			SetControllerKeyAssociatedWithAction(PED_CYCLE_WEAPON_RIGHT,             6, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_LOOKRIGHT,                  6, JOYSTICK);
@@ -466,6 +467,7 @@ void CControllerConfigManager::InitDefaultControlConfigJoyPad(uint32 buttons)
 		IF_BTN_IN_RANGE(7)
 			SetControllerKeyAssociatedWithAction(PED_CENTER_CAMERA_BEHIND_PLAYER,    7, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_CHANGE_RADIO_STATION,       7, JOYSTICK);
+			SetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL,                   7, JOYSTICK);
 		IF_BTN_IN_RANGE(6)
 			SetControllerKeyAssociatedWithAction(PED_CYCLE_WEAPON_RIGHT,             6, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_LOOKRIGHT,                  6, JOYSTICK);
@@ -535,6 +537,7 @@ void CControllerConfigManager::InitialiseControllerActionNameArray()
 	SETACTIONNAME(GO_FORWARD);
 	SETACTIONNAME(GO_BACK);
 	SETACTIONNAME(NETWORK_TALK);
+	SETACTIONNAME(PED_WEAPON_WHEEL);
 	SETACTIONNAME(TOGGLE_DPAD);
 	SETACTIONNAME(SWITCH_DEBUG_CAM_ON);
 	SETACTIONNAME(TAKE_SCREEN_SHOT);
@@ -857,6 +860,8 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_ThirdPersonOnl
 		state.RightShoulder2 = 255;
 	if (button == GetControllerKeyAssociatedWithAction(PED_SPRINT, type))
 		state.Cross = 255;
+	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
+		state.WeaponWheel = 255;
 	
 	if (CMenuManager::m_ControlMethod == CONTROL_CLASSIC)
 	{
@@ -1145,6 +1150,8 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonUp_All_Player_State
 {
 	if (button == GetControllerKeyAssociatedWithAction(NETWORK_TALK, type))
 		state.NetworkTalk = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
+		state.WeaponWheel = 0;
 }
 
 void CControllerConfigManager::AffectPadFromKeyBoard()
@@ -1928,6 +1935,7 @@ e_ControllerActionType CControllerConfigManager::GetActionType(e_ControllerActio
 	case PED_CYCLE_TARGET_LEFT:
 	case PED_CYCLE_TARGET_RIGHT:
 	case PED_CENTER_CAMERA_BEHIND_PLAYER:
+	case PED_WEAPON_WHEEL:
 		return ACTIONTYPE_3RDPERSON;
 		break;
 
@@ -2472,7 +2480,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2516,7 +2524,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2560,7 +2568,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2604,7 +2612,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
