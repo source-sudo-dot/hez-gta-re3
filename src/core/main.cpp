@@ -1524,6 +1524,7 @@ Render2dStuff(void)
 #endif
 		CHud::Draw();
 	CWeaponWheel::Draw();
+	CPad::DrawStickDebug();
 	CUserDisplay::OnscnTimer.ProcessForDisplay();
 	CMessages::Display();
 	CDarkel::DrawMessages();

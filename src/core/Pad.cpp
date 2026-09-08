@@ -2709,10 +2709,14 @@ int16 CPad::SniperModeLookUpDown(void)
 		return dpad;
 }
 
-float CPad::m_fStickDeadzone = 0.15f;
+float CPad::m_fStickDeadzoneLeft = 0.15f;
+float CPad::m_fStickDeadzoneRight = 0.08f;
 float CPad::m_fStickSensitivity = 1.0f;
 float CPad::m_fStickAimSensitivity = 0.5f;
 float CPad::m_fStickCurve = 2.0f;
+bool  CPad::m_bStickDebug = false;
+float CPad::m_fDebugRawLen = 0.0f;
+float CPad::m_fDebugDeadzonedLen = 0.0f;
 
 // Take the dead zone out of the stick as a circle rather than per axis, and stretch
 // what is left back over the whole range.  Cutting each axis on its own and leaving the
@@ -2720,9 +2724,9 @@ float CPad::m_fStickCurve = 2.0f;
 // quarter of its top speed the moment the stick leaves the middle and there is no way
 // to turn slowly.
 void
-CPad::ApplyStickDeadzone(float &x, float &y)
+CPad::ApplyStickDeadzone(float &x, float &y, float deadzone)
 {
-	float deadzone = Clamp(m_fStickDeadzone, 0.0f, 0.9f);
+	deadzone = Clamp(deadzone, 0.0f, 0.9f);
 	float len = Sqrt(SQR(x) + SQR(y));
 	if(len <= deadzone || len == 0.0f){
 		x = 0.0f;
@@ -2767,6 +2771,31 @@ CPad::GetLookStickSensitivity(void)
 	if ( GetPad(0)->GetTarget() && FindPlayerVehicle() == nil )
 		return Max(m_fStickAimSensitivity, 0.05f);
 	return Max(m_fStickSensitivity, 0.05f);
+}
+
+// What the right stick reads at each stage, printed on screen with StickDebug=1, so a
+// jump can be pinned on the hardware, the dead zone or the curve instead of guessed at.
+void
+CPad::DrawStickDebug(void)
+{
+	if(!m_bStickDebug)
+		return;
+
+	char buf[128];
+	wchar wbuf[128];
+	int16 out = GetPad(0)->LookAroundLeftRight();
+	int16 outY = GetPad(0)->LookAroundUpDown();
+	sprintf(buf, "raw %.4f  dz %.4f  x %d  y %d", m_fDebugRawLen, m_fDebugDeadzonedLen, out, outY);
+	AsciiToUnicode(buf, wbuf);
+
+	CFont::SetBackgroundOff();
+	CFont::SetScale(SCREEN_SCALE_X(0.5f), SCREEN_SCALE_Y(0.8f));
+	CFont::SetCentreOff();
+	CFont::SetRightJustifyOff();
+	CFont::SetPropOn();
+	CFont::SetFontStyle(FONT_BANK);
+	CFont::SetColor(CRGBA(255, 255, 128, 255));
+	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(140.0f), wbuf);
 }
 
 // what the camera code used to get at most, kept so the top speed does not change

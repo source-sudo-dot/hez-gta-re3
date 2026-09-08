@@ -250,12 +250,20 @@ public:
 	// How much of the stick is thrown away around the middle, and how fast the camera
 	// turns for the rest of it.  All three are set in Options, Controller, Gamepad
 	// Settings and saved under [Controller] in re3.ini.
-	static float m_fStickDeadzone;
+	static float m_fStickDeadzoneLeft;
+	static float m_fStickDeadzoneRight;
 	static float m_fStickSensitivity;
 	static float m_fStickAimSensitivity;
 	static float m_fStickCurve;
-	static void ApplyStickDeadzone(float &x, float &y);
+	static void ApplyStickDeadzone(float &x, float &y, float deadzone);
 	static float GetLookStickSensitivity(void);
+
+	// StickDebug=1 under [Controller] in re3.ini puts the right stick's numbers on
+	// screen, to see at which stage a jump comes in
+	static bool m_bStickDebug;
+	static float m_fDebugRawLen;
+	static float m_fDebugDeadzonedLen;
+	static void DrawStickDebug(void);
 	bool TargetJustDown(void);
 	bool JumpJustDown(void);
 	bool GetSprint(void);

@@ -98,7 +98,8 @@ static struct {
 	const char *key;
 	const char *text;
 } ExtraText[] = {
-	{ "FEZ_DZ", "STICK DEAD ZONE" },
+	{ "FEZ_DZL", "LEFT STICK DEAD ZONE" },
+	{ "FEZ_DZR", "RIGHT STICK DEAD ZONE" },
 	{ "FEZ_SN", "STICK SENSITIVITY" },
 	{ "FEZ_AS", "STICK SENS. WHILE AIMING" },
 	{ "FEZ_WW", "WEAPON WHEEL" },

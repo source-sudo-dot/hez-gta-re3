@@ -2597,8 +2597,10 @@ void CapturePad(RwInt32 padID)
 		// it was below it instead of being cleared, so a stick let go could keep the
 		// camera turning.  CPad takes it out as a circle now and stretches the rest back
 		// over the full range, and the value is always written.
-		CPad::ApplyStickDeadzone(leftStickPos.x, leftStickPos.y);
-		CPad::ApplyStickDeadzone(rightStickPos.x, rightStickPos.y);
+		CPad::m_fDebugRawLen = Sqrt(SQR(rightStickPos.x) + SQR(rightStickPos.y));
+		CPad::ApplyStickDeadzone(leftStickPos.x, leftStickPos.y, CPad::m_fStickDeadzoneLeft);
+		CPad::ApplyStickDeadzone(rightStickPos.x, rightStickPos.y, CPad::m_fStickDeadzoneRight);
+		CPad::m_fDebugDeadzonedLen = Sqrt(SQR(rightStickPos.x) + SQR(rightStickPos.y));
 
 		pad->PCTempJoyState.LeftStickX	= (int32)(leftStickPos.x  * 128.0f);
 		pad->PCTempJoyState.LeftStickY	= (int32)(leftStickPos.y  * 128.0f);
