@@ -427,9 +427,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CTRLDISPLAY,		"FEC_CDP", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_SETTINGS },
 		INVERT_PAD_SELECTOR
 		MENUACTION_CTRLVIBRATION,	"FEC_VIB", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_SETTINGS },
-		MENUACTION_CFO_SLIDER,		"FEZ_DZ", { new CCFOSlider(&CPad::m_fStickDeadzone, "Controller", "StickDeadzone", 0.0f, 0.5f) },
-		MENUACTION_CFO_SLIDER,		"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f) },
-		MENUACTION_CFO_SLIDER,		"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f) },
 		SELECT_CONTROLLER_TYPE
 		MENUACTION_CHANGEMENU,		"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
@@ -712,6 +709,9 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 #ifdef DETECT_JOYSTICK_MENU
 		MENUACTION_CHANGEMENU,	"FEC_JOD", { nil, SAVESLOT_NONE, MENUPAGE_DETECT_JOYSTICK },
 #endif
+		MENUACTION_CFO_SLIDER,	"FEZ_DZ", { new CCFOSlider(&CPad::m_fStickDeadzone, "Controller", "StickDeadzone", 0.0f, 0.5f) },
+		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f) },
+		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f) },
 		MENUACTION_CHANGEMENU,	"FET_AMS", { nil, SAVESLOT_NONE, MENUPAGE_MOUSE_CONTROLS },
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_PC },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
