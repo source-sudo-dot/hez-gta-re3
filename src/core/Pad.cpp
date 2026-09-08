@@ -2783,9 +2783,9 @@ CPad::DrawStickDebug(void)
 
 	char buf[128];
 	wchar wbuf[128];
-	int16 out = GetPad(0)->LookAroundLeftRight();
-	int16 outY = GetPad(0)->LookAroundUpDown();
-	sprintf(buf, "raw %.4f  dz %.4f  x %d  y %d", m_fDebugRawLen, m_fDebugDeadzonedLen, out, outY);
+	float out = GetPad(0)->LookAroundLeftRightFloat();
+	float outY = GetPad(0)->LookAroundUpDownFloat();
+	sprintf(buf, "raw %.4f  dz %.4f  x %.3f  y %.3f", m_fDebugRawLen, m_fDebugDeadzonedLen, out, outY);
 	AsciiToUnicode(buf, wbuf);
 
 	CFont::SetBackgroundOff();
@@ -2801,21 +2801,26 @@ CPad::DrawStickDebug(void)
 // what the camera code used to get at most, kept so the top speed does not change
 #define STICK_LOOK_RANGE (234.0f)
 
-int16 CPad::LookAroundLeftRight(void)
+float CPad::LookAroundLeftRightFloat(void)
 {
 	if ( GetLookBehindForPed() )
-		return 0;
+		return 0.0f;
 
 	float x, y;
 	ShapeLookStick(x, y);
 
-	return (int16)( x * STICK_LOOK_RANGE );
+	return x * STICK_LOOK_RANGE;
 }
 
-int16 CPad::LookAroundUpDown(void)
+int16 CPad::LookAroundLeftRight(void)
+{
+	return (int16)GetPad(0)->LookAroundLeftRightFloat();
+}
+
+float CPad::LookAroundUpDownFloat(void)
 {
 	if ( GetLookBehindForPed() )
-		return 0;
+		return 0.0f;
 
 	float x, y;
 	ShapeLookStick(x, y);
@@ -2830,7 +2835,12 @@ int16 CPad::LookAroundUpDown(void)
 		y = -y;
 #endif
 
-	return (int16)( y * STICK_LOOK_RANGE );
+	return y * STICK_LOOK_RANGE;
+}
+
+int16 CPad::LookAroundUpDown(void)
+{
+	return (int16)GetPad(0)->LookAroundUpDownFloat();
 }
 
 

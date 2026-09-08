@@ -256,6 +256,13 @@ public:
 	static float m_fStickAimSensitivity;
 	static float m_fStickCurve;
 	static void ApplyStickDeadzone(float &x, float &y, float deadzone);
+	// The same value LookAround* gives, without being cut down to a whole number.
+	// One step of the whole number version is the smallest turn the camera can make,
+	// and that step is already a visible nudge, so the cameras that turn smoothly take
+	// these instead.  The first person ones square the value themselves and keep the
+	// whole number version, or their scaling would be off by orders of magnitude.
+	float LookAroundLeftRightFloat(void);
+	float LookAroundUpDownFloat(void);
 	static float GetLookStickSensitivity(void);
 
 	// StickDebug=1 under [Controller] in re3.ini puts the right stick's numbers on

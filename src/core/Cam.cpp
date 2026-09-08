@@ -1527,8 +1527,8 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 		LookLeftRight = m_fMultiHori*MouseX;
 		LookUpDown = m_fMultiVert*MouseY;
 	}else{
-		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRight();
-		LookUpDown = CPad::GetPad(0)->LookAroundUpDown();
+		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->LookAroundUpDownFloat();
 	}
 	float AlphaOffset, BetaOffset;
 	if(UseMouse){
@@ -4637,8 +4637,8 @@ CCam::Process_FollowPed_Rotation(const CVector &CameraTarget, float TargetOrient
 	}else
 */
 	{
-		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRight();
-		LookUpDown = CPad::GetPad(0)->LookAroundUpDown();
+		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->LookAroundUpDownFloat();
 	}
 	float AlphaOffset, BetaOffset;
 	if(UseMouse){
