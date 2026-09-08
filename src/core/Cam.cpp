@@ -35,6 +35,7 @@ bool CCamera::bFreeCamSetting = false;
 bool CCamera::bAimDisablesFreeCam = true;
 float CCamera::m_fCarCamFollowVert = 0.25f;
 float CCamera::m_fCarCamFollowDelay = 1.5f;
+float CCamera::m_fCarCamSmoothing = 0.3f;
 int nPreviousMode = -1;
 #endif
 
@@ -5148,7 +5149,11 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	float betaSpeedFromStickX = xMovement * CARCAM_SET[camSetArrPos][12];
 
 	float newAngleSpeedMaxBlendAmount = CARCAM_SET[camSetArrPos][9];
-	float angleChangeStep = Pow(CARCAM_SET[camSetArrPos][8], CTimer::GetTimeStep());
+	// The stick sets a speed here and that speed is smoothed, so the camera builds up
+	// and runs down instead of going where it is pointed.  On foot the stick is added
+	// straight onto the angle, which is why that one feels sharp and this one does not.
+	// At a smoothing of 0 the speed is taken as it comes and the two match.
+	float angleChangeStep = Pow(CARCAM_SET[camSetArrPos][8] * Clamp(TheCamera.m_fCarCamSmoothing, 0.0f, 1.0f), CTimer::GetTimeStep());
 	float targetBetaWithStickBlendAmount = betaSpeedFromStickX + (targetBeta - Beta) / Max(CTimer::GetTimeStep(), 1.0f);
 
 	if (targetBetaWithStickBlendAmount < -newAngleSpeedMaxBlendAmount)

@@ -493,6 +493,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "MoveWhileShooting", &CWeaponInfo::bMoveWhileShooting);
 	ReadIniIfExists("Display", "CarCamFollowVert", &CCamera::m_fCarCamFollowVert);
 	ReadIniIfExists("Display", "CarCamFollowDelay", &CCamera::m_fCarCamFollowDelay);
+	ReadIniIfExists("Display", "CarCamSmoothing", &CCamera::m_fCarCamSmoothing);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -602,6 +603,7 @@ void SaveINISettings()
 	StoreIni("Display", "MoveWhileShooting", CWeaponInfo::bMoveWhileShooting);
 	StoreIni("Display", "CarCamFollowVert", CCamera::m_fCarCamFollowVert);
 	StoreIni("Display", "CarCamFollowDelay", CCamera::m_fCarCamFollowDelay);
+	StoreIni("Display", "CarCamSmoothing", CCamera::m_fCarCamSmoothing);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

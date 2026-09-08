@@ -570,6 +570,9 @@ public:
 	// first.  CarCamFollowVert and CarCamFollowDelay under [Display] in re3.ini.
 	static float m_fCarCamFollowVert;
 	static float m_fCarCamFollowDelay;
+	// How much weight the car camera carries, 1 as much as it used to and 0 none, in
+	// which case it turns as directly as the one on foot.  CarCamSmoothing.
+	static float m_fCarCamSmoothing;
 #endif
 
 	// High level and misc
