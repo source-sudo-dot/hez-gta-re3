@@ -104,7 +104,9 @@ static struct {
 	{ "FEZ_AS", "STICK SENS. WHILE AIMING" },
 	{ "FEZ_WW", "WEAPON WHEEL" },
 	{ "FEZ_CV", "STICK CURVE" },
-	{ "FEZ_STK", "STICK SETTINGS" },
+	{ "FEZ_STK", "CAMERA AND STICK" },
+	{ "FEZ_CVF", "CAR CAM PITCH FOLLOW" },
+	{ "FEZ_CVD", "CAR CAM FOLLOW DELAY" },
 	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];

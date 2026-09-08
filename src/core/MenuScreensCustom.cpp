@@ -949,6 +949,8 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f, nil, 56, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_CVF", { new CCFOSlider(&CCamera::m_fCarCamFollowVert, "Display", "CarCamFollowVert", 0.0f, 1.0f, nil, 20, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_CVD", { new CCFOSlider(&CCamera::m_fCarCamFollowDelay, "Display", "CarCamFollowDelay", 0.0f, 5.0f, nil, 50, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

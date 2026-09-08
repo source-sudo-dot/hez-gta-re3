@@ -33,6 +33,8 @@ int16 DebugCamMode;
 bool CCamera::bFreeCam = false;
 bool CCamera::bFreeCamSetting = false;
 bool CCamera::bAimDisablesFreeCam = true;
+float CCamera::m_fCarCamFollowVert = 0.25f;
+float CCamera::m_fCarCamFollowDelay = 1.5f;
 int nPreviousMode = -1;
 #endif
 
@@ -5044,6 +5046,20 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 		targetAlphaBlendAmount = maxAlphaBlendAmount;
 	}
 
+	// The camera closes half the gap to the car's pitch every logical frame, which is
+	// fast enough to pull the view back down while the stick is still asking for it.
+	// Hold it off while the stick is being used and for a set time after, then let it
+	// in at the strength the player asked for.  Beta is left alone, it follows through
+	// a much gentler path already.
+	static float vertFollowHoldOff = 0.0f;
+	if (Abs(pad->GetCarGunUpDown()) > 1 || Abs(pad->GetCarGunLeftRight()) > 1)
+		vertFollowHoldOff = Max(0.0f, TheCamera.m_fCarCamFollowDelay) * 50.0f;
+	else
+		vertFollowHoldOff = Max(0.0f, vertFollowHoldOff - CTimer::GetTimeStep());
+
+	float vertFollowScale = vertFollowHoldOff > 0.0f ? 0.0f : Clamp(TheCamera.m_fCarCamFollowVert, 0.0f, 1.0f);
+	targetAlphaBlendAmount *= vertFollowScale;
+
 	// Using GetCarGun(LR/UD) will give us same unprocessed RightStick value as SA
 	float stickX = -(pad->GetCarGunLeftRight());
 	float stickY = -pad->GetCarGunUpDown();
@@ -5167,7 +5183,7 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	if ((camSetArrPos <= 1 || camSetArrPos == 7) && targetAlpha < Alpha && carPosChange >= newDistance) {
 		if (isCar && ((CAutomobile*)car)->m_nWheelsOnGround > 1)
 			// || isBike && GetMysteriousWheelRelatedThingBike(car) > 1)
-			alphaSpeedFromStickY += (targetAlpha - Alpha) * 0.075f;
+			alphaSpeedFromStickY += (targetAlpha - Alpha) * 0.075f * vertFollowScale;
 	}
 
 	AlphaSpeed = angleChangeStepLeft * alphaSpeedFromStickY + angleChangeStep * AlphaSpeed;
