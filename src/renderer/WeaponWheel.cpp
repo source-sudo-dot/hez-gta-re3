@@ -159,8 +159,8 @@ CWeaponWheel::Process(void)
 	// Point with the right stick, or push the pick around with the mouse.  The stick
 	// says where to point outright, the mouse moves the pointer, so both feel the way
 	// they do everywhere else.
-	float stickX = pad->LookAroundLeftRight() / 128.0f;
-	float stickY = pad->LookAroundUpDown() / 128.0f;
+	float stickX = pad->NewState.RightStickX / 128.0f;
+	float stickY = -pad->NewState.RightStickY / 128.0f;
 	if(Sqrt(SQR(stickX) + SQR(stickY)) > WHEEL_STICK_DEADZONE){
 		m_fPointX = stickX;
 		m_fPointY = stickY;

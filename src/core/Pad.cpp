@@ -672,6 +672,7 @@ CControllerState CPad::ReconcileTwoControllersInput(CControllerState const &Stat
 	_RECONCILE_BUTTON(LeftShock);
 	_RECONCILE_BUTTON(RightShock);
 	_RECONCILE_BUTTON(NetworkTalk);
+	_RECONCILE_BUTTON(WeaponWheel);
 	_RECONCILE_AXIS(LeftStickX);
 	_RECONCILE_AXIS(LeftStickY);
 	_FIX_AXIS_DIR(LeftStickX);
@@ -2708,24 +2709,64 @@ int16 CPad::SniperModeLookUpDown(void)
 		return dpad;
 }
 
+float CPad::m_fStickDeadzone = 0.15f;
+float CPad::m_fStickSensitivity = 1.0f;
+float CPad::m_fStickAimSensitivity = 0.5f;
+
+// Take the dead zone out of the stick as a circle rather than per axis, and stretch
+// what is left back over the whole range.  Cutting each axis on its own and leaving the
+// rest where it was, which is what the pad code used to do, means the camera jumps to a
+// quarter of its top speed the moment the stick leaves the middle and there is no way
+// to turn slowly.
+void
+CPad::ApplyStickDeadzone(float &x, float &y)
+{
+	float deadzone = Clamp(m_fStickDeadzone, 0.0f, 0.9f);
+	float len = Sqrt(SQR(x) + SQR(y));
+	if(len <= deadzone || len == 0.0f){
+		x = 0.0f;
+		y = 0.0f;
+		return;
+	}
+	float scaled = Min((len - deadzone) / (1.0f - deadzone), 1.0f);
+	x = x / len * scaled;
+	y = y / len * scaled;
+}
+
+// Square the stick so a small push turns the camera slowly and the speed builds up
+// towards the edge.  The dead zone is already gone by the time this runs.
+static float
+ShapeLookStickAxis(float axis)
+{
+	float mag = Min(Abs(axis), 1.0f);
+	mag = SQR(mag) * CPad::GetLookStickSensitivity();
+	return axis < 0.0f ? -mag : mag;
+}
+
+// A second sensitivity for while Target/Aim is held on foot, so the camera can be
+// quick for looking around and slow for lining a shot up.
+float
+CPad::GetLookStickSensitivity(void)
+{
+	if ( GetPad(0)->GetTarget() && FindPlayerVehicle() == nil )
+		return Max(m_fStickAimSensitivity, 0.05f);
+	return Max(m_fStickSensitivity, 0.05f);
+}
+
+// what the camera code used to get at most, kept so the top speed does not change
+#define STICK_LOOK_RANGE (234.0f)
+
 int16 CPad::LookAroundLeftRight(void)
 {
-	float axis = GetPad(0)->NewState.RightStickX;
+	if ( GetLookBehindForPed() )
+		return 0;
 
-	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
-							* (127.0f / 32.0f) ); // 3.96875f
-
-	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 10 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -10 : 10) )
-							* (127.0f / 64.0f) ); // 1.984375f
-
-	return 0;
+	return (int16)( ShapeLookStickAxis(GetPad(0)->NewState.RightStickX / 128.0f) * STICK_LOOK_RANGE );
 }
 
 int16 CPad::LookAroundUpDown(void)
 {
-	int16 axis = GetPad(0)->NewState.RightStickY;
+	float axis = GetPad(0)->NewState.RightStickY;
 
 #ifdef FIX_BUGS
 	axis = -axis;
@@ -2735,15 +2776,10 @@ int16 CPad::LookAroundUpDown(void)
 		axis = -axis;
 #endif
 
-	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
-							* (127.0f / 32.0f) ); // 3.96875f
+	if ( GetLookBehindForPed() )
+		return 0;
 
-	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 40 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -40 : 40) )
-							* (127.0f / 64.0f) ); // 1.984375f
-
-	return 0;
+	return (int16)( ShapeLookStickAxis(axis / 128.0f) * STICK_LOOK_RANGE );
 }
 
 

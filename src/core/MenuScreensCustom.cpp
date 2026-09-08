@@ -427,6 +427,9 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CTRLDISPLAY,		"FEC_CDP", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_SETTINGS },
 		INVERT_PAD_SELECTOR
 		MENUACTION_CTRLVIBRATION,	"FEC_VIB", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_SETTINGS },
+		MENUACTION_CFO_SLIDER,		"FEZ_DZ", { new CCFOSlider(&CPad::m_fStickDeadzone, "Controller", "StickDeadzone", 0.0f, 0.5f) },
+		MENUACTION_CFO_SLIDER,		"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f) },
+		MENUACTION_CFO_SLIDER,		"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f) },
 		SELECT_CONTROLLER_TYPE
 		MENUACTION_CHANGEMENU,		"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
