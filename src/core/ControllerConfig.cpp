@@ -540,6 +540,7 @@ void CControllerConfigManager::InitialiseControllerActionNameArray()
 	SETACTIONNAME(PED_WEAPON_WHEEL);
 	SETACTIONNAME(PED_BULLET_TIME);
 	SETACTIONNAME(PED_RELOAD);
+	SETACTIONNAME(PED_MAP);
 	SETACTIONNAME(TOGGLE_DPAD);
 	SETACTIONNAME(SWITCH_DEBUG_CAM_ON);
 	SETACTIONNAME(TAKE_SCREEN_SHOT);
@@ -1001,6 +1002,9 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_AllStates(int3
 
 	if (button == GetControllerKeyAssociatedWithAction(NETWORK_TALK, type))
 		state.NetworkTalk = 255;
+
+	if (button == GetControllerKeyAssociatedWithAction(PED_MAP, type))
+		state.Map = 255;
 }
 
 void CControllerConfigManager::AffectControllerStateOn_ButtonDown_VehicleAndThirdPersonOnly(int32 button, eControllerType type, CControllerState &state)
@@ -1156,6 +1160,8 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonUp_All_Player_State
 {
 	if (button == GetControllerKeyAssociatedWithAction(NETWORK_TALK, type))
 		state.NetworkTalk = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_MAP, type))
+		state.Map = 0;
 	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
 		state.WeaponWheel = 0;
 	if (button == GetControllerKeyAssociatedWithAction(PED_BULLET_TIME, type))
@@ -1949,6 +1955,8 @@ e_ControllerActionType CControllerConfigManager::GetActionType(e_ControllerActio
 	case PED_BULLET_TIME:
 	case PED_RELOAD:
 		return ACTIONTYPE_3RDPERSON;
+	case PED_MAP:
+		return ACTIONTYPE_COMMON;
 		break;
 
 #ifdef BIND_VEHICLE_FIREWEAPON

@@ -719,6 +719,12 @@ public:
 	static int32 m_KeyPressedCode;
 
 	static bool m_bStartUpFrontEndRequested;
+#ifdef MENU_MAP
+	// the map on a button: opened straight on that page and closed again when it is left
+	static bool m_bStartUpMapRequested;
+	static bool m_bMapOpenedDirectly;
+	static void RequestMap(void) { m_bStartUpMapRequested = true; }
+#endif
 	static bool m_bShutDownFrontEndRequested;
 	static bool m_PrefsAllowNastyGame;
 	

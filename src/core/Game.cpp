@@ -1043,6 +1043,10 @@ void CGame::Process(void)
 	// paused check, or it could never be closed again.
 	CWeaponWheel::Process();
 	CBulletTime::Process();
+#ifdef MENU_MAP
+	if (CPad::GetPad(0)->GetMapJustDown())
+		FrontEndMenuManager.RequestMap();
+#endif
 
 	if (!CTimer::GetIsPaused())
 	{

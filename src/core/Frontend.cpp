@@ -179,6 +179,10 @@ uint8 CMenuManager::m_PrefsStereoMono; // unused except restore settings
 
 bool CMenuManager::m_PrefsAllowNastyGame = true;
 bool CMenuManager::m_bStartUpFrontEndRequested;
+#ifdef MENU_MAP
+bool CMenuManager::m_bStartUpMapRequested;
+bool CMenuManager::m_bMapOpenedDirectly;
+#endif
 bool CMenuManager::m_bShutDownFrontEndRequested;
 
 #ifdef ASPECT_RATIO_SCALE
@@ -551,7 +555,7 @@ CMenuManager::ProcessList(bool &goBack, bool &optionSelected)
 	}
 	if (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS) {
 		// GetNumOptionsCntrlConfigScreens would have been a better choice
-		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 33 : 28;
+		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 34 : 29;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
 	}
@@ -1956,10 +1960,10 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 		case MENUPAGE_KEYBOARD_CONTROLS:
 			switch (m_ControlMethod) {
 				case CONTROL_STANDARD:
-					number = 28;
+					number = 29;
 					break;
 				case CONTROL_CLASSIC:
-					number = 33;
+					number = 34;
 					break;
 			}
 			break;
@@ -2082,7 +2086,10 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 						controllerAction = PED_CYCLE_TARGET_LEFT;
 					break;
 				case 28:
-					controllerAction = PED_CYCLE_TARGET_RIGHT;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = PED_MAP;
+					else
+						controllerAction = PED_CYCLE_TARGET_RIGHT;
 					break;
 				case 29:
 					controllerAction = PED_CENTER_CAMERA_BEHIND_PLAYER;
@@ -2095,6 +2102,9 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 					break;
 				case 32:
 					controllerAction = PED_RELOAD;
+					break;
+				case 33:
+					controllerAction = PED_MAP;
 					break;
 				default:
 					break;
@@ -2414,7 +2424,7 @@ CMenuManager::DrawControllerSetupScreen()
 		default:
 			break;
 	}
-	wchar *actionTexts[34];
+	wchar *actionTexts[35];
 	actionTexts[0] = TheText.Get("FEC_FIR");
 	actionTexts[1] = TheText.Get("FEC_NWE");
 	actionTexts[2] = TheText.Get("FEC_PWE");
@@ -2449,7 +2459,8 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[30] = TheText.Get("FEZ_WW");
 		actionTexts[31] = TheText.Get("FEZ_BT");
 		actionTexts[32] = TheText.Get("FEZ_RLD");
-		actionTexts[33] = nil;
+		actionTexts[33] = TheText.Get("FEZ_MAP");
+		actionTexts[34] = nil;
 	} else {
 		actionTexts[18] = TheText.Get("FEC_TFL");
 		actionTexts[19] = TheText.Get("FEC_TFR");
@@ -2461,7 +2472,8 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[25] = TheText.Get("FEZ_WW");
 		actionTexts[26] = TheText.Get("FEZ_BT");
 		actionTexts[27] = TheText.Get("FEZ_RLD");
-		actionTexts[28] = nil;
+		actionTexts[28] = TheText.Get("FEZ_MAP");
+		actionTexts[29] = nil;
 	}
 
 	// Gray panel background
@@ -4202,6 +4214,27 @@ CMenuManager::Process(void)
 		RequestFrontEndStartUp();
 
 	SwitchMenuOnAndOff();
+
+#ifdef MENU_MAP
+	// The map on a button, opened straight on its page the way the save screen opens
+	// straight on the slot list.  Leaving that page closes the menu again rather than
+	// dropping the player into the pause menu he never asked for.
+	if (m_bStartUpMapRequested) {
+		m_bStartUpMapRequested = false;
+		if (!m_bMenuActive && !m_bGameNotLoaded) {
+			m_bMenuActive = true;
+			m_bMapOpenedDirectly = true;
+			CTimer::StartUserPause();
+			m_nCurrScreen = MENUPAGE_MAP;
+			m_nCurrOption = 0;
+		}
+	}
+	if (m_bMapOpenedDirectly && (!m_bMenuActive || m_nCurrScreen != MENUPAGE_MAP)) {
+		m_bMapOpenedDirectly = false;
+		if (m_bMenuActive)
+			RequestFrontEndShutDown();
+	}
+#endif
 
 	// Be able to re-open menu correctly.
 	if (m_bMenuActive) {

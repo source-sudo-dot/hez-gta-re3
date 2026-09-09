@@ -111,6 +111,7 @@ static struct {
 	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
 	{ "FEZ_BT", "SLOW MOTION" },
 	{ "FEZ_RLD", "RELOAD" },
+	{ "FEZ_MAP", "OPEN MAP" },
 	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_XHS", "CROSSHAIR SIZE" },
 	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
