@@ -702,8 +702,10 @@ CPlayerPed::ProcessManualReload(CPad *padUsed)
 		return;
 	if (info->m_nAmountofAmmunition <= 1)
 		return;
-	// busy firing or already reloading
-	if (weapon->m_eWeaponState != WEAPONSTATE_READY)
+	// Already reloading is the only state that says no.  A weapon reads as firing for as
+	// long as its rate of fire lasts after a shot, up to a second, and waiting that out
+	// meant a reload asked for at the end of a burst was simply dropped.
+	if (weapon->m_eWeaponState == WEAPONSTATE_RELOADING)
 		return;
 	// clip already full, or nothing left to fill it with
 	if (weapon->m_nAmmoInClip >= info->m_nAmountofAmmunition || weapon->m_nAmmoTotal <= weapon->m_nAmmoInClip)
@@ -713,6 +715,20 @@ CPlayerPed::ProcessManualReload(CPad *padUsed)
 	weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload;
 	if (CWorld::Players[CWorld::PlayerInFocus].m_bFastReload)
 		weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload / 4;
+
+	// Whatever the arm was doing gives way to the reload.  Pointing the gun at nothing
+	// is what holds the weapon up between shots and PointGunAt() puts that pose back on
+	// every frame, so the state has to go first, and the firing animation is faded out
+	// rather than left to blend against the reload.
+	if (bIsPointingGunAt && m_pPointGunAt == nil)
+		ClearPointGunAt();
+	bIsAimPosed = false;
+
+	CAnimBlendAssociation *weaponAssoc = RpAnimBlendClumpGetAssociation(GetClump(), info->m_AnimToPlay);
+	if (weaponAssoc) {
+		weaponAssoc->flags |= ASSOC_DELETEFADEDOUT;
+		weaponAssoc->blendDelta = -8.0f;
+	}
 
 	// The animation is started from inside the attack, so a reload asked for outside
 	// one has to start it the same way CPed::FinishedAttackCB does.  Only the pistol
