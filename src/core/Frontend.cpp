@@ -4229,7 +4229,12 @@ CMenuManager::Process(void)
 			m_nCurrOption = 0;
 		}
 	}
-	if (m_bMapOpenedDirectly && (!m_bMenuActive || m_nCurrScreen != MENUPAGE_MAP)) {
+	// pressed again, so put it away
+	if (m_bMapOpenedDirectly && m_bMenuActive && m_nCurrScreen == MENUPAGE_MAP &&
+		CPad::GetPad(0)->NewState.Map && !CPad::GetPad(0)->OldState.Map) {
+		m_bMapOpenedDirectly = false;
+		RequestFrontEndShutDown();
+	} else if (m_bMapOpenedDirectly && (!m_bMenuActive || m_nCurrScreen != MENUPAGE_MAP)) {
 		m_bMapOpenedDirectly = false;
 		if (m_bMenuActive)
 			RequestFrontEndShutDown();

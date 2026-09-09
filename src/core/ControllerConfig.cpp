@@ -555,6 +555,12 @@ void CControllerConfigManager::UpdateJoyInConfigMenus_ButtonDown(int32 button, i
 		CPad *pad = CPad::GetPad(padnumber);
 		if (pad != NULL)
 		{
+			// The map is opened and closed with the same key, so it has to get through
+			// here too.  Everything else in this function is menu navigation on fixed
+			// button numbers, which is why a bound action needs saying separately.
+			if (button == GetControllerKeyAssociatedWithAction(PED_MAP, JOYSTICK))
+				pad->PCTempJoyState.Map = 255;
+
 			switch (button)
 			{
 			case 16:
@@ -1021,6 +1027,9 @@ void CControllerConfigManager::UpdateJoyInConfigMenus_ButtonUp(int32 button, int
 
 		if (pad != NULL)
 		{
+			if (button == GetControllerKeyAssociatedWithAction(PED_MAP, JOYSTICK))
+				pad->PCTempJoyState.Map = 0;
+
 			switch (button)
 			{
 			case 16:
