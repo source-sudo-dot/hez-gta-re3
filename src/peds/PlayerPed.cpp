@@ -607,20 +607,22 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
 	CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(GetClump(), info->m_AnimToPlay);
 
-	bool wantPose =
+	// Whether the player is asking to aim, and nothing else.  What the weapon is doing
+	// while he asks must not come into it: it stays in its firing state for as long as
+	// its rate of fire says, up to a second, and treating that as "not aiming" was what
+	// took the pose off and dropped the arm between shots.
+	bool aiming =
 		bAimReadyPose &&
 		padUsed->GetTarget() &&
 		!bInVehicle &&
 		info->IsFlagSet(WEAPONFLAG_CANAIM) &&
 		info->m_eWeaponFire != WEAPON_FIRE_MELEE &&
-		GetWeapon()->m_eWeaponState == WEAPONSTATE_READY &&
-		m_nPedState != PED_ATTACK && m_nPedState != PED_AIM_GUN &&
 		// the first person sights raise the weapon themselves
 		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_SNIPER &&
 		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_M16_1STPERSON &&
 		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_ROCKETLAUNCHER;
 
-	if (!wantPose) {
+	if (!aiming) {
 		// Let it go the way the game drops the lock on pose.  A running animation is one
 		// the player is firing with and is left well alone.
 		if (bIsAimPosed) {
@@ -632,6 +634,13 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 		}
 		return;
 	}
+
+	// While a shot or a reload is actually playing, leave the animation to it.  Nothing
+	// is torn down here, so the pose is simply picked up again when it is over.
+	if (m_nPedState == PED_ATTACK || m_nPedState == PED_AIM_GUN)
+		return;
+	if (GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING)
+		return;
 
 	if (assoc == nil) {
 		assoc = CAnimManager::BlendAnimation(GetClump(), ASSOCGRP_STD, info->m_AnimToPlay, 8.0f);
