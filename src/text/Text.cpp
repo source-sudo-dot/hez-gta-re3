@@ -113,6 +113,7 @@ static struct {
 	{ "FEZ_RLD", "RELOAD" },
 	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_XHS", "CROSSHAIR SIZE" },
+	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
 	{ "FEZ_BTS", "SLOW MOTION SECONDS" },
 	{ "FEZ_BTR", "SLOW MOTION RECHARGE" },
 };

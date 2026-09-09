@@ -30,11 +30,18 @@ CCrosshair::RegisterHit(bool headShot)
 }
 
 // The shot that kills is registered as a hit first and comes through here after, so
-// this is the one that decides the colour.
+// this only has the colour to add.  It must not touch the shape: the flag CDarkel is
+// handed is only set when the game decides to take the head off, which for most
+// weapons is a one in sixteen roll, so most head shots reach here saying they were
+// not one.  The hit knows better, it read the part off the collision itself.
 void
 CCrosshair::RegisterKill(bool headShot)
 {
-	m_bHeadShot = headShot;
+	if(m_fMarkerTime <= 0.0f)
+		m_bHeadShot = headShot;
+	else if(headShot)
+		m_bHeadShot = true;
+
 	m_bKill = true;
 	m_fMarkerTime = MARKER_SECONDS;
 }
