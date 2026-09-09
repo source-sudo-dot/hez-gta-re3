@@ -623,10 +623,21 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_ROCKETLAUNCHER;
 
 	if (!aiming) {
-		// Let it go the way the game drops the lock on pose.  A running animation is one
-		// the player is firing with and is left well alone.
 		if (bIsAimPosed) {
 			bIsAimPosed = false;
+
+			// The end of a burst leaves the player pointing the gun at nothing, which is
+			// what keeps the weapon up between shots.  PointGunAt() puts the pose back on
+			// every frame while that lasts, so fading the animation here would achieve
+			// nothing: the state has to be left first.  A real lock on target is somebody
+			// else's business and is not touched.
+			if (bIsPointingGunAt && m_pPointGunAt == nil) {
+				ClearPointGunAt();
+				return;
+			}
+
+			// Otherwise let it go the way the game drops the lock on pose.  A running
+			// animation is one the player is firing with and is left well alone.
 			if (assoc && !assoc->IsRunning()) {
 				assoc->flags |= ASSOC_DELETEFADEDOUT;
 				assoc->blendDelta = -4.0f;
