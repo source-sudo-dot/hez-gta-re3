@@ -19,7 +19,9 @@ public:
 	static void Draw(float x, float y, float scale);
 
 private:
-	// seconds left on the marker, and what it should look like
+	// seconds left on the marker.  The shape says whether it was a head shot, the
+	// colour whether it was a kill, so the two read apart from each other.
 	static float m_fMarkerTime;
-	static int32 m_nMarkerKind;
+	static bool m_bHeadShot;
+	static bool m_bKill;
 };

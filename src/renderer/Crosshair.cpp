@@ -9,13 +9,8 @@
 bool  CCrosshair::bModern = true;
 float CCrosshair::m_fSize = 5.0f;
 float CCrosshair::m_fMarkerTime = 0.0f;
-int32 CCrosshair::m_nMarkerKind = 0;
-
-enum {
-	MARKER_HIT = 1,
-	MARKER_HEADSHOT,
-	MARKER_KILL,
-};
+bool  CCrosshair::m_bHeadShot = false;
+bool  CCrosshair::m_bKill = false;
 
 // how long a marker stays up
 #define MARKER_SECONDS (0.30f)
@@ -26,17 +21,21 @@ void
 CCrosshair::RegisterHit(bool headShot)
 {
 	// a kill already showing is the more interesting news, leave it alone
-	if(m_nMarkerKind == MARKER_KILL && m_fMarkerTime > 0.0f)
+	if(m_bKill && m_fMarkerTime > 0.0f)
 		return;
 
-	m_nMarkerKind = headShot ? MARKER_HEADSHOT : MARKER_HIT;
+	m_bHeadShot = headShot;
+	m_bKill = false;
 	m_fMarkerTime = MARKER_SECONDS;
 }
 
+// The shot that kills is registered as a hit first and comes through here after, so
+// this is the one that decides the colour.
 void
 CCrosshair::RegisterKill(bool headShot)
 {
-	m_nMarkerKind = MARKER_KILL;
+	m_bHeadShot = headShot;
+	m_bKill = true;
 	m_fMarkerTime = MARKER_SECONDS;
 }
 
@@ -105,28 +104,27 @@ CCrosshair::Draw(float x, float y, float scale)
 	float life = m_fMarkerTime / MARKER_SECONDS;
 	int32 alpha = (int32)(235.0f * life);
 
-	CRGBA col;
-	if(m_nMarkerKind == MARKER_KILL)
-		col = CRGBA(235, 55, 45, alpha);
-	else
-		col = CRGBA(255, 255, 255, alpha);
+	// red only when the shot killed, whichever shape it is
+	CRGBA col = m_bKill ? CRGBA(235, 55, 45, alpha) : CRGBA(255, 255, 255, alpha);
 
-	if(m_nMarkerKind == MARKER_HIT){
+	// how far the marker reaches, the same either way so they sit in the same place
+	float reach = radius * 1.10f;
+
+	if(!m_bHeadShot){
 		// a cross through the ring
-		float d = radius * 0.78f;
+		float d = reach * 0.7071f;
 		DrawLine(x - d, y - d, x + d, y + d, half, col);
 		DrawLine(x - d, y + d, x + d, y - d, half, col);
 		return;
 	}
 
-	// A head shot or a kill puts a burst of spokes outside the ring instead, so the two
-	// read apart at a glance rather than by colour alone.
-	float inner = radius * 1.25f;
-	float outer = radius * (1.75f + 0.55f * (1.0f - life));
+	// A head shot puts a burst of spokes in the same place instead, so the two read
+	// apart by their shape and not only by colour.
+	float inner = radius * 0.32f;
 	for(int32 i = 0; i < 8; i++){
 		float a = i * (TWOPI / 8) + PI / 8;
 		float s = Sin(a);
 		float c = -Cos(a);
-		DrawLine(x + s * inner, y + c * inner, x + s * outer, y + c * outer, half, col);
+		DrawLine(x + s * inner, y + c * inner, x + s * reach, y + c * reach, half, col);
 	}
 }
