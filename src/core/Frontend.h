@@ -723,6 +723,10 @@ public:
 	// the map on a button: opened straight on that page and closed again when it is left
 	static bool m_bStartUpMapRequested;
 	static bool m_bMapOpenedDirectly;
+	// set when the map key closed the map, cleared when it is let go, so the same
+	// press cannot open it straight back up
+	static bool m_bMapKeyHeldOver;
+	static float m_fMapScrollSpeed;
 	static void RequestMap(void) { m_bStartUpMapRequested = true; }
 #endif
 	static bool m_bShutDownFrontEndRequested;

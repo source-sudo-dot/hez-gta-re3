@@ -504,6 +504,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "CrosshairSize", &CCrosshair::m_fSize);
 	ReadIniIfExists("Display", "AimReadyPose", &CPlayerPed::bAimReadyPose);
 	ReadIniIfExists("Display", "AimRaiseSpeed", &CPlayerPed::m_fAimRaiseSpeed);
+	ReadIniIfExists("Display", "MapScrollSpeed", &CMenuManager::m_fMapScrollSpeed);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -621,6 +622,7 @@ void SaveINISettings()
 	StoreIni("Display", "CrosshairSize", CCrosshair::m_fSize);
 	StoreIni("Display", "AimReadyPose", CPlayerPed::bAimReadyPose);
 	StoreIni("Display", "AimRaiseSpeed", CPlayerPed::m_fAimRaiseSpeed);
+	StoreIni("Display", "MapScrollSpeed", CMenuManager::m_fMapScrollSpeed);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

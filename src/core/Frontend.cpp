@@ -182,6 +182,8 @@ bool CMenuManager::m_bStartUpFrontEndRequested;
 #ifdef MENU_MAP
 bool CMenuManager::m_bStartUpMapRequested;
 bool CMenuManager::m_bMapOpenedDirectly;
+bool CMenuManager::m_bMapKeyHeldOver;
+float CMenuManager::m_fMapScrollSpeed = 1.0f;
 #endif
 bool CMenuManager::m_bShutDownFrontEndRequested;
 
@@ -4233,6 +4235,9 @@ CMenuManager::Process(void)
 	if (m_bMapOpenedDirectly && m_bMenuActive && m_nCurrScreen == MENUPAGE_MAP &&
 		CPad::GetPad(0)->NewState.Map && !CPad::GetPad(0)->OldState.Map) {
 		m_bMapOpenedDirectly = false;
+		// Shutting the menu down clears the pads, so a key still being held reads as a
+		// fresh press on the next frame and would open the map again at once.
+		m_bMapKeyHeldOver = true;
 		RequestFrontEndShutDown();
 	} else if (m_bMapOpenedDirectly && (!m_bMenuActive || m_nCurrScreen != MENUPAGE_MAP)) {
 		m_bMapOpenedDirectly = false;
@@ -4787,7 +4792,9 @@ CMenuManager::ProcessButtonPresses(void)
 					goBack = true;
 				}
 			} else {
-				if (CPad::GetPad(0)->GetEscapeJustDown() || (m_nCurrScreen != MENUPAGE_PAUSE_MENU && CPad::GetPad(0)->GetBackJustDown())) {
+				// the back button used to be shut out of the pause menu, so only escape
+				// could put it away
+				if (CPad::GetPad(0)->GetEscapeJustDown() || CPad::GetPad(0)->GetBackJustDown()) {
 					m_bShowMouse = false;
 					goBack = true;
 				}
@@ -6561,23 +6568,29 @@ CMenuManager::PrintMap(void)
 		}
 	}
 
+	// These steps were counted per drawn frame, so the map raced away as fast as the
+	// game could draw: at 144 a second it covered five times what it did at the thirty
+	// this was written for.  The rendered frame length puts it back on the clock, and
+	// MAP SCROLL SPEED scales it from there.
+	float mapStep = CTimer::GetRenderFrameLength() * Max(m_fMapScrollSpeed, 0.05f);
+
 	if (CPad::GetPad(0)->GetLeftMouse()) {
 		fMapCenterX += m_nMousePosX - m_nMouseOldPosX;
 		fMapCenterY += m_nMousePosY - m_nMouseOldPosY;
 	} else if (CPad::GetPad(0)->GetLeft() || CPad::GetPad(0)->GetDPadLeft()) {
-		fMapCenterX += 15.0f;
+		fMapCenterX += 15.0f * mapStep;
 	} else if (CPad::GetPad(0)->GetRight() || CPad::GetPad(0)->GetDPadRight()) {
-		fMapCenterX -= 15.0f;
+		fMapCenterX -= 15.0f * mapStep;
 	} else if (CPad::GetPad(0)->GetLeftStickX()) {
-		fMapCenterX -= CPad::GetPad(0)->GetLeftStickX() / 128.0f * 20.0f;
+		fMapCenterX -= CPad::GetPad(0)->GetLeftStickX() / 128.0f * 20.0f * mapStep;
 	}
 
 	if (CPad::GetPad(0)->GetUp() || CPad::GetPad(0)->GetDPadUp()) {
-		fMapCenterY += 15.0f;
+		fMapCenterY += 15.0f * mapStep;
 	} else if (CPad::GetPad(0)->GetDown() || CPad::GetPad(0)->GetDPadDown()) {
-		fMapCenterY -= 15.0f;
+		fMapCenterY -= 15.0f * mapStep;
 	} else if (CPad::GetPad(0)->GetLeftStickY()) {
-		fMapCenterY -= CPad::GetPad(0)->GetLeftStickY() / 128.0f * 20.0f;
+		fMapCenterY -= CPad::GetPad(0)->GetLeftStickY() / 128.0f * 20.0f * mapStep;
 	}
 
 	if (CPad::GetPad(0)->GetMouseWheelDown() || CPad::GetPad(0)->GetPageDown() || CPad::GetPad(0)->GetRightShoulder2()) {

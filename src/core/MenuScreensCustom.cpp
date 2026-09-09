@@ -969,6 +969,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 2.0f, 20.0f, nil, 36, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_AZ", { new CCFOSlider(&CCamera::m_fAimZoomDegrees, "Display", "AimZoomDegrees", 0.0f, 35.0f, nil, 70, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_MSS", { new CCFOSlider(&CMenuManager::m_fMapScrollSpeed, "Display", "MapScrollSpeed", 0.1f, 3.0f, nil, 58, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

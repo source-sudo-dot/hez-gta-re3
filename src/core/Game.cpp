@@ -1044,7 +1044,9 @@ void CGame::Process(void)
 	CWeaponWheel::Process();
 	CBulletTime::Process();
 #ifdef MENU_MAP
-	if (CPad::GetPad(0)->GetMapJustDown())
+	if (!CPad::GetPad(0)->NewState.Map)
+		CMenuManager::m_bMapKeyHeldOver = false;
+	else if (CPad::GetPad(0)->GetMapJustDown() && !CMenuManager::m_bMapKeyHeldOver)
 		FrontEndMenuManager.RequestMap();
 #endif
 

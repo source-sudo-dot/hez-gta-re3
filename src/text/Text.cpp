@@ -112,6 +112,7 @@ static struct {
 	{ "FEZ_BT", "SLOW MOTION" },
 	{ "FEZ_RLD", "RELOAD" },
 	{ "FEZ_MAP", "OPEN MAP" },
+	{ "FEZ_MSS", "MAP SCROLL SPEED" },
 	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_XHS", "CROSSHAIR SIZE" },
 	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
