@@ -29,6 +29,7 @@
 #include "ControllerConfig.h"
 #include "IniFile.h"
 #include "BulletTime.h"
+#include "Crosshair.h"
 #include "WeaponInfo.h"
 #include "CarCtrl.h"
 #include "Population.h"
@@ -65,6 +66,7 @@
 
 #define MOVE_WHILE_SHOOTING_TOGGLE MENUACTION_CFO_SELECT, "FEZ_MWS", { new CCFOSelect((int8*)&CWeaponInfo::bMoveWhileShooting, "Display", "MoveWhileShooting", off_on, 2, false, MoveWhileShootingChange) },
 #define BULLET_TIME_TOGGLE MENUACTION_CFO_SELECT, "FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) },
+#define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
 
 #ifdef PS2_ALPHA_TEST
 	#define DUALPASS_SELECTOR MENUACTION_CFO_SELECT, "FEM_2PR", { new CCFOSelect((int8*)&gPS2alphaTest, "Graphics", "PS2AlphaTest", off_on, 2, false) },
@@ -481,6 +483,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		FREE_CAM_TOGGLE
 		MOVE_WHILE_SHOOTING_TOGGLE
 		BULLET_TIME_TOGGLE
+		MODERN_CROSSHAIR_TOGGLE
 		POSTFX_SELECTORS
 		// re3.cpp inserts here pipeline selectors if neo/neo.txd exists and EXTENDED_PIPELINES defined
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
@@ -496,6 +499,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		FREE_CAM_TOGGLE
 		MOVE_WHILE_SHOOTING_TOGGLE
 		BULLET_TIME_TOGGLE
+		MODERN_CROSSHAIR_TOGGLE
 		MENUACTION_SUBTITLES,	"FED_SUB", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
 		MENUACTION_CFO_SELECT,	"FEM_EHU", { new CCFOSelect((int8*)&CDraw::ms_bExtendHud, "Display", "ExtendHud", off_on, 2, false) },
 		MENUACTION_CFO_DYNAMIC,	"FET_DEF", { new CCFODynamic(nil, nil, nil, nil, RestoreDefDisplay) },

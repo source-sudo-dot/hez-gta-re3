@@ -27,6 +27,7 @@
 #include "Hud.h"
 #include "WeaponInfo.h"
 #include "BulletTime.h"
+#include "Crosshair.h"
 #include "WeaponWheel.h"
 #include "SceneEdit.h"
 #include "Pad.h"
@@ -499,6 +500,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "BulletTime", &CBulletTime::bEnabled);
 	ReadIniIfExists("Display", "BulletTimeSeconds", &CBulletTime::m_fDuration);
 	ReadIniIfExists("Display", "BulletTimeRecharge", &CBulletTime::m_fRecharge);
+	ReadIniIfExists("Display", "ModernCrosshair", &CCrosshair::bModern);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -612,6 +614,7 @@ void SaveINISettings()
 	StoreIni("Display", "BulletTime", CBulletTime::bEnabled);
 	StoreIni("Display", "BulletTimeSeconds", CBulletTime::m_fDuration);
 	StoreIni("Display", "BulletTimeRecharge", CBulletTime::m_fRecharge);
+	StoreIni("Display", "ModernCrosshair", CCrosshair::bModern);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

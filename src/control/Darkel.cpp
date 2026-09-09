@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include "Darkel.h"
+#include "Crosshair.h"
 #include "PlayerPed.h"
 #include "Wanted.h"
 #include "Timer.h"
@@ -245,6 +246,8 @@ CDarkel::RegisterKillByPlayer(CPed *victim, eWeaponType weapon, bool headshot)
 	if (CReplay::IsPlayingBack())
 		return;
 #endif
+	CCrosshair::RegisterKill(headshot);
+
 	if (FrenzyOnGoing() && (weapon == WeaponType
 			|| weapon == WEAPONTYPE_EXPLOSION
 			|| weapon == WEAPONTYPE_UZI_DRIVEBY && WeaponType == WEAPONTYPE_UZI

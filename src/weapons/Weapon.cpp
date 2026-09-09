@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "Weapon.h"
+#include "Crosshair.h"
 #include "AnimBlendAssociation.h"
 #include "AudioManager.h"
 #include "BulletInfo.h"
@@ -941,6 +942,9 @@ CWeapon::DoBulletImpact(CEntity *shooter, CEntity *victim,
 			{
 				if ( victimPed->DoesLOSBulletHitPed(*point) )
 				{
+					if ( shooter == FindPlayerPed() )
+						CCrosshair::RegisterHit(point->pieceB == PEDPIECE_HEAD);
+
 					CVector pos = victimPed->GetPosition();
 
 					CVector2D posOffset(source->x-pos.x, source->y-pos.y);

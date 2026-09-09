@@ -6,6 +6,7 @@
 #include "Darkel.h"
 #include "Hud.h"
 #include "BulletTime.h"
+#include "Crosshair.h"
 #include "Messages.h"
 #include "Frontend.h"
 #include "Font.h"
@@ -386,7 +387,11 @@ void CHud::Draw()
 #ifdef ASPECT_RATIO_SCALE
 				f3rdY -= SCREEN_SCALE_Y(2.0f);
 #endif
-				if (FindPlayerPed() && WeaponType == WEAPONTYPE_M16) {
+				if (CCrosshair::bModern) {
+					CCrosshair::Draw(f3rdX, f3rdY,
+						FindPlayerPed() && WeaponType == WEAPONTYPE_M16 ? 38.0f : 26.0f);
+				}
+				else if (FindPlayerPed() && WeaponType == WEAPONTYPE_M16) {
 					rect.left = f3rdX - SCREEN_SCALE_X(32.0f * 0.6f);
 					rect.top = f3rdY - SCREEN_SCALE_Y(32.0f  * 0.6f);
 					rect.right = f3rdX + SCREEN_SCALE_X(32.0f * 0.6f);

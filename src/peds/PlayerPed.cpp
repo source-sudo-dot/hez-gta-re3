@@ -610,6 +610,24 @@ CPlayerPed::ProcessManualReload(CPad *padUsed)
 	weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload;
 	if (CWorld::Players[CWorld::PlayerInFocus].m_bFastReload)
 		weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload / 4;
+
+	// The animation is started from inside the attack, so a reload asked for outside
+	// one has to start it the same way CPed::FinishedAttackCB does.  Only the pistol
+	// and the rifle bodies have one; the shotgun and the rest reload without.
+	AnimationId reloadAnim = ANIM_STD_NUM;
+	if (info->m_AnimToPlay == ANIM_STD_WEAPON_HGUN_BODY)
+		reloadAnim = ANIM_STD_HGUN_RELOAD;
+	else if (info->m_AnimToPlay == ANIM_STD_WEAPON_AK_BODY)
+		reloadAnim = ANIM_STD_AK_RELOAD;
+
+	if (reloadAnim != ANIM_STD_NUM && !RpAnimBlendClumpGetAssociation(GetClump(), reloadAnim)) {
+		CAnimManager::BlendAnimation(GetClump(), ASSOCGRP_STD, reloadAnim, 8.0f);
+		ClearLookFlag();
+		ClearAimFlag();
+		bIsAttacking = false;
+		bIsPointingGunAt = false;
+		m_shootTimer = CTimer::GetTimeInMilliseconds();
+	}
 }
 
 void

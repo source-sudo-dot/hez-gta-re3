@@ -111,6 +111,7 @@ static struct {
 	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
 	{ "FEZ_BT", "SLOW MOTION" },
 	{ "FEZ_RLD", "RELOAD" },
+	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_BTS", "SLOW MOTION SECONDS" },
 	{ "FEZ_BTR", "SLOW MOTION RECHARGE" },
 };
