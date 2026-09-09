@@ -645,6 +645,14 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 		return;
 	}
 
+	// The shot ends with ClearAttack() fading the animation out, and letting that finish
+	// would drop the arm and then lift it again on the next frame from a fresh animation.
+	// Aim is still held, so it is caught on the way out and blended straight back in.
+	if (assoc->blendDelta < 0.0f) {
+		assoc->flags &= ~ASSOC_DELETEFADEDOUT;
+		assoc->blendDelta = (1.0f - assoc->blendAmount) * 8.0f;
+	}
+
 	bIsAimPosed = true;
 
 	// held at the ready, exactly where PointGunAt would hold it
