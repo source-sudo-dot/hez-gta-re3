@@ -962,6 +962,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_CSM", { new CCFOSlider(&CCamera::m_fCarCamSmoothing, "Display", "CarCamSmoothing", 0.0f, 1.0f, nil, 20, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 2.0f, 20.0f, nil, 36, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

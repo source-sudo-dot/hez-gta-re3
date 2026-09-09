@@ -501,6 +501,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "BulletTimeSeconds", &CBulletTime::m_fDuration);
 	ReadIniIfExists("Display", "BulletTimeRecharge", &CBulletTime::m_fRecharge);
 	ReadIniIfExists("Display", "ModernCrosshair", &CCrosshair::bModern);
+	ReadIniIfExists("Display", "CrosshairSize", &CCrosshair::m_fSize);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -615,6 +616,7 @@ void SaveINISettings()
 	StoreIni("Display", "BulletTimeSeconds", CBulletTime::m_fDuration);
 	StoreIni("Display", "BulletTimeRecharge", CBulletTime::m_fRecharge);
 	StoreIni("Display", "ModernCrosshair", CCrosshair::bModern);
+	StoreIni("Display", "CrosshairSize", CCrosshair::m_fSize);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

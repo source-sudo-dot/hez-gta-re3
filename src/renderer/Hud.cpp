@@ -389,7 +389,7 @@ void CHud::Draw()
 #endif
 				if (CCrosshair::bModern) {
 					CCrosshair::Draw(f3rdX, f3rdY,
-						FindPlayerPed() && WeaponType == WEAPONTYPE_M16 ? 38.0f : 26.0f);
+						FindPlayerPed() && WeaponType == WEAPONTYPE_M16 ? 1.35f : 1.0f);
 				}
 				else if (FindPlayerPed() && WeaponType == WEAPONTYPE_M16) {
 					rect.left = f3rdX - SCREEN_SCALE_X(32.0f * 0.6f);

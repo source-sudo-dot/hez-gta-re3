@@ -7,13 +7,16 @@ class CCrosshair
 public:
 	// ModernCrosshair under [Display] in re3.ini
 	static bool bModern;
+	// radius in the units the rest of the hud is laid out in, CrosshairSize
+	static float m_fSize;
 
 	// called from the weapon code when one of the player's shots lands on a ped
 	static void RegisterHit(bool headShot);
 	// called from CDarkel where every kill by the player already passes through
 	static void RegisterKill(bool headShot);
 
-	static void Draw(float x, float y, float size);
+	// scale is 1 for a pistol, a little more for the rifle sight
+	static void Draw(float x, float y, float scale);
 
 private:
 	// seconds left on the marker, and what it should look like

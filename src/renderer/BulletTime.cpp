@@ -3,6 +3,7 @@
 #include "BulletTime.h"
 
 #include "Camera.h"
+#include "Crosshair.h"
 #include "CutsceneMgr.h"
 #include "DMAudio.h"
 #include "Frontend.h"
@@ -112,12 +113,15 @@ CBulletTime::DrawMeter(float x, float y)
 	if(!bEnabled)
 		return;
 
-	float halfWidth = SCREEN_SCALE_X(26.0f);
-	float height = SCREEN_SCALE_Y(3.0f);
-	float top = y + SCREEN_SCALE_Y(22.0f);
+	// sized off the crosshair, so the two stay in proportion whatever it is set to
+	float radius = SCREEN_SCALE_Y(Max(CCrosshair::m_fSize, 1.0f));
+	float halfWidth = radius * 1.6f;
+	float height = Max(radius * 0.12f, 1.0f);
+	float top = y + radius * 2.2f;
 
-	CSprite2d::DrawRect(CRect(x - halfWidth - SCREEN_SCALE_X(1.0f), top - SCREEN_SCALE_Y(1.0f),
-		x + halfWidth + SCREEN_SCALE_X(1.0f), top + height + SCREEN_SCALE_Y(1.0f)),
+	float border = Max(height * 0.6f, 1.0f);
+	CSprite2d::DrawRect(CRect(x - halfWidth - border, top - border,
+		x + halfWidth + border, top + height + border),
 		CRGBA(0, 0, 0, 120));
 
 	if(m_fCharge <= 0.0f)
