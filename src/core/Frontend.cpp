@@ -551,7 +551,7 @@ CMenuManager::ProcessList(bool &goBack, bool &optionSelected)
 	}
 	if (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS) {
 		// GetNumOptionsCntrlConfigScreens would have been a better choice
-		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 32 : 27;
+		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 33 : 28;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
 	}
@@ -1956,10 +1956,10 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 		case MENUPAGE_KEYBOARD_CONTROLS:
 			switch (m_ControlMethod) {
 				case CONTROL_STANDARD:
-					number = 27;
+					number = 28;
 					break;
 				case CONTROL_CLASSIC:
-					number = 32;
+					number = 33;
 					break;
 			}
 			break;
@@ -2076,7 +2076,10 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 						controllerAction = PED_1RST_PERSON_LOOK_DOWN;
 					break;
 				case 27:
-					controllerAction = PED_CYCLE_TARGET_LEFT;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = PED_RELOAD;
+					else
+						controllerAction = PED_CYCLE_TARGET_LEFT;
 					break;
 				case 28:
 					controllerAction = PED_CYCLE_TARGET_RIGHT;
@@ -2089,6 +2092,9 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 					break;
 				case 31:
 					controllerAction = PED_BULLET_TIME;
+					break;
+				case 32:
+					controllerAction = PED_RELOAD;
 					break;
 				default:
 					break;
@@ -2408,7 +2414,7 @@ CMenuManager::DrawControllerSetupScreen()
 		default:
 			break;
 	}
-	wchar *actionTexts[33];
+	wchar *actionTexts[34];
 	actionTexts[0] = TheText.Get("FEC_FIR");
 	actionTexts[1] = TheText.Get("FEC_NWE");
 	actionTexts[2] = TheText.Get("FEC_PWE");
@@ -2442,7 +2448,8 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[29] = TheText.Get("FEC_CEN");
 		actionTexts[30] = TheText.Get("FEZ_WW");
 		actionTexts[31] = TheText.Get("FEZ_BT");
-		actionTexts[32] = nil;
+		actionTexts[32] = TheText.Get("FEZ_RLD");
+		actionTexts[33] = nil;
 	} else {
 		actionTexts[18] = TheText.Get("FEC_TFL");
 		actionTexts[19] = TheText.Get("FEC_TFR");
@@ -2453,7 +2460,8 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[24] = TheText.Get("FEC_LOR");
 		actionTexts[25] = TheText.Get("FEZ_WW");
 		actionTexts[26] = TheText.Get("FEZ_BT");
-		actionTexts[27] = nil;
+		actionTexts[27] = TheText.Get("FEZ_RLD");
+		actionTexts[28] = nil;
 	}
 
 	// Gray panel background

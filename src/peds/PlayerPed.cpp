@@ -581,6 +581,37 @@ CPlayerPed::IsThisPedAttackingPlayer(CPed *suspect)
 	return false;
 }
 
+// The game only reloads once the clip runs dry, in CWeapon::Fire.  Topping it up early
+// is the same two lines: put the weapon in its reloading state and set the timer, and
+// CWeapon::Update() plays the sound and fills the clip when the timer runs out, exactly
+// as it does for the automatic one.  The fast reload cheat is honoured the same way too.
+void
+CPlayerPed::ProcessManualReload(CPad *padUsed)
+{
+	if (!padUsed->GetReloadJustDown())
+		return;
+
+	CWeapon *weapon = GetWeapon();
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(weapon->m_eWeaponType);
+
+	// nothing with a clip to fill
+	if (info->m_eWeaponFire == WEAPON_FIRE_MELEE || info->m_eWeaponFire == WEAPON_FIRE_PROJECTILE)
+		return;
+	if (info->m_nAmountofAmmunition <= 1)
+		return;
+	// busy firing or already reloading
+	if (weapon->m_eWeaponState != WEAPONSTATE_READY)
+		return;
+	// clip already full, or nothing left to fill it with
+	if (weapon->m_nAmmoInClip >= info->m_nAmountofAmmunition || weapon->m_nAmmoTotal <= weapon->m_nAmmoInClip)
+		return;
+
+	weapon->m_eWeaponState = WEAPONSTATE_RELOADING;
+	weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload;
+	if (CWorld::Players[CWorld::PlayerInFocus].m_bFastReload)
+		weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload / 4;
+}
+
 void
 CPlayerPed::PlayerControlSniper(CPad *padUsed)
 {
@@ -1317,6 +1348,8 @@ CPlayerPed::ProcessControl(void)
 	CPad *padUsed = CPad::GetPad(0);
 	m_pWanted->Update();
 	CEntity::PruneReferences();
+
+	ProcessManualReload(padUsed);
 
 	if (m_nMoveState != PEDMOVE_RUN && m_nMoveState != PEDMOVE_SPRINT)
 		RestoreSprintEnergy(1.0f);
