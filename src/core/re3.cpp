@@ -26,6 +26,7 @@
 #include "Debug.h"
 #include "Hud.h"
 #include "WeaponInfo.h"
+#include "BulletTime.h"
 #include "WeaponWheel.h"
 #include "SceneEdit.h"
 #include "Pad.h"
@@ -314,7 +315,8 @@ const char *iniControllerActions[] = { "PED_FIREWEAPON", "PED_CYCLE_WEAPON_RIGHT
 	"VEHICLE_ACCELERATE", "VEHICLE_BRAKE", "VEHICLE_CHANGE_RADIO_STATION", "VEHICLE_HORN", "TOGGLE_SUBMISSIONS", "VEHICLE_HANDBRAKE", "PED_1RST_PERSON_LOOK_LEFT",
 	"PED_1RST_PERSON_LOOK_RIGHT", "VEHICLE_LOOKLEFT", "VEHICLE_LOOKRIGHT", "VEHICLE_LOOKBEHIND", "VEHICLE_TURRETLEFT", "VEHICLE_TURRETRIGHT", "VEHICLE_TURRETUP", "VEHICLE_TURRETDOWN",
 	"PED_CYCLE_TARGET_LEFT", "PED_CYCLE_TARGET_RIGHT", "PED_CENTER_CAMERA_BEHIND_PLAYER", "PED_LOCK_TARGET", "NETWORK_TALK", "PED_1RST_PERSON_LOOK_UP", "PED_1RST_PERSON_LOOK_DOWN",
-	"PED_WEAPON_WHEEL", "TOGGLE_DPAD", "SWITCH_DEBUG_CAM_ON", "TAKE_SCREEN_SHOT", "SHOW_MOUSE_POINTER_TOGGLE" };
+	"PED_WEAPON_WHEEL", "TOGGLE_DPAD", "SWITCH_DEBUG_CAM_ON", "TAKE_SCREEN_SHOT", "SHOW_MOUSE_POINTER_TOGGLE",
+	"PED_BULLET_TIME" };
 
 const char *iniControllerTypes[] = { "kbd:", "2ndKbd:", "mouse:", "joy:" };
 
@@ -494,6 +496,9 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "CarCamFollowVert", &CCamera::m_fCarCamFollowVert);
 	ReadIniIfExists("Display", "CarCamFollowDelay", &CCamera::m_fCarCamFollowDelay);
 	ReadIniIfExists("Display", "CarCamSmoothing", &CCamera::m_fCarCamSmoothing);
+	ReadIniIfExists("Display", "BulletTime", &CBulletTime::bEnabled);
+	ReadIniIfExists("Display", "BulletTimeSeconds", &CBulletTime::m_fDuration);
+	ReadIniIfExists("Display", "BulletTimeRecharge", &CBulletTime::m_fRecharge);
 	ReadIniIfExists("Controller", "HeadBob1stPerson", &TheCamera.m_bHeadBob);
 	ReadIniIfExists("Controller", "VerticalMouseSens", &TheCamera.m_fMouseAccelVertical);
 	ReadIniIfExists("Controller", "HorizantalMouseSens", &TheCamera.m_fMouseAccelHorzntl);
@@ -604,6 +609,9 @@ void SaveINISettings()
 	StoreIni("Display", "CarCamFollowVert", CCamera::m_fCarCamFollowVert);
 	StoreIni("Display", "CarCamFollowDelay", CCamera::m_fCarCamFollowDelay);
 	StoreIni("Display", "CarCamSmoothing", CCamera::m_fCarCamSmoothing);
+	StoreIni("Display", "BulletTime", CBulletTime::bEnabled);
+	StoreIni("Display", "BulletTimeSeconds", CBulletTime::m_fDuration);
+	StoreIni("Display", "BulletTimeRecharge", CBulletTime::m_fRecharge);
 	StoreIni("Controller", "HeadBob1stPerson", TheCamera.m_bHeadBob);
 	StoreIni("Controller", "VerticalMouseSens", TheCamera.m_fMouseAccelVertical);
 	StoreIni("Controller", "HorizantalMouseSens", TheCamera.m_fMouseAccelHorzntl);

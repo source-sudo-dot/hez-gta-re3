@@ -5,6 +5,7 @@
 #include "Clock.h"
 #include "Darkel.h"
 #include "Hud.h"
+#include "BulletTime.h"
 #include "Messages.h"
 #include "Frontend.h"
 #include "Font.h"
@@ -403,6 +404,8 @@ void CHud::Draw()
 					Sprites[HUD_SITEM16].Draw(CRect(rect), CRGBA(255, 255, 255, 255),
 						0.0f, 0.0f,  1.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f);
 				}
+
+				CBulletTime::DrawMeter(f3rdX, f3rdY);
 			}
 			else
 #endif

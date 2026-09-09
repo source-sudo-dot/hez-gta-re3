@@ -368,6 +368,7 @@ CControllerState::Clear(void)
 	LeftShock = RightShock = 0;
 	NetworkTalk = 0;
 	WeaponWheel = 0;
+	BulletTime = 0;
 }
 
 void CKeyboardState::Clear()
@@ -673,6 +674,7 @@ CControllerState CPad::ReconcileTwoControllersInput(CControllerState const &Stat
 	_RECONCILE_BUTTON(RightShock);
 	_RECONCILE_BUTTON(NetworkTalk);
 	_RECONCILE_BUTTON(WeaponWheel);
+	_RECONCILE_BUTTON(BulletTime);
 	_RECONCILE_AXIS(LeftStickX);
 	_RECONCILE_AXIS(LeftStickY);
 	_FIX_AXIS_DIR(LeftStickX);
@@ -1768,6 +1770,14 @@ bool CPad::GetLookBehindForCar(void)
 		return false;
 
 	return !!(NewState.RightShoulder2 && NewState.LeftShoulder2);
+}
+
+bool CPad::GetBulletTime(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	return !!NewState.BulletTime;
 }
 
 bool CPad::GetWeaponWheel(void)

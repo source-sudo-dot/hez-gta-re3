@@ -25,6 +25,7 @@ public:
 	int16 LeftShock, RightShock;
 	int16 NetworkTalk;
 	int16 WeaponWheel;
+	int16 BulletTime;
 	float GetLeftStickX(void) { return LeftStickX/32767.0f; };
 	float GetLeftStickY(void) { return LeftStickY/32767.0f; };
 	float GetRightStickX(void) { return RightStickX/32767.0f; };
@@ -33,7 +34,7 @@ public:
 	bool CheckForInput();
 	void Clear(void);
 };
-VALIDATE_SIZE(CControllerState, 0x2C);
+VALIDATE_SIZE(CControllerState, 0x2E);
 
 class CMouseControllerState
 {
@@ -246,6 +247,7 @@ public:
 	bool CycleWeaponRightJustDown(void);
 	bool GetTarget(void);
 	bool GetWeaponWheel(void);
+	bool GetBulletTime(void);
 
 	// How much of the stick is thrown away around the middle, and how fast the camera
 	// turns for the rest of it.  All three are set in Options, Controller, Gamepad

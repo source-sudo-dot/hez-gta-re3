@@ -28,6 +28,7 @@
 #include "Pad.h"
 #include "ControllerConfig.h"
 #include "IniFile.h"
+#include "BulletTime.h"
 #include "WeaponInfo.h"
 #include "CarCtrl.h"
 #include "Population.h"
@@ -63,6 +64,7 @@
 #endif
 
 #define MOVE_WHILE_SHOOTING_TOGGLE MENUACTION_CFO_SELECT, "FEZ_MWS", { new CCFOSelect((int8*)&CWeaponInfo::bMoveWhileShooting, "Display", "MoveWhileShooting", off_on, 2, false, MoveWhileShootingChange) },
+#define BULLET_TIME_TOGGLE MENUACTION_CFO_SELECT, "FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) },
 
 #ifdef PS2_ALPHA_TEST
 	#define DUALPASS_SELECTOR MENUACTION_CFO_SELECT, "FEM_2PR", { new CCFOSelect((int8*)&gPS2alphaTest, "Graphics", "PS2AlphaTest", off_on, 2, false) },
@@ -478,6 +480,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		CUTSCENE_BORDERS_TOGGLE
 		FREE_CAM_TOGGLE
 		MOVE_WHILE_SHOOTING_TOGGLE
+		BULLET_TIME_TOGGLE
 		POSTFX_SELECTORS
 		// re3.cpp inserts here pipeline selectors if neo/neo.txd exists and EXTENDED_PIPELINES defined
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
@@ -492,6 +495,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		CUTSCENE_BORDERS_TOGGLE
 		FREE_CAM_TOGGLE
 		MOVE_WHILE_SHOOTING_TOGGLE
+		BULLET_TIME_TOGGLE
 		MENUACTION_SUBTITLES,	"FED_SUB", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
 		MENUACTION_CFO_SELECT,	"FEM_EHU", { new CCFOSelect((int8*)&CDraw::ms_bExtendHud, "Display", "ExtendHud", off_on, 2, false) },
 		MENUACTION_CFO_DYNAMIC,	"FET_DEF", { new CCFODynamic(nil, nil, nil, nil, RestoreDefDisplay) },
@@ -952,6 +956,8 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_CVF", { new CCFOSlider(&CCamera::m_fCarCamFollowVert, "Display", "CarCamFollowVert", 0.0f, 1.0f, nil, 20, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CVD", { new CCFOSlider(&CCamera::m_fCarCamFollowDelay, "Display", "CarCamFollowDelay", 0.0f, 5.0f, nil, 50, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CSM", { new CCFOSlider(&CCamera::m_fCarCamSmoothing, "Display", "CarCamSmoothing", 0.0f, 1.0f, nil, 20, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

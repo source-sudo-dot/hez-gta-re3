@@ -538,6 +538,7 @@ void CControllerConfigManager::InitialiseControllerActionNameArray()
 	SETACTIONNAME(GO_BACK);
 	SETACTIONNAME(NETWORK_TALK);
 	SETACTIONNAME(PED_WEAPON_WHEEL);
+	SETACTIONNAME(PED_BULLET_TIME);
 	SETACTIONNAME(TOGGLE_DPAD);
 	SETACTIONNAME(SWITCH_DEBUG_CAM_ON);
 	SETACTIONNAME(TAKE_SCREEN_SHOT);
@@ -862,6 +863,8 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_ThirdPersonOnl
 		state.Cross = 255;
 	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
 		state.WeaponWheel = 255;
+	if (button == GetControllerKeyAssociatedWithAction(PED_BULLET_TIME, type))
+		state.BulletTime = 255;
 	
 	if (CMenuManager::m_ControlMethod == CONTROL_CLASSIC)
 	{
@@ -1152,6 +1155,8 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonUp_All_Player_State
 		state.NetworkTalk = 0;
 	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
 		state.WeaponWheel = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_BULLET_TIME, type))
+		state.BulletTime = 0;
 }
 
 void CControllerConfigManager::AffectPadFromKeyBoard()
@@ -1936,6 +1941,7 @@ e_ControllerActionType CControllerConfigManager::GetActionType(e_ControllerActio
 	case PED_CYCLE_TARGET_RIGHT:
 	case PED_CENTER_CAMERA_BEHIND_PLAYER:
 	case PED_WEAPON_WHEEL:
+	case PED_BULLET_TIME:
 		return ACTIONTYPE_3RDPERSON;
 		break;
 

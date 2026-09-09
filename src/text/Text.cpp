@@ -109,6 +109,9 @@ static struct {
 	{ "FEZ_CVD", "CAR CAM FOLLOW DELAY" },
 	{ "FEZ_CSM", "CAR CAM SMOOTHING" },
 	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
+	{ "FEZ_BT", "SLOW MOTION" },
+	{ "FEZ_BTS", "SLOW MOTION SECONDS" },
+	{ "FEZ_BTR", "SLOW MOTION RECHARGE" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;
