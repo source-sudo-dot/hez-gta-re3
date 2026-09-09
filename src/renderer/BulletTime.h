@@ -20,6 +20,8 @@ public:
 	static bool m_bActive;
 
 	static void Init(void);
+	// held on foot with a weapon out and Target/Aim down
+	static bool IsAiming(void);
 	static void Process(void);
 	// drawn under the crosshair, so it is only up when the crosshair is
 	static void DrawMeter(float x, float y);

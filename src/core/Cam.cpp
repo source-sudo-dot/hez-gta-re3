@@ -1538,8 +1538,12 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 		BetaOffset = LookLeftRight * TheCamera.m_fMouseAccelHorzntl * FOV/80.0f;
 		AlphaOffset = LookUpDown * TheCamera.m_fMouseAccelVertical * FOV/80.0f;
 	}else{
-		BetaOffset = LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * CTimer::GetTimeStep();
-		AlphaOffset = LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * CTimer::GetTimeStep();
+		// The time step carries the time scale, so slow motion would turn the camera
+		// slowly as well.  The world is meant to slow down, the aim is not, so the scale
+		// is divided back out.  It is 1 the rest of the time and this changes nothing.
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		BetaOffset = LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * lookStep;
+		AlphaOffset = LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * lookStep;
 	}
 
 	if(TheCamera.GetFading() && TheCamera.GetFadingDirection() == FADE_IN && nFadeControlThreshhold < CDraw::FadeValue ||
@@ -4648,8 +4652,9 @@ CCam::Process_FollowPed_Rotation(const CVector &CameraTarget, float TargetOrient
 		BetaOffset = LookLeftRight * TheCamera.m_fMouseAccelHorzntl * FOV/80.0f;
 		AlphaOffset = LookUpDown * TheCamera.m_fMouseAccelVertical * FOV/80.0f;
 	}else{
-		BetaOffset = LookLeftRight * fStickSens * (1.0f/20.0f) * FOV/80.0f * CTimer::GetTimeStep();
-		AlphaOffset = LookUpDown * fStickSens * (0.6f/20.0f) * FOV/80.0f * CTimer::GetTimeStep();
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		BetaOffset = LookLeftRight * fStickSens * (1.0f/20.0f) * FOV/80.0f * lookStep;
+		AlphaOffset = LookUpDown * fStickSens * (0.6f/20.0f) * FOV/80.0f * lookStep;
 	}
 
 	// Stop centering once stick has been touched

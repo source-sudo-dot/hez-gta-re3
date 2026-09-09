@@ -18,6 +18,7 @@ float CBulletTime::m_fDuration = 3.0f;
 float CBulletTime::m_fRecharge = 3.0f;
 float CBulletTime::m_fCharge = 1.0f;
 bool  CBulletTime::m_bActive = false;
+static bool bButtonWasDown = false;
 
 // far enough ahead that the pill's own timer never ends this, the meter does
 #define BULLETTIME_PILL_MS (60 * 60 * 1000)
@@ -27,6 +28,18 @@ CBulletTime::Init(void)
 {
 	m_bActive = false;
 	m_fCharge = 1.0f;
+	bButtonWasDown = false;
+}
+
+bool
+CBulletTime::IsAiming(void)
+{
+	CPlayerPed *player = FindPlayerPed();
+
+	return player != nil &&
+		FindPlayerVehicle() == nil &&
+		CPad::GetPad(0)->GetTarget() &&
+		player->GetWeapon()->m_eWeaponType != WEAPONTYPE_UNARMED;
 }
 
 void
@@ -47,12 +60,23 @@ CBulletTime::Process(void)
 		return;
 	}
 
+	bool buttonDown = CPad::GetPad(0)->GetBulletTime();
+	bool buttonJustDown = buttonDown && !bButtonWasDown;
+	bButtonWasDown = buttonDown;
+
 	if(m_bActive){
 		// a pill picked up off the street, or anything else that stops the adrenaline,
 		// takes the meter with it
 		if(!player->m_bAdrenalineActive){
 			m_bActive = false;
 			m_fCharge = 0.0f;
+			return;
+		}
+
+		// pressed again, or the weapon lowered
+		if(buttonJustDown || !IsAiming()){
+			m_bActive = false;
+			player->ClearAdrenaline();
 			return;
 		}
 
@@ -65,15 +89,12 @@ CBulletTime::Process(void)
 		return;
 	}
 
-	if(m_fCharge < 1.0f){
+	if(m_fCharge < 1.0f)
 		m_fCharge = Min(1.0f, m_fCharge + dt / Max(m_fRecharge, 0.1f));
-		return;
-	}
 
-	// full, and nothing else is already slowing things down
-	if(CPad::GetPad(0)->GetBulletTime() &&
+	// full, aiming, and nothing else is already slowing things down
+	if(buttonJustDown && m_fCharge >= 1.0f && IsAiming() &&
 	   !player->m_bAdrenalineActive &&
-	   FindPlayerVehicle() == nil &&
 	   !player->Dead() && player->m_nPedState != PED_DIE && player->m_nPedState != PED_ARRESTED &&
 	   !FrontEndMenuManager.m_bMenuActive && !CCutsceneMgr::IsRunning()){
 		player->m_bAdrenalineActive = true;
