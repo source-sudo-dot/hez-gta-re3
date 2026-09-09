@@ -743,7 +743,12 @@ CPed::Attack(void)
 			SetPointGunAt(m_pPointGunAt);
 #endif
 #ifdef FREE_CAM
-		} else if (IsPlayer() && ((CPlayerPed*)this)->m_bFreeAimActive && GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
+		// m_bFreeAimActive is only set while the free camera is on, and holding Target/Aim
+		// turns that off, so this branch stopped being reached and the weapon dropped at
+		// the end of every burst.  Holding aim counts as free aiming for it as well now.
+		} else if (IsPlayer() && (((CPlayerPed*)this)->m_bFreeAimActive ||
+			CPlayerPed::bAimReadyPose && CPad::GetPad(0)->GetTarget() && TheCamera.Cams[0].Using3rdPersonMouseCam())
+			&& GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
 			float limitedCam = CGeneral::LimitRadianAngle(-TheCamera.Orientation);
 			SetLookFlag(limitedCam, true);
 			SetAimFlag(limitedCam);
