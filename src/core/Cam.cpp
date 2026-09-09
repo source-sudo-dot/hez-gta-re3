@@ -4803,6 +4803,10 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 
 	CPad* pad = CPad::GetPad(0);
 
+	// the pitch that was actually asked for, carried from frame to frame, see below
+	static float heldAlpha = 0.0f;
+	static bool heldAlphaValid = false;
+
 	// Next direction is non-existent in III
 	uint8 nextDirectionIsForward = !(pad->GetLookBehindForCar() || pad->GetLookBehindForPed() || pad->GetLookLeft() || pad->GetLookRight()) &&
 		DirectionWasLooking == LOOKING_FORWARD;
@@ -4925,6 +4929,7 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	// Called when we just entered the car, just started to look behind or returned back from looking left, right or behind
 	if (ResetStatics || TheCamera.m_bCamDirectlyBehind || TheCamera.m_bCamDirectlyInFront) {
 		ResetStatics = false;
+		heldAlphaValid = false;
 		Rotating = false;
 		m_bCollisionChecksOn = true;
 		// TheCamera.m_bResetOldMatrix = 1;
@@ -5031,7 +5036,31 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 					}
 				}
 
+	// How much of the pull back to level to let through, and how long the right stick has
+	// to have been still first.  Any use of the stick puts the wait back to the start.
+	static float vertFollowHoldOff = 0.0f;
+	if (Abs(pad->GetCarGunUpDown()) > 1 || Abs(pad->GetCarGunLeftRight()) > 1)
+		vertFollowHoldOff = Max(0.0f, TheCamera.m_fCarCamFollowDelay) * 50.0f;
+	else
+		vertFollowHoldOff = Max(0.0f, vertFollowHoldOff - CTimer::GetTimeStep());
+
+	float vertFollowScale = vertFollowHoldOff > 0.0f ? 0.0f : Clamp(TheCamera.m_fCarCamFollowVert, 0.0f, 1.0f);
+
+	// The camera hangs off a point it leaves behind the car, and Front is the line from
+	// that point to the car.  Every frame the car drives on, and that travel is added to
+	// the line.  On a road it is level travel, so the line flattens and the view is
+	// dragged back down, harder the faster the car goes because it covers more ground in
+	// a frame.  That is the pull, and it is there on flat ground with the car sitting
+	// level.  heldAlpha carries the pitch that was actually asked for from frame to
+	// frame, and the two are blended, so at 0 the view stays where it is put and at 1 the
+	// line decides as it always did.
 	float targetAlpha = Asin(Clamp(Front.z, -1.0f, 1.0f)) - zoomModeAlphaOffset;
+	if (!heldAlphaValid) {
+		heldAlpha = targetAlpha;
+		heldAlphaValid = true;
+	}
+	targetAlpha = heldAlpha + (targetAlpha - heldAlpha) * vertFollowScale;
+
 	if (targetAlpha <= maxAlphaAllowed) {
 		if (targetAlpha < -CARCAM_SET[camSetArrPos][14])
 			targetAlpha = -CARCAM_SET[camSetArrPos][14];
@@ -5046,19 +5075,6 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	} else {
 		targetAlphaBlendAmount = maxAlphaBlendAmount;
 	}
-
-	// How much of the pull back towards the car's pitch to let through, and how long the
-	// right stick has to have been still first.  Note that targetAlphaBlendAmount is NOT
-	// that pull: it is the only thing that moves Alpha, which is the value the angle
-	// limits below are checked against, and holding it still leaves Alpha outside those
-	// limits, where AlphaSpeed is zeroed every frame and the stick stops working.
-	static float vertFollowHoldOff = 0.0f;
-	if (Abs(pad->GetCarGunUpDown()) > 1 || Abs(pad->GetCarGunLeftRight()) > 1)
-		vertFollowHoldOff = Max(0.0f, TheCamera.m_fCarCamFollowDelay) * 50.0f;
-	else
-		vertFollowHoldOff = Max(0.0f, vertFollowHoldOff - CTimer::GetTimeStep());
-
-	float vertFollowScale = vertFollowHoldOff > 0.0f ? 0.0f : Clamp(TheCamera.m_fCarCamFollowVert, 0.0f, 1.0f);
 
 	// Using GetCarGun(LR/UD) will give us same unprocessed RightStick value as SA
 	float stickX = -(pad->GetCarGunLeftRight());
@@ -5214,6 +5230,8 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 			alphaWithSpeedAccounted = CTimer::GetTimeStep() * AlphaSpeed + targetAlpha;
 			Alpha += targetAlphaBlendAmount;
 		}
+
+		heldAlpha = alphaWithSpeedAccounted;
 
 	if (Alpha <= maxAlphaAllowed) {
 		float minAlphaAllowed = -CARCAM_SET[camSetArrPos][14];
