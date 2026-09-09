@@ -5047,11 +5047,11 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 		targetAlphaBlendAmount = maxAlphaBlendAmount;
 	}
 
-	// The camera closes half the gap to the car's pitch every logical frame, which is
-	// fast enough to pull the view back down while the stick is still asking for it.
-	// Hold it off while the stick is being used and for a set time after, then let it
-	// in at the strength the player asked for.  Beta is left alone, it follows through
-	// a much gentler path already.
+	// How much of the pull back towards the car's pitch to let through, and how long the
+	// right stick has to have been still first.  Note that targetAlphaBlendAmount is NOT
+	// that pull: it is the only thing that moves Alpha, which is the value the angle
+	// limits below are checked against, and holding it still leaves Alpha outside those
+	// limits, where AlphaSpeed is zeroed every frame and the stick stops working.
 	static float vertFollowHoldOff = 0.0f;
 	if (Abs(pad->GetCarGunUpDown()) > 1 || Abs(pad->GetCarGunLeftRight()) > 1)
 		vertFollowHoldOff = Max(0.0f, TheCamera.m_fCarCamFollowDelay) * 50.0f;
@@ -5059,7 +5059,6 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 		vertFollowHoldOff = Max(0.0f, vertFollowHoldOff - CTimer::GetTimeStep());
 
 	float vertFollowScale = vertFollowHoldOff > 0.0f ? 0.0f : Clamp(TheCamera.m_fCarCamFollowVert, 0.0f, 1.0f);
-	targetAlphaBlendAmount *= vertFollowScale;
 
 	// Using GetCarGun(LR/UD) will give us same unprocessed RightStick value as SA
 	float stickX = -(pad->GetCarGunLeftRight());
