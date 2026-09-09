@@ -72,6 +72,12 @@ public:
 	void PlayerControlFighter(CPad*);
 	void ProcessWeaponSwitch(CPad*);
 	void ProcessManualReload(CPad*);
+	void ProcessAimReadyPose(CPad*);
+
+	// AimReadyPose and AimRaiseSpeed under [Display] in re3.ini
+	static bool bAimReadyPose;
+	static float m_fAimRaiseSpeed;
+	static bool bIsAimPosed;
 	void MakeObjectTargettable(int32);
 	void PlayerControl1stPersonRunAround(CPad *padUsed);
 	void EvaluateNeighbouringTarget(CEntity*, CEntity**, float*, float, float, bool);

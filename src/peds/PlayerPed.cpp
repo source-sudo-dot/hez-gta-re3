@@ -585,6 +585,81 @@ CPlayerPed::IsThisPedAttackingPlayer(CPed *suspect)
 // is the same two lines: put the weapon in its reloading state and set the timer, and
 // CWeapon::Update() plays the sound and fills the clip when the timer runs out, exactly
 // as it does for the automatic one.  The fast reload cheat is honoured the same way too.
+bool CPlayerPed::bAimReadyPose = true;
+float CPlayerPed::m_fAimRaiseSpeed = 2.0f;
+bool CPlayerPed::bIsAimPosed = false;
+
+// The wind up before a shot is the firing animation having to run from nothing to the
+// frame the weapon.dat calls the fire point: nine frames on the pistol, twelve on the
+// rifle, a third of a second either way.  The game already knows how to avoid that, it
+// just never does it here: PointGunAt() winds the animation forward to its loop start
+// and holds it, so the arm is up before the trigger is pulled and only the last frame or
+// two are left to play.  That only runs while locked on to somebody though, and free
+// aiming with the mouse camera never locks on.
+//
+// This puts the same pose on while Target/Aim is held.  Firing carries on from where the
+// animation was left, because BlendAnimation keeps the time on one that is already
+// there, so the first shot comes at once.  Both weapon animations are partial, upper
+// body only, so the legs keep walking under it.
+void
+CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
+{
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(GetClump(), info->m_AnimToPlay);
+
+	bool wantPose =
+		bAimReadyPose &&
+		padUsed->GetTarget() &&
+		!bInVehicle &&
+		info->IsFlagSet(WEAPONFLAG_CANAIM) &&
+		info->m_eWeaponFire != WEAPON_FIRE_MELEE &&
+		GetWeapon()->m_eWeaponState == WEAPONSTATE_READY &&
+		m_nPedState != PED_ATTACK && m_nPedState != PED_AIM_GUN &&
+		// the first person sights raise the weapon themselves
+		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_SNIPER &&
+		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_M16_1STPERSON &&
+		TheCamera.PlayerWeaponMode.Mode != CCam::MODE_ROCKETLAUNCHER;
+
+	if (!wantPose) {
+		// Let it go the way the game drops the lock on pose.  A running animation is one
+		// the player is firing with and is left well alone.
+		if (bIsAimPosed) {
+			bIsAimPosed = false;
+			if (assoc && !assoc->IsRunning()) {
+				assoc->flags |= ASSOC_DELETEFADEDOUT;
+				assoc->blendDelta = -4.0f;
+			}
+		}
+		return;
+	}
+
+	if (assoc == nil) {
+		assoc = CAnimManager::BlendAnimation(GetClump(), ASSOCGRP_STD, info->m_AnimToPlay, 8.0f);
+		if (assoc == nil)
+			return;
+
+		assoc->SetCurrentTime(0.0f);
+		assoc->SetRun();
+		assoc->speed = Max(m_fAimRaiseSpeed, 0.1f);
+		bIsAimPosed = true;
+		return;
+	}
+
+	bIsAimPosed = true;
+
+	// held at the ready, exactly where PointGunAt would hold it
+	if (assoc->currentTime >= info->m_fAnimLoopStart) {
+		assoc->SetCurrentTime(info->m_fAnimLoopStart);
+		assoc->flags &= ~ASSOC_RUNNING;
+		assoc->speed = 1.0f;
+
+		if (info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM))
+			m_pedIK.m_flags |= CPedIK::AIMS_WITH_ARM;
+		else
+			m_pedIK.m_flags &= ~CPedIK::AIMS_WITH_ARM;
+	}
+}
+
 void
 CPlayerPed::ProcessManualReload(CPad *padUsed)
 {
@@ -1368,6 +1443,7 @@ CPlayerPed::ProcessControl(void)
 	CEntity::PruneReferences();
 
 	ProcessManualReload(padUsed);
+	ProcessAimReadyPose(padUsed);
 
 	if (m_nMoveState != PEDMOVE_RUN && m_nMoveState != PEDMOVE_SPRINT)
 		RestoreSprintEnergy(1.0f);
