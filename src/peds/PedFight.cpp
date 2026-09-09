@@ -2058,6 +2058,46 @@ CPed::ClearInvestigateEvent(void)
 		SetMoveState(PEDMOVE_WALK);
 }
 
+// Where a bullet lands is worked out and passed all the way here, but nothing except
+// the death animation ever reads it, so a shot in the head and a shot in the leg take the
+// same slice off.  This gives the four guns that are actually pointed at people a value
+// per part instead.  The numbers come from a hundred health, so the shots to a kill land
+// on whole numbers: a rifle kills with one to the head, two to the body or five to a
+// limb, a pistol or uzi with one, three or six.
+//
+// The shotgun and the sniper already kill outright and the explosives have no part worth
+// hitting, so they are left alone, as is everything the player is hit by.  The ped's own
+// defend weakness still applies on top, so an old man still goes down faster than a gang
+// member does.
+static float
+AltDamageForHit(eWeaponType method, ePedPieceTypes pedPiece, float vanilla)
+{
+	float head, body, limb;
+
+	switch (method) {
+	case WEAPONTYPE_AK47:
+	case WEAPONTYPE_M16:
+		head = 100.0f; body = 50.0f; limb = 20.0f;
+		break;
+	case WEAPONTYPE_COLT45:
+	case WEAPONTYPE_UZI:
+		head = 100.0f; body = 34.0f; limb = 17.0f;
+		break;
+	default:
+		return vanilla;
+	}
+
+	switch (pedPiece) {
+	case PEDPIECE_HEAD:
+		return head;
+	case PEDPIECE_TORSO:
+	case PEDPIECE_MID:
+		return body;
+	default:
+		return limb;
+	}
+}
+
 bool
 CPed::InflictDamage(CEntity *damagedBy, eWeaponType method, float damage, ePedPieceTypes pedPiece, uint8 direction)
 {
@@ -2085,6 +2125,10 @@ CPed::InflictDamage(CEntity *damagedBy, eWeaponType method, float damage, ePedPi
 	if (bOnlyDamagedByPlayer && damagedBy != player && damagedBy != FindPlayerVehicle() &&
 		method != WEAPONTYPE_DROWNING && method != WEAPONTYPE_EXPLOSION)
 		return false;
+
+	// The alternative model, only ever applied to somebody who is not the player.
+	if (CWeaponInfo::bAltDamageModel && !IsPlayer())
+		damage = AltDamageForHit(method, pedPiece, damage);
 
 	float healthImpact;
 	if (IsPlayer())

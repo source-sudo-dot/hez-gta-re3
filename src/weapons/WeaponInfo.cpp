@@ -162,6 +162,7 @@ CWeaponInfo::LoadWeaponData(void)
 }
 
 bool CWeaponInfo::bMoveWhileShooting = false;
+bool CWeaponInfo::bAltDamageModel = false;
 
 // Only the pistol and the uzi carry CANAIM_WITHARM in weapon.dat.  Without it the
 // whole body plays the firing animation and the player is planted where he stands;

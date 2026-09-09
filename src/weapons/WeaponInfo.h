@@ -45,6 +45,8 @@ public:
 
 	// MoveWhileShooting under [Display] in re3.ini
 	static bool bMoveWhileShooting;
+	// AltDamageModel under [Display] in re3.ini
+	static bool bAltDamageModel;
 	static void ApplyMoveWhileShooting(void);
 	static CWeaponInfo *GetWeaponInfo(eWeaponType weaponType);
 	static eWeaponFire FindWeaponFireType(char *name);

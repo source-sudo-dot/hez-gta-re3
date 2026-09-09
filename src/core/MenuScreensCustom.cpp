@@ -67,6 +67,7 @@
 
 #define MOVE_WHILE_SHOOTING_TOGGLE MENUACTION_CFO_SELECT, "FEZ_MWS", { new CCFOSelect((int8*)&CWeaponInfo::bMoveWhileShooting, "Display", "MoveWhileShooting", off_on, 2, false, MoveWhileShootingChange) },
 #define BULLET_TIME_TOGGLE MENUACTION_CFO_SELECT, "FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) },
+#define ALT_DAMAGE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADM", { new CCFOSelect((int8*)&CWeaponInfo::bAltDamageModel, "Display", "AltDamageModel", off_on, 2, false) },
 #define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
 #define AIM_READY_POSE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ARP", { new CCFOSelect((int8*)&CPlayerPed::bAimReadyPose, "Display", "AimReadyPose", off_on, 2, false) },
 
@@ -485,6 +486,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		FREE_CAM_TOGGLE
 		MOVE_WHILE_SHOOTING_TOGGLE
 		BULLET_TIME_TOGGLE
+		ALT_DAMAGE_TOGGLE
 		MODERN_CROSSHAIR_TOGGLE
 		AIM_READY_POSE_TOGGLE
 		POSTFX_SELECTORS
@@ -502,6 +504,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		FREE_CAM_TOGGLE
 		MOVE_WHILE_SHOOTING_TOGGLE
 		BULLET_TIME_TOGGLE
+		ALT_DAMAGE_TOGGLE
 		MODERN_CROSSHAIR_TOGGLE
 		AIM_READY_POSE_TOGGLE
 		MENUACTION_SUBTITLES,	"FED_SUB", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
