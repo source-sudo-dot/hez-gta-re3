@@ -113,11 +113,13 @@ CBulletTime::DrawMeter(float x, float y)
 	if(!bEnabled)
 		return;
 
-	// sized off the crosshair, so the two stay in proportion whatever it is set to
-	float radius = SCREEN_SCALE_Y(Max(CCrosshair::m_fSize, 1.0f));
+	// The bar used to be sized off the crosshair, which left it unreadable once the
+	// crosshair was turned down small, so it keeps a size of its own.  Only where it
+	// sits still follows the crosshair, far enough down to clear a large one.
+	float radius = SCREEN_SCALE_Y(5.0f);
 	float halfWidth = radius * 1.6f;
 	float height = Max(radius * 0.12f, 1.0f);
-	float top = y + radius * 2.2f;
+	float top = y + Max(radius, SCREEN_SCALE_Y(Max(CCrosshair::m_fSize, 1.0f))) * 2.2f;
 
 	float border = Max(height * 0.6f, 1.0f);
 	CSprite2d::DrawRect(CRect(x - halfWidth - border, top - border,
