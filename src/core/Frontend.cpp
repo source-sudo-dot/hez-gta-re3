@@ -2151,7 +2151,6 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 				case 26:
 				case 27:
 				case 28:
-				case 29:
 					controllerAction = -1;
 					break;
 				case 3:
