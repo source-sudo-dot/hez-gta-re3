@@ -73,6 +73,7 @@
 #define WEAPON_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_WW", { new CCFOSelect((int8*)&CWeaponWheel::bEnabled, "Display", "WeaponWheel", off_on, 2, false) },
 #define AIM_FREECAM_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADF", { new CCFOSelect((int8*)&CCamera::bAimDisablesFreeCam, "Display", "AimDisablesFreeCam", off_on, 2, false) },
 #define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
+#define HIT_MARKERS_TOGGLE MENUACTION_CFO_SELECT, "FEZ_HM", { new CCFOSelect((int8*)&CCrosshair::bHitMarkers, "Display", "HitMarkers", off_on, 2, false) },
 #define AIM_READY_POSE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ARP", { new CCFOSelect((int8*)&CPlayerPed::bAimReadyPose, "Display", "AimReadyPose", off_on, 2, false) },
 
 #ifdef PS2_ALPHA_TEST
@@ -982,6 +983,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) },
 		MODERN_CROSSHAIR_TOGGLE
+		HIT_MARKERS_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 2.0f, 20.0f, nil, 36, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},

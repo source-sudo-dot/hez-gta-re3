@@ -7,6 +7,7 @@
 #include "Timer.h"
 
 bool  CCrosshair::bModern = true;
+bool  CCrosshair::bHitMarkers = true;
 float CCrosshair::m_fSize = 5.0f;
 float CCrosshair::m_fMarkerTime = 0.0f;
 bool  CCrosshair::m_bHeadShot = false;
@@ -94,18 +95,17 @@ CCrosshair::Draw(float x, float y, float scale)
 
 	// one scale on both axes, or the ring comes out an ellipse
 	float radius = SCREEN_SCALE_Y(Max(m_fSize, 1.0f)) * scale;
+	// the marker keeps the thinner stroke, the ring reads better a quarter heavier
 	float half = Max(radius * 0.055f, 1.0f);
+	float ringHalf = Max(radius * 0.06875f, 1.25f);
 
 	CRGBA shadow(0, 0, 0, 110);
 	CRGBA white(255, 255, 255, 235);
 
-	DrawRing(x, y, radius, half * 1.9f, shadow);
-	DrawRing(x, y, radius, half, white);
+	DrawRing(x, y, radius, ringHalf * 1.9f, shadow);
+	DrawRing(x, y, radius, ringHalf, white);
 
-	// the dot in the middle
-	CSprite2d::DrawRect(CRect(x - half * 1.4f, y - half * 1.4f, x + half * 1.4f, y + half * 1.4f), white);
-
-	if(m_fMarkerTime <= 0.0f)
+	if(!bHitMarkers || m_fMarkerTime <= 0.0f)
 		return;
 
 	float life = m_fMarkerTime / MARKER_SECONDS;

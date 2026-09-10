@@ -384,9 +384,6 @@ void CHud::Draw()
 			if (DrawCrossHairPC && TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam()) {
 				float f3rdX = SCREEN_WIDTH * TheCamera.m_f3rdPersonCHairMultX;
 				float f3rdY = SCREEN_HEIGHT * TheCamera.m_f3rdPersonCHairMultY;
-#ifdef ASPECT_RATIO_SCALE
-				f3rdY -= SCREEN_SCALE_Y(2.0f);
-#endif
 				if (CCrosshair::bModern) {
 					CCrosshair::Draw(f3rdX, f3rdY,
 						FindPlayerPed() && WeaponType == WEAPONTYPE_M16 ? 1.35f : 1.0f);

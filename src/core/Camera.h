@@ -654,6 +654,7 @@ public:
 	void ClearPlayerWeaponMode(void);
 	void UpdateAimingCoors(CVector const &coors);
 	bool Find3rdPersonCamTargetVector(float dist, CVector pos, CVector &source, CVector &target);
+	void Find3rdPersonCamAimTangents(float fov, float &tanX, float &tanY);
 	float Find3rdPersonQuickAimPitch(void);
 
 	// Physical camera

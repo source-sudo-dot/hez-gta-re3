@@ -7,6 +7,8 @@ class CCrosshair
 public:
 	// ModernCrosshair under [Display] in re3.ini
 	static bool bModern;
+	// HitMarkers under [Display] in re3.ini
+	static bool bHitMarkers;
 	// radius in the units the rest of the hud is laid out in, CrosshairSize
 	static float m_fSize;
 

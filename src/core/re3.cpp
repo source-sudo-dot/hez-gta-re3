@@ -503,6 +503,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "BulletTimeSeconds", &CBulletTime::m_fDuration);
 	ReadIniIfExists("Display", "BulletTimeRecharge", &CBulletTime::m_fRecharge);
 	ReadIniIfExists("Display", "ModernCrosshair", &CCrosshair::bModern);
+	ReadIniIfExists("Display", "HitMarkers", &CCrosshair::bHitMarkers);
 	ReadIniIfExists("Display", "CrosshairSize", &CCrosshair::m_fSize);
 	ReadIniIfExists("Display", "AimReadyPose", &CPlayerPed::bAimReadyPose);
 	ReadIniIfExists("Display", "AimRaiseSpeed", &CPlayerPed::m_fAimRaiseSpeed);
@@ -623,6 +624,7 @@ void SaveINISettings()
 	StoreIni("Display", "BulletTimeSeconds", CBulletTime::m_fDuration);
 	StoreIni("Display", "BulletTimeRecharge", CBulletTime::m_fRecharge);
 	StoreIni("Display", "ModernCrosshair", CCrosshair::bModern);
+	StoreIni("Display", "HitMarkers", CCrosshair::bHitMarkers);
 	StoreIni("Display", "CrosshairSize", CCrosshair::m_fSize);
 	StoreIni("Display", "AimReadyPose", CPlayerPed::bAimReadyPose);
 	StoreIni("Display", "AimRaiseSpeed", CPlayerPed::m_fAimRaiseSpeed);
