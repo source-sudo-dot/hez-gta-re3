@@ -2291,7 +2291,13 @@ CAutomobile::ProcessControlInputs(uint8 pad)
 	m_fSteerInput = Clamp(m_fSteerInput, -1.0f, 1.0f);
 
 	// Accelerate/Brake
-	float acceleration = (CPad::GetPad(pad)->GetAccelerate() - CPad::GetPad(pad)->GetBrake())/255.0f;
+	// The two used to be subtracted from one another, so holding both cancelled out and
+	// the car neither drove nor slowed - which from the seat reads as the brake being
+	// ignored while the throttle carries on.  The brake wins instead, the way the pedals
+	// of a real car do, and a negative figure still means brake or reverse as before.
+	float accelerate = CPad::GetPad(pad)->GetAccelerate()/255.0f;
+	float brake = CPad::GetPad(pad)->GetBrake()/255.0f;
+	float acceleration = brake > 0.0f ? -brake : accelerate;
 	if(GetModelIndex() == MI_DODO && acceleration < 0.0f)
 		acceleration *= 0.3f;
 	if(Abs(speed) < 0.01f){
