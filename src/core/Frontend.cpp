@@ -1125,7 +1125,12 @@ CMenuManager::Draw()
 	if (aScreens[m_nCurrScreen].m_ScreenName[0] != '\0') {
 		
 		SET_FONT_FOR_MENU_HEADER
-		CFont::PrintString(PAGE_NAME_X(MENUHEADER_POS_X), SCREEN_SCALE_FROM_BOTTOM(MENUHEADER_POS_Y), TheText.Get(aScreens[m_nCurrScreen].m_ScreenName));
+		float headerY = MENUHEADER_POS_Y;
+#ifdef MENU_MAP
+		if (m_nCurrScreen == MENUPAGE_MAP)
+			headerY = MAP_STRIP_TEXT_Y;
+#endif
+		CFont::PrintString(PAGE_NAME_X(MENUHEADER_POS_X), SCREEN_SCALE_FROM_BOTTOM(headerY), TheText.Get(aScreens[m_nCurrScreen].m_ScreenName));
 
 		// Weird place to put that.
 		nextYToUse += 24.0f + 10.0f;
@@ -1336,9 +1341,9 @@ CMenuManager::Draw()
 		wchar *backTx = TheText.Get("FEDS_TB");
 		CFont::SetDropShadowPosition(1);
 		CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
-		CFont::PrintString(MENU_X(60.0f), SCREEN_SCALE_FROM_BOTTOM(120.0f), backTx);
+		CFont::PrintString(MENU_X(60.0f), SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TEXT_Y), backTx);
 		CFont::SetDropShadowPosition(0);
-		if (!CheckHover(MENU_X(30.0f), MENU_X(30.0f) + CFont::GetStringWidth(backTx), SCREEN_SCALE_FROM_BOTTOM(125.0f), SCREEN_SCALE_FROM_BOTTOM(105.0f))) {
+		if (!CheckHover(MENU_X(30.0f), MENU_X(30.0f) + CFont::GetStringWidth(backTx), SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TOP), SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_BOTTOM))) {
 			m_nHoverOption = HOVEROPTION_NOT_HOVERING;
 			m_nCurrOption = m_nOptionMouseHovering = 0;
 		} else {
@@ -6449,11 +6454,12 @@ CMenuManager::PrintController(void)
 
 #ifdef MENU_MAP
 
-#define ZOOM(x, y, in) \
+#define ZOOM_BY(x, y, factor) \
 	do { \
+		float z2 = (factor); \
+		bool in = z2 > 1.0f; \
 		if(fMapSize > SCREEN_HEIGHT * 3.0f && in) \
 			break; \
-		float z2 = in? 1.1f : 1.f/1.1f; \
 		fMapCenterX += (x - fMapCenterX) * (1.0f - z2); \
 		fMapCenterY += (y - fMapCenterY) * (1.0f - z2); \
 		\
@@ -6462,6 +6468,8 @@ CMenuManager::PrintController(void)
 		\
 		fMapSize *= z2; \
 	} while(0) \
+
+#define ZOOM(x, y, in) ZOOM_BY(x, y, (in) ? 1.1f : 1.f/1.1f)
 
 void
 CMenuManager::PrintMap(void)
@@ -6593,16 +6601,28 @@ CMenuManager::PrintMap(void)
 		fMapCenterY -= CPad::GetPad(0)->GetLeftStickY() / 128.0f * 20.0f * mapStep;
 	}
 
-	if (CPad::GetPad(0)->GetMouseWheelDown() || CPad::GetPad(0)->GetPageDown() || CPad::GetPad(0)->GetRightShoulder2()) {
+	if (CPad::GetPad(0)->GetMouseWheelDown() || CPad::GetPad(0)->GetPageDown()) {
 		if (CPad::GetPad(0)->GetMouseWheelDown())
 			ZOOM(mapCrosshair.x, mapCrosshair.y, false);
 		else
 			ZOOM(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, false);
-	} else if (CPad::GetPad(0)->GetMouseWheelUp() || CPad::GetPad(0)->GetPageUp() || CPad::GetPad(0)->GetRightShoulder1()) {
+	} else if (CPad::GetPad(0)->GetMouseWheelUp() || CPad::GetPad(0)->GetPageUp()) {
 		if (CPad::GetPad(0)->GetMouseWheelUp())
 			ZOOM(mapCrosshair.x, mapCrosshair.y, true);
 		else
 			ZOOM(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, true);
+	} else {
+		// The triggers zoom by how far they are pushed rather than in steps: R2 in, L2
+		// out, so a light pull creeps and a full one races.  It is an amount per second,
+		// so the same pull covers the same ground at any frame rate.
+		float pull = CPad::m_fTriggerRight - CPad::m_fTriggerLeft;
+		if (Abs(pull) > 0.08f) {
+			float amount = (Abs(pull) - 0.08f) / 0.92f;
+			float seconds = CTimer::GetRenderFrameLength() / (float)LOGICAL_FRAME_RATE;
+			// two and a half times the size a second at a full pull
+			float factor = Pow(2.5f, amount * seconds);
+			ZOOM_BY(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, pull > 0.0f ? factor : 1.0f / factor);
+		}
 	}
 	
 	if (fMapCenterX - fMapSize > SCREEN_WIDTH / 2)
@@ -6611,58 +6631,20 @@ CMenuManager::PrintMap(void)
 	if (fMapCenterX + fMapSize < SCREEN_WIDTH / 2)
 		fMapCenterX = SCREEN_WIDTH / 2 - fMapSize;
 
-	if (fMapCenterY + fMapSize < SCREEN_HEIGHT - MENU_Y(60.0f))
-		fMapCenterY = SCREEN_HEIGHT - MENU_Y(60.0f) - fMapSize;
+	if (fMapCenterY + fMapSize < SCREEN_HEIGHT - MENU_Y(MAP_STRIP_TOP))
+		fMapCenterY = SCREEN_HEIGHT - MENU_Y(MAP_STRIP_TOP) - fMapSize;
 	
 	fMapCenterY = Min(fMapCenterY, fMapSize); // To not show beyond north border
 
 	bMenuMapActive = false;
 
-	CSprite2d::DrawRect(CRect(MENU_X(14.0f), SCREEN_STRETCH_FROM_BOTTOM(95.0f),
-		SCREEN_STRETCH_FROM_RIGHT(11.0f), SCREEN_STRETCH_FROM_BOTTOM(59.0f)),
+	CSprite2d::DrawRect(CRect(MENU_X(14.0f), SCREEN_STRETCH_FROM_BOTTOM(MAP_STRIP_TOP),
+		SCREEN_STRETCH_FROM_RIGHT(11.0f), SCREEN_STRETCH_FROM_BOTTOM(MAP_STRIP_BOTTOM)),
 		CRGBA(235, 170, 50, 255));
-
-	CFont::SetScale(MENU_X(0.4f), MENU_Y(0.7f));
-	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
-	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
-
-	float nextX = MENU_X(30.0f), nextY = 95.0f;
-	wchar *text;
-#ifdef MORE_LANGUAGES
-#define TEXT_PIECE(key,extraSpace) \
-	text = TheText.Get(key);\
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), text);\
-	if (CFont::IsJapanese())\
-		nextX += CFont::GetStringWidth_Jap(text) + MENU_X(extraSpace);\
-	else\
-		nextX += CFont::GetStringWidth(text, true) + MENU_X(extraSpace);
-#else
-#define TEXT_PIECE(key,extraSpace) \
-	text = TheText.Get(key); CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), text); nextX += CFont::GetStringWidth(text, true) + MENU_X(extraSpace);
-#endif
-
-	TEXT_PIECE("FEC_MWF", 3.0f);
-	TEXT_PIECE("FEC_PGU", 1.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	TEXT_PIECE("FEC_ZIN", 20.0f);
-	TEXT_PIECE("FEC_MWB", 3.0f);
-	TEXT_PIECE("FEC_PGD", 1.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), TheText.Get("FEC_ZOT")); nextX = MENU_X(30.0f); nextY -= 11.0f;
-	TEXT_PIECE("FEC_UPA", 2.0f);
-	TEXT_PIECE("FEC_DWA", 2.0f);
-	TEXT_PIECE("FEC_LFA", 2.0f);
-	TEXT_PIECE("FEC_RFA", 2.0f);
-	TEXT_PIECE("FEC_MSL", 1.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), TheText.Get("FEC_MOV")); nextX = MENU_X(30.0f); nextY -= 11.0f;
-	TEXT_PIECE("FEC_MSR", 2.0f);
-	TEXT_PIECE("FEC_IBT", 1.0f);
-	CFont::PrintString(nextX, SCREEN_SCALE_FROM_BOTTOM(nextY), TheText.Get("FEM_TWP"));
-#undef TEXT_PIECE
 }
 
 #undef ZOOM
+#undef ZOOM_BY
 #endif
 
 // rowIdx 99999 returns total numbers of rows. otherwise it returns 0.

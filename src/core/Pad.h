@@ -262,6 +262,10 @@ public:
 	static float m_fStickAimSensitivity;
 	static float m_fStickCurve;
 	static void ApplyStickDeadzone(float &x, float &y, float deadzone);
+	// 0 to 1, how far each trigger is pushed.  The pad state squares them off into a
+	// button, which is all the game needs but not all the map zoom wants.
+	static float m_fTriggerLeft;
+	static float m_fTriggerRight;
 	// The same value LookAround* gives, without being cut down to a whole number.
 	// One step of the whole number version is the smallest turn the camera can make,
 	// and that step is already a visible nudge, so the cameras that turn smoothly take

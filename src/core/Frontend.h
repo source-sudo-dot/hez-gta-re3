@@ -15,6 +15,10 @@
 #define MENUHEADER_HEIGHT 1.6f
 #endif
 #define MENUHEADER_WIDTH 0.84f
+// the strip along the bottom of the map, and where its two labels sit inside it
+#define MAP_STRIP_TOP    (46.0f)
+#define MAP_STRIP_BOTTOM (10.0f)
+#define MAP_STRIP_TEXT_Y (40.0f)
 
 #define MENU_X_MARGIN 40.0f
 #define MENUACTION_POS_Y 60.0f

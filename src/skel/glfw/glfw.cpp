@@ -2550,11 +2550,16 @@ void CapturePad(RwInt32 padID)
 
 		// glfw returns 0.0 for non-existent axises(which is bullocks) so we treat it as deadzone, and keep value of previous frame.
 		// otherwise if this axis is present, -1 = released, 1 = pressed
-		if (lt != 0.0f)
+		if (lt != 0.0f) {
 			ControlsManager.m_NewState.mappedButtons[15] = lt > -0.8f;
+			// how far it is pushed, which the button above throws away
+			CPad::m_fTriggerLeft = Clamp((lt + 1.0f) * 0.5f, 0.0f, 1.0f);
+		}
 
-		if (rt != 0.0f)
+		if (rt != 0.0f) {
 			ControlsManager.m_NewState.mappedButtons[16] = rt > -0.8f;
+			CPad::m_fTriggerRight = Clamp((rt + 1.0f) * 0.5f, 0.0f, 1.0f);
+		}
 	}
 	// TODO? L2-R2 axes(not buttons-that's fine) on joysticks that don't have SDL gamepad mapping AREN'T handled, and I think it's impossible to do without mapping.
 
