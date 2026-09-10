@@ -168,6 +168,14 @@ bool CWeaponInfo::bAltDamageModel = false;
 // onto the ordinary over-the-shoulder path.
 bool CWeaponInfo::bM16ThirdPerson = true;
 
+bool
+CWeaponInfo::UsesScopeAim(eWeaponType weaponType)
+{
+	return weaponType == WEAPONTYPE_ROCKETLAUNCHER ||
+	       weaponType == WEAPONTYPE_SNIPERRIFLE ||
+	       weaponType == WEAPONTYPE_M16 && !bM16ThirdPerson;
+}
+
 // Only the pistol and the uzi carry CANAIM_WITHARM in weapon.dat.  Without it the
 // whole body plays the firing animation and the player is planted where he stands;
 // with it the animation is held at its loop start and the arm is pointed on its own,

@@ -7,6 +7,7 @@
 #include "Train.h"
 #include "Automobile.h"
 #include "Ped.h"
+#include "WeaponInfo.h"
 #include "PlayerPed.h"
 #include "Wanted.h"
 #include "Pad.h"
@@ -811,6 +812,7 @@ CCamera::UpdatePadInput(void)
 	if(bFreeCamSetting && bAimDisablesFreeCam &&
 	   Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED &&
 	   FindPlayerPed() != nil && FindPlayerVehicle() == nil &&
+	   !CWeaponInfo::UsesScopeAim(FindPlayerPed()->GetWeapon()->m_eWeaponType) &&
 	   CPad::GetPad(0)->GetTarget())
 		bFreeCam = false;
 

@@ -1185,9 +1185,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 		ClearPointGunAt();
 	}
 	if (!m_pFire) {
-		if (GetWeapon()->m_eWeaponType == WEAPONTYPE_ROCKETLAUNCHER ||
-			GetWeapon()->m_eWeaponType == WEAPONTYPE_SNIPERRIFLE ||
-			GetWeapon()->m_eWeaponType == WEAPONTYPE_M16 && !CWeaponInfo::bM16ThirdPerson) {
+		if (CWeaponInfo::UsesScopeAim(GetWeapon()->m_eWeaponType)) {
 			if (padUsed->TargetJustDown()) {
 				SetStoredState();
 				SetPedState(PED_SNIPER_MODE);
