@@ -601,6 +601,20 @@ bool CPlayerPed::bIsAimPosed = false;
 // animation was left, because BlendAnimation keeps the time on one that is already
 // there, so the first shot comes at once.  Both weapon animations are partial, upper
 // body only, so the legs keep walking under it.
+// The arm comes down on a fade, so the fade rate is how fast it drops.  Both ways out
+// of the pose use the rate the game drops a lock on with, and the same setting that
+// raises the arm scales it, so one slider governs both halves of the movement.
+static void
+FadeAimPoseOut(CPed *ped, CWeaponInfo *info, float speed)
+{
+	for (int32 i = 0; i < 2; i++) {
+		AnimationId id = i == 0 ? info->m_AnimToPlay : info->m_Anim2ToPlay;
+		CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(ped->GetClump(), id);
+		if (assoc && assoc->blendDelta < 0.0f)
+			assoc->blendDelta *= speed;
+	}
+}
+
 void
 CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 {
@@ -643,6 +657,7 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 			// else's business and is not touched.
 			if (bIsPointingGunAt && m_pPointGunAt == nil) {
 				ClearPointGunAt();
+				FadeAimPoseOut(this, info, Max(m_fAimRaiseSpeed, 0.1f));
 				return;
 			}
 
@@ -650,7 +665,7 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 			// animation is one the player is firing with and is left well alone.
 			if (assoc && !assoc->IsRunning()) {
 				assoc->flags |= ASSOC_DELETEFADEDOUT;
-				assoc->blendDelta = -4.0f;
+				assoc->blendDelta = -4.0f * Max(m_fAimRaiseSpeed, 0.1f);
 			}
 		}
 		return;
