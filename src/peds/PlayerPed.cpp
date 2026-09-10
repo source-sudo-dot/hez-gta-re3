@@ -1191,12 +1191,16 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 			if (padUsed->TargetJustDown()) {
 				SetStoredState();
 				SetPedState(PED_SNIPER_MODE);
-#ifdef FREE_CAM
-				if (CCamera::bFreeCam && TheCamera.Cams[0].Using3rdPersonMouseCam()) {
+				// The sights start from wherever the body happens to face, so a player
+				// turned towards the camera aimed a full half turn backwards.  The free cam
+				// did line the two up, but only ever for the mouse camera - a pad never
+				// reached it.  Turn the player to the camera whenever we come off the
+				// ordinary follow camera, which is the only place the two can disagree.
+				if (TheCamera.Cams[TheCamera.ActiveCam].Mode == CCam::MODE_FOLLOWPED) {
 					m_fRotationCur = CGeneral::LimitRadianAngle(-TheCamera.Orientation);
+					m_fRotationDest = m_fRotationCur;
 					SetHeading(m_fRotationCur);
 				}
-#endif
 				if (GetWeapon()->m_eWeaponType == WEAPONTYPE_ROCKETLAUNCHER)
 					TheCamera.SetNewPlayerWeaponMode(CCam::MODE_ROCKETLAUNCHER, 0, 0);
 				else if (GetWeapon()->m_eWeaponType == WEAPONTYPE_SNIPERRIFLE)
