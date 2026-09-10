@@ -929,12 +929,12 @@ void CRadar::DrawRadarSprite(uint16 sprite, float x, float y, uint8 alpha)
 	RadarSprites[sprite]->Draw(CRect(x - SCREEN_SCALE_X(8.0f), y - SCREEN_SCALE_Y(8.0f), x + SCREEN_SCALE_X(8.0f), y + SCREEN_SCALE_Y(8.0f)), CRGBA(255, 255, 255, alpha));
 }
 
-void CRadar::DrawRotatingRadarSprite(CSprite2d* sprite, float x, float y, float angle, int32 alpha)
+void CRadar::DrawRotatingRadarSprite(CSprite2d* sprite, float x, float y, float angle, int32 alpha, float size)
 {
 	CVector curPosn[4];
-	const float sizeX = SCREEN_SCALE_X(8.0f);
+	const float sizeX = SCREEN_SCALE_X(size);
 	const float correctedAngle = angle - PI / 4.f;
-	const float sizeY = SCREEN_SCALE_Y(8.0f);
+	const float sizeY = SCREEN_SCALE_Y(size);
 
 	for (uint32 i = 0; i < 4; i++) {
 		const float cornerAngle = i * HALFPI + correctedAngle;
@@ -1505,31 +1505,13 @@ CRadar::InitFrontEndMap()
 	m_radarRange = 1000.0f; // doesn't mean anything, just affects the calculation in TransformRadarPointToScreenSpace
 }
 
+// The player was a pin that blinked, which says where he is but not which way he is
+// facing.  An arrow says both.  The map is drawn north up, so the heading needs no
+// camera term - the radar's own formula with the camera looking north.
 void
 CRadar::DrawYouAreHereSprite(float x, float y)
 {
-	static uint32 lastChange = 0;
-	static bool show = true;
-
-	if (show) {
-		if (CTimer::GetTimeInMillisecondsPauseMode() - lastChange > 500) {
-			lastChange = CTimer::GetTimeInMillisecondsPauseMode();
-			show = !show;
-		}
-	} else {
-		if (CTimer::GetTimeInMillisecondsPauseMode() - lastChange > 200) {
-			lastChange = CTimer::GetTimeInMillisecondsPauseMode();
-			show = !show;
-		}
-	}
-
-	if (show) {
-		float left = x - SCREEN_SCALE_X(12.0f);
-		float top = y;
-		float right = SCREEN_SCALE_X(12.0) + x;
-		float bottom = y - SCREEN_SCALE_Y(24.0f);
-		CentreSprite.Draw(CRect(left, top, right, bottom), CRGBA(255, 255, 255, 255));
-	}
+	DrawRotatingRadarSprite(&CentreSprite, x, y, FindPlayerHeading() - PI, 255, 11.0f);
 }
 
 void

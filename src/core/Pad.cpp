@@ -1449,6 +1449,15 @@ void CPad::Update(int16 pad)
 		NewState = ReconcileTwoControllersInput(PCTempMouseState, NewState);
 	}
 
+	if ( m_bBackButtonHeldOver && pad == 0 )
+	{
+		// read before it is taken away, or letting go could never be seen
+		if ( NewState.Circle == 0 )
+			m_bBackButtonHeldOver = false;
+		else
+			NewState.Circle = 0;
+	}
+
 	PCTempJoyState.Clear();
 	PCTempKeyState.Clear();
 	PCTempMouseState.Clear();
@@ -2758,6 +2767,7 @@ float CPad::m_fStickDeadzoneRight = 0.08f;
 float CPad::m_fStickSensitivity = 1.0f;
 float CPad::m_fStickAimSensitivity = 0.5f;
 float CPad::m_fStickCurve = 2.0f;
+bool  CPad::m_bBackButtonHeldOver = false;
 float CPad::m_fTriggerLeft = 0.0f;
 float CPad::m_fTriggerRight = 0.0f;
 bool  CPad::m_bStickDebug = false;

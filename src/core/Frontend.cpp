@@ -320,11 +320,22 @@ const char* MenuFilenames[][2] = {
 #define PAGE_NAME_X SCREEN_SCALE_FROM_RIGHT
 #endif
 
+#ifdef MENU_MAP
+// PrintMap centres on the player only while the middle is still at nothing, which it
+// is exactly once, so every later look at the map opened wherever it was left.  Put
+// it back to nothing on the way in.
+#define MAP_TO_PLAYER(screen) \
+		if ((screen) == MENUPAGE_MAP) { fMapCenterX = 0.0f; fMapCenterY = 0.0f; }
+#else
+#define MAP_TO_PLAYER(screen)
+#endif
+
 // Seperate func. in VC
 #define ChangeScreen(screen, option, updateDelay, clearAlpha) \
 	do { \
 		m_nPrevScreen = m_nCurrScreen; \
 		int newOpt = option; \
+		MAP_TO_PLAYER(screen) \
 		SETUP_SCROLLING(screen) \
 		m_nCurrScreen = screen; \
 		m_nCurrOption = newOpt; \
@@ -4266,6 +4277,7 @@ CMenuManager::Process(void)
 			m_bMenuActive = true;
 			m_bMapOpenedDirectly = true;
 			CTimer::StartUserPause();
+			MAP_TO_PLAYER(MENUPAGE_MAP)
 			m_nCurrScreen = MENUPAGE_MAP;
 			m_nCurrOption = 0;
 		}
@@ -5850,6 +5862,11 @@ CMenuManager::SwitchMenuOnAndOff()
 			int16 start1 = CPad::GetPad(0)->PCTempJoyState.Start, start2 = CPad::GetPad(0)->PCTempKeyState.Start,
 				start3 = CPad::GetPad(0)->OldState.Start, start4 = CPad::GetPad(0)->NewState.Start;
 #endif
+			// Circle is what leaves a menu, and it is very likely still held on the way
+			// out.  Hold it over so it cannot fire whatever it is bound to in the game.
+			if (CPad::GetPad(0)->NewState.Circle || CPad::GetPad(0)->PCTempJoyState.Circle)
+				CPad::m_bBackButtonHeldOver = true;
+
 			CPad::GetPad(0)->Clear(false);
 			CPad::GetPad(1)->Clear(false);
 #ifdef REGISTER_START_BUTTON
