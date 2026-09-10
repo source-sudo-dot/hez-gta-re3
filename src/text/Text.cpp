@@ -116,6 +116,8 @@ static struct {
 	{ "FEZ_BT", "SLOW MOTION" },
 	{ "FEZ_RLD", "RELOAD" },
 	{ "FEZ_MAP", "OPEN MAP" },
+	{ "FEZ_DBL", "DRIVE-BY LEFT" },
+	{ "FEZ_DBR", "DRIVE-BY RIGHT" },
 	{ "FEZ_MSS", "MAP SCROLL SPEED" },
 	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_HM", "HIT MARKERS" },

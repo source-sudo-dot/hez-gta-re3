@@ -557,7 +557,7 @@ CMenuManager::ProcessList(bool &goBack, bool &optionSelected)
 	}
 	if (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS) {
 		// GetNumOptionsCntrlConfigScreens would have been a better choice
-		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 34 : 29;
+		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 36 : 31;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
 	}
@@ -1967,10 +1967,10 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 		case MENUPAGE_KEYBOARD_CONTROLS:
 			switch (m_ControlMethod) {
 				case CONTROL_STANDARD:
-					number = 29;
+					number = 31;
 					break;
 				case CONTROL_CLASSIC:
-					number = 34;
+					number = 36;
 					break;
 			}
 			break;
@@ -1993,7 +1993,6 @@ ContSetupRowHeight(float rowHeight, int numOptions, float yStart)
 void
 CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8 column)
 {
-	int controllerAction = PED_FIREWEAPON;
 	// GetStartOptionsCntrlConfigScreens();
 	int numOptions = GetNumOptionsCntrlConfigScreens();
 	int nextY = MENU_Y(yStart);
@@ -2016,6 +2015,7 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 		int nextX = xStart;
 		int bindingsForThisOpt = 0;
 		int contSetOrder = SETORDER_1;
+		int controllerAction = -1;
 		CFont::SetColor(CRGBA(LIST_OPTION_COLOR.r, LIST_OPTION_COLOR.g, LIST_OPTION_COLOR.b, FadeIn(LIST_OPTION_COLOR.a)));
 
 		if (column == CONTSETUP_PED_COLUMN) {
@@ -2112,10 +2112,12 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 						controllerAction = PED_CYCLE_TARGET_RIGHT;
 					break;
 				case 29:
-					controllerAction = PED_CENTER_CAMERA_BEHIND_PLAYER;
+					if (m_ControlMethod == CONTROL_CLASSIC)
+						controllerAction = PED_CENTER_CAMERA_BEHIND_PLAYER;
 					break;
 				case 30:
-					controllerAction = PED_WEAPON_WHEEL;
+					if (m_ControlMethod == CONTROL_CLASSIC)
+						controllerAction = PED_WEAPON_WHEEL;
 					break;
 				case 31:
 					controllerAction = PED_BULLET_TIME;
@@ -2202,6 +2204,20 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 					break;
 				case 24:
 					controllerAction = VEHICLE_LOOKRIGHT;
+					break;
+				case 29:
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = VEHICLE_LOOKLEFT_FIRE;
+					break;
+				case 30:
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = VEHICLE_LOOKRIGHT_FIRE;
+					break;
+				case 34:
+					controllerAction = VEHICLE_LOOKLEFT_FIRE;
+					break;
+				case 35:
+					controllerAction = VEHICLE_LOOKRIGHT_FIRE;
 					break;
 				default:
 					break;
@@ -2444,7 +2460,7 @@ CMenuManager::DrawControllerSetupScreen()
 		default:
 			break;
 	}
-	wchar *actionTexts[35];
+	wchar *actionTexts[37];
 	actionTexts[0] = TheText.Get("FEC_FIR");
 	actionTexts[1] = TheText.Get("FEC_NWE");
 	actionTexts[2] = TheText.Get("FEC_PWE");
@@ -2480,7 +2496,9 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[31] = TheText.Get("FEZ_BT");
 		actionTexts[32] = TheText.Get("FEZ_RLD");
 		actionTexts[33] = TheText.Get("FEZ_MAP");
-		actionTexts[34] = nil;
+		actionTexts[34] = TheText.Get("FEZ_DBL");
+		actionTexts[35] = TheText.Get("FEZ_DBR");
+		actionTexts[36] = nil;
 	} else {
 		actionTexts[18] = TheText.Get("FEC_TFL");
 		actionTexts[19] = TheText.Get("FEC_TFR");
@@ -2493,7 +2511,9 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[26] = TheText.Get("FEZ_BT");
 		actionTexts[27] = TheText.Get("FEZ_RLD");
 		actionTexts[28] = TheText.Get("FEZ_MAP");
-		actionTexts[29] = nil;
+		actionTexts[29] = TheText.Get("FEZ_DBL");
+		actionTexts[30] = TheText.Get("FEZ_DBR");
+		actionTexts[31] = nil;
 	}
 
 	// Gray panel background
