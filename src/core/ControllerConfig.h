@@ -153,6 +153,10 @@ public:
 #endif
 	wchar                 m_aActionNames[MAX_CONTROLLERACTIONS][ACTIONNAME_LENGTH];
 	bool                  m_aButtonStates[MAX_BUTTONS];
+	// Leaving a menu clears the pads, so a button still held reads as a fresh press the
+	// moment the game is back and sets off everything it is bound to.  Held over here,
+	// where the bindings are read, so none of it is handed on until it is let go.
+	bool                  m_aButtonHeldOver[MAX_BUTTONS];
 	tControllerConfigBind m_aSettings[MAX_CONTROLLERACTIONS][MAX_CONTROLLERTYPES];
 	bool                  m_aSimCheckers[MAX_SIMS][MAX_CONTROLLERTYPES];
 	bool                  m_bMouseAssociated;
@@ -225,6 +229,7 @@ public:
 	int32 GetControllerKeyAssociatedWithAction(e_ControllerAction action, eControllerType type);
 
 	void  UpdateJoyButtonState(int32 padnumber);
+	void  HoldOverHeldButtons(void);
 	
 	bool  GetIsActionAButtonCombo             (e_ControllerAction action);
 	wchar *GetButtonComboText                 (e_ControllerAction action);

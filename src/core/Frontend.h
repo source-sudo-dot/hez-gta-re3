@@ -731,6 +731,8 @@ public:
 	// set when the map key closed the map, cleared when it is let go, so the same
 	// press cannot open it straight back up
 	static bool m_bMapKeyHeldOver;
+	// set on the way into the map page, cleared once PrintMap has centred
+	static bool m_bMapCentreOnPlayer;
 	static float m_fMapScrollSpeed;
 	static void RequestMap(void) { m_bStartUpMapRequested = true; }
 #endif

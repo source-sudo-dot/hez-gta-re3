@@ -2846,6 +2846,25 @@ void CControllerConfigManager::UpdateJoyButtonState(int32 padnumber)
 		}
 	}
 #endif
+
+	for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		if (!m_aButtonHeldOver[i])
+			continue;
+
+		if (!m_aButtonStates[i])
+			m_aButtonHeldOver[i] = false;
+		else
+			m_aButtonStates[i] = false;
+	}
+}
+
+// Whatever is down at this moment does not count as pressed again until it is let go.
+void CControllerConfigManager::HoldOverHeldButtons(void)
+{
+	for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		if (m_aButtonStates[i])
+			m_aButtonHeldOver[i] = true;
+	}
 }
 
 bool CControllerConfigManager::GetIsActionAButtonCombo(e_ControllerAction action)

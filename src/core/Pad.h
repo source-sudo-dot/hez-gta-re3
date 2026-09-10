@@ -262,14 +262,14 @@ public:
 	static float m_fStickAimSensitivity;
 	static float m_fStickCurve;
 	static void ApplyStickDeadzone(float &x, float &y, float deadzone);
-	// Leaving a menu clears the pads, so a button still held reads as a fresh press
-	// the moment the game is back and sets off whatever it is bound to.  Held over
-	// until it is actually let go.
-	static bool m_bBackButtonHeldOver;
 	// 0 to 1, how far each trigger is pushed.  The pad state squares them off into a
 	// button, which is all the game needs but not all the map zoom wants.
 	static float m_fTriggerLeft;
 	static float m_fTriggerRight;
+	static bool m_bTriggerHeldOver[2];
+	static float GetTriggerLeft(void)  { return m_bTriggerHeldOver[0] ? 0.0f : m_fTriggerLeft; }
+	static float GetTriggerRight(void) { return m_bTriggerHeldOver[1] ? 0.0f : m_fTriggerRight; }
+	static void HoldOverHeldTriggers(void);
 	// The same value LookAround* gives, without being cut down to a whole number.
 	// One step of the whole number version is the smallest turn the camera can make,
 	// and that step is already a visible nudge, so the cameras that turn smoothly take

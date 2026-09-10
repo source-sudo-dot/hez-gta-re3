@@ -183,6 +183,7 @@ bool CMenuManager::m_bStartUpFrontEndRequested;
 bool CMenuManager::m_bStartUpMapRequested;
 bool CMenuManager::m_bMapOpenedDirectly;
 bool CMenuManager::m_bMapKeyHeldOver;
+bool CMenuManager::m_bMapCentreOnPlayer;
 float CMenuManager::m_fMapScrollSpeed = 1.0f;
 #endif
 bool CMenuManager::m_bShutDownFrontEndRequested;
@@ -325,7 +326,7 @@ const char* MenuFilenames[][2] = {
 // is exactly once, so every later look at the map opened wherever it was left.  Put
 // it back to nothing on the way in.
 #define MAP_TO_PLAYER(screen) \
-		if ((screen) == MENUPAGE_MAP) { fMapCenterX = 0.0f; fMapCenterY = 0.0f; }
+		if ((screen) == MENUPAGE_MAP) m_bMapCentreOnPlayer = true;
 #else
 #define MAP_TO_PLAYER(screen)
 #endif
@@ -4276,6 +4277,8 @@ CMenuManager::Process(void)
 		if (!m_bMenuActive && !m_bGameNotLoaded) {
 			m_bMenuActive = true;
 			m_bMapOpenedDirectly = true;
+			ControlsManager.HoldOverHeldButtons();
+			CPad::HoldOverHeldTriggers();
 			CTimer::StartUserPause();
 			MAP_TO_PLAYER(MENUPAGE_MAP)
 			m_nCurrScreen = MENUPAGE_MAP;
@@ -5840,6 +5843,10 @@ CMenuManager::SwitchMenuOnAndOff()
 			m_bMenuActive = true;
 
 		if (m_bMenuActive) {
+			// Whatever is held on the way in must not carry into the menu either - opening
+			// the map with the throttle down had it zooming before a finger moved.
+			ControlsManager.HoldOverHeldButtons();
+			CPad::HoldOverHeldTriggers();
 			CTimer::StartUserPause();
 		} else {
 #ifdef PS2_LIKE_MENU
@@ -5862,10 +5869,10 @@ CMenuManager::SwitchMenuOnAndOff()
 			int16 start1 = CPad::GetPad(0)->PCTempJoyState.Start, start2 = CPad::GetPad(0)->PCTempKeyState.Start,
 				start3 = CPad::GetPad(0)->OldState.Start, start4 = CPad::GetPad(0)->NewState.Start;
 #endif
-			// Circle is what leaves a menu, and it is very likely still held on the way
-			// out.  Hold it over so it cannot fire whatever it is bound to in the game.
-			if (CPad::GetPad(0)->NewState.Circle || CPad::GetPad(0)->PCTempJoyState.Circle)
-				CPad::m_bBackButtonHeldOver = true;
+			// Whatever is still held on the way out - circle, which is what leaves a menu
+			// - must not read as a fresh press once the game is back.
+			ControlsManager.HoldOverHeldButtons();
+			CPad::HoldOverHeldTriggers();
 
 			CPad::GetPad(0)->Clear(false);
 			CPad::GetPad(1)->Clear(false);
@@ -6529,8 +6536,13 @@ CMenuManager::PrintMap(void)
 	bMenuMapActive = true;
 	CRadar::InitFrontEndMap();
 
-	if (m_nMenuFadeAlpha < 255 && fMapCenterX == 0.f && fMapCenterY == 0.f) {
-		// Just entered. We need to do these transformations in here, because Radar knows whether map is active or not
+	// This used to go by the menu still fading in and the middle still being at nothing,
+	// which is a pair of conditions that only happen to line up: open the map again
+	// before the fade has restarted and it centred nowhere, and the clamps below then
+	// pushed the whole map off to one side.  A flag set on the way in says it plainly.
+	if (m_bMapCentreOnPlayer) {
+		m_bMapCentreOnPlayer = false;
+		// These transformations have to happen in here, because Radar knows whether map is active or not
 		CVector2D radarSpacePlayer;
 		CVector2D screenSpacePlayer;
 		CRadar::TransformRealWorldPointToRadarSpace(radarSpacePlayer, CVector2D(FindPlayerCoors()));
@@ -6666,7 +6678,7 @@ CMenuManager::PrintMap(void)
 		// The triggers zoom by how far they are pushed rather than in steps: R2 in, L2
 		// out, so a light pull creeps and a full one races.  It is an amount per second,
 		// so the same pull covers the same ground at any frame rate.
-		float pull = CPad::m_fTriggerRight - CPad::m_fTriggerLeft;
+		float pull = CPad::GetTriggerRight() - CPad::GetTriggerLeft();
 		if (Abs(pull) > 0.08f) {
 			float amount = (Abs(pull) - 0.08f) / 0.92f;
 			float seconds = CTimer::GetRenderFrameLength() / (float)LOGICAL_FRAME_RATE;

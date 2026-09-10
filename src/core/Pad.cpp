@@ -1110,9 +1110,22 @@ void CPad::AffectFromXinput(uint32 pad)
 }
 #endif
 
+// A trigger already pulled when a menu opened - the throttle, say - would have had the
+// map zooming from the first frame.  Held over, the same as the buttons are.
+void CPad::HoldOverHeldTriggers(void)
+{
+	m_bTriggerHeldOver[0] = m_fTriggerLeft > 0.08f;
+	m_bTriggerHeldOver[1] = m_fTriggerRight > 0.08f;
+}
+
 void CPad::UpdatePads(void)
 {
 	bool bUpdate = true;
+
+	if ( m_bTriggerHeldOver[0] && m_fTriggerLeft <= 0.08f )
+		m_bTriggerHeldOver[0] = false;
+	if ( m_bTriggerHeldOver[1] && m_fTriggerRight <= 0.08f )
+		m_bTriggerHeldOver[1] = false;
 
 	GetPad(0)->UpdateMouseForLogicalFrame();
 #ifdef XINPUT
@@ -1447,15 +1460,6 @@ void CPad::Update(int16 pad)
 	{
 		NewState = ReconcileTwoControllersInput(PCTempKeyState, PCTempJoyState);
 		NewState = ReconcileTwoControllersInput(PCTempMouseState, NewState);
-	}
-
-	if ( m_bBackButtonHeldOver && pad == 0 )
-	{
-		// read before it is taken away, or letting go could never be seen
-		if ( NewState.Circle == 0 )
-			m_bBackButtonHeldOver = false;
-		else
-			NewState.Circle = 0;
 	}
 
 	PCTempJoyState.Clear();
@@ -2767,9 +2771,9 @@ float CPad::m_fStickDeadzoneRight = 0.08f;
 float CPad::m_fStickSensitivity = 1.0f;
 float CPad::m_fStickAimSensitivity = 0.5f;
 float CPad::m_fStickCurve = 2.0f;
-bool  CPad::m_bBackButtonHeldOver = false;
 float CPad::m_fTriggerLeft = 0.0f;
 float CPad::m_fTriggerRight = 0.0f;
+bool  CPad::m_bTriggerHeldOver[2] = { false, false };
 bool  CPad::m_bStickDebug = false;
 float CPad::m_fDebugRawLen = 0.0f;
 float CPad::m_fDebugDeadzonedLen = 0.0f;
