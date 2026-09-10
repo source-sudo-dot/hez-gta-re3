@@ -607,6 +607,16 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
 	CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(GetClump(), info->m_AnimToPlay);
 
+	// The raise runs the animation fast, and the shot plays on that very association:
+	// FireGun fires each time its time crosses the weapon's fire frame, and it only ever
+	// corrects a speed that has fallen below one.  So a shot let off before the arm was
+	// up came at the raise speed, and kept coming at it.  Hand the speed back the moment
+	// the trigger is touched, rather than a frame later once the attack state turns up.
+	if (assoc != nil &&
+		(padUsed->GetWeapon() || m_nPedState == PED_ATTACK || m_nPedState == PED_AIM_GUN ||
+		 GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING))
+		assoc->speed = 1.0f;
+
 	// Whether the player is asking to aim, and nothing else.  What the weapon is doing
 	// while he asks must not come into it: it stays in its firing state for as long as
 	// its rate of fire says, up to a second, and treating that as "not aiming" was what
