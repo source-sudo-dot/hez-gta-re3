@@ -99,13 +99,18 @@ int32 CControllerConfigManager::GetJoyButtonJustDown()
 	}
 #elif defined RW_GL3
 	if (m_NewState.isGamepad) {
-		for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		for (int32 i = 0; i < JOY_MAPPED_BUTTONS; i++) {
 			if (m_NewState.mappedButtons[i] && !(m_OldState.mappedButtons[i]))
 				return MapIdToButtonId(i);
 		}
+		// nothing the mapping knows, so let anything else the pad reports have a turn
+		for (int32 i = 0; i < JOY_RAW_BUTTONS; i++) {
+			if (m_NewState.rawButtons[i] && !(m_OldState.rawButtons[i]))
+				return RAW_BUTTON_ID(i);
+		}
 	} else {
-		for (int32 i = 0; i < Min(m_NewState.numButtons, MAX_BUTTONS); i++) {
-			if (m_NewState.buttons[i] && !(m_OldState.buttons[i]))
+		for (int32 i = 0; i < JOY_BUTTONS; i++) {
+			if (m_NewState.rawButtons[i] && !(m_OldState.rawButtons[i]))
 				return i + 1;
 		}
 	}
@@ -2807,15 +2812,18 @@ void CControllerConfigManager::UpdateJoyButtonState(int32 padnumber)
 	}
 #elif defined RW_GL3
 	if (m_NewState.isGamepad) {
-		for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		for (int32 i = 0; i < JOY_MAPPED_BUTTONS; i++) {
 			if (i == GLFW_GAMEPAD_BUTTON_GUIDE)
 				continue;
 
 			m_aButtonStates[MapIdToButtonId(i)-1] = m_NewState.mappedButtons[i];
 		}
+		for (int32 i = 0; i < JOY_RAW_BUTTONS; i++) {
+			m_aButtonStates[RAW_BUTTON_ID(i)-1] = m_NewState.rawButtons[i];
+		}
 	} else {
-		for (int32 i = 0; i < Min(m_NewState.numButtons, MAX_BUTTONS); i++) {
-			m_aButtonStates[i] = m_NewState.buttons[i];
+		for (int32 i = 0; i < JOY_BUTTONS; i++) {
+			m_aButtonStates[i] = m_NewState.rawButtons[i];
 		}
 	}
 #endif

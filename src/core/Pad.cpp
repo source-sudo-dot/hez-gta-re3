@@ -24,6 +24,7 @@
 #include "Timer.h"
 #include "Record.h"
 #include "World.h"
+#include "PadRumble.h"
 #include "PlayerPed.h"
 #include "Vehicle.h"
 #include "Ped.h"
@@ -1119,6 +1120,18 @@ void CPad::UpdatePads(void)
 	GetPad(1)->AffectFromXinput(m_bMapPadOneToPadTwo ? 0 : 1);
 #else
 	CapturePad(0);
+
+	{
+		CPad *shaking = GetPad(0);
+		uint8 motor = shaking->ShakeFreq;
+		if (shaking->ShakeDur < CTimer::GetTimeStepInMilliseconds())
+			shaking->ShakeDur = 0;
+		else
+			shaking->ShakeDur -= (int16)CTimer::GetTimeStepInMilliseconds();
+		if (shaking->ShakeDur == 0)
+			shaking->ShakeFreq = 0;
+		CPadRumble::Update(motor, motor);
+	}
 #endif
 
 	// Improve keyboard input latency part 1

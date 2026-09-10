@@ -102,7 +102,14 @@ class CControllerState;
 
 
 #define JOY_BUTTONS 16
-#define MAX_BUTTONS (JOY_BUTTONS+1)
+// GLFW's gamepad mapping only knows the fifteen buttons a standard pad has, so what a
+// controller carries on top of them - the DualSense touchpad and mute, a pad's extra
+// paddles - never reaches the binding screen.  Those are offered under ids of their own,
+// past the mapped ones, straight off the raw button list.
+#define JOY_MAPPED_BUTTONS 17
+#define JOY_RAW_BUTTONS 24
+#define RAW_BUTTON_ID(i) (JOY_BUTTONS + 1 + (i))
+#define MAX_BUTTONS (JOY_BUTTONS + JOY_RAW_BUTTONS + 1)
 
 #define ACTIONNAME_LENGTH 40
 
@@ -113,6 +120,7 @@ struct GlfwJoyState {
 	uint8 numButtons;
 	uint8* buttons;
 	bool mappedButtons[17];
+	bool rawButtons[JOY_RAW_BUTTONS];
 };
 #endif
 

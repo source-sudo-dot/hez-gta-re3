@@ -6619,8 +6619,8 @@ CMenuManager::PrintMap(void)
 		if (Abs(pull) > 0.08f) {
 			float amount = (Abs(pull) - 0.08f) / 0.92f;
 			float seconds = CTimer::GetRenderFrameLength() / (float)LOGICAL_FRAME_RATE;
-			// two and a half times the size a second at a full pull
-			float factor = Pow(2.5f, amount * seconds);
+			// not quite four times the size a second at a full pull
+			float factor = Pow(3.75f, amount * seconds);
 			ZOOM_BY(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, pull > 0.0f ? factor : 1.0f / factor);
 		}
 	}

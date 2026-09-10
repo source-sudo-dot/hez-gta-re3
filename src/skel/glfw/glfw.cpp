@@ -43,6 +43,7 @@ long _dwOperatingSystemVersion;
 #include "Timer.h"
 #include "DMAudio.h"
 #include "ControllerConfig.h"
+#include "PadRumble.h"
 #include "Frontend.h"
 #include "Game.h"
 #include "PCSave.h"
@@ -584,6 +585,7 @@ psInitialize(void)
 void
 psTerminate(void)
 {
+	CPadRumble::Shutdown();
 	return;
 }
 
@@ -2542,6 +2544,8 @@ void CapturePad(RwInt32 padID)
 
 	ControlsManager.m_NewState.buttons = (uint8*)buttons;
 	ControlsManager.m_NewState.numButtons = numButtons;
+	for (int i = 0; i < JOY_RAW_BUTTONS; i++)
+		ControlsManager.m_NewState.rawButtons[i] = i < numButtons && buttons[i];
 	ControlsManager.m_NewState.id = glfwPad;
 	ControlsManager.m_NewState.isGamepad = glfwGetGamepadState(glfwPad, &gamepadState);
 	if (ControlsManager.m_NewState.isGamepad) {
