@@ -73,6 +73,7 @@
 #define WEAPON_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_WW", { new CCFOSelect((int8*)&CWeaponWheel::bEnabled, "Display", "WeaponWheel", off_on, 2, false) },
 #define AIM_FREECAM_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADF", { new CCFOSelect((int8*)&CCamera::bAimDisablesFreeCam, "Display", "AimDisablesFreeCam", off_on, 2, false) },
 #define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
+#define AIM_TO_FIRE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ATF", { new CCFOSelect((int8*)&CPlayerPed::bAimToFire, "Display", "AimToFire", off_on, 2, false) },
 #define AIM_ASSIST_TOGGLE MENUACTION_CFO_SELECT, "FEZ_AA", { new CCFOSelect((int8*)&CPlayerPed::bAimAssist, "Display", "AimAssist", off_on, 2, false) },
 #define HIT_MARKERS_TOGGLE MENUACTION_CFO_SELECT, "FEZ_HM", { new CCFOSelect((int8*)&CCrosshair::bHitMarkers, "Display", "HitMarkers", off_on, 2, false) },
 #define AIM_READY_POSE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ARP", { new CCFOSelect((int8*)&CPlayerPed::bAimReadyPose, "Display", "AimReadyPose", off_on, 2, false) },
@@ -980,6 +981,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 0, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
 
 		MOVE_WHILE_SHOOTING_TOGGLE
+		AIM_TO_FIRE_TOGGLE
 		AIM_READY_POSE_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) },
 		AIM_ASSIST_TOGGLE

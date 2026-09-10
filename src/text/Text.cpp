@@ -123,6 +123,7 @@ static struct {
 	{ "FEZ_HM", "HIT MARKERS" },
 	{ "FEZ_XHS", "CROSSHAIR SIZE" },
 	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
+	{ "FEZ_ATF", "AIM TO FIRE" },
 	{ "FEZ_ARP", "WEAPON READY ON AIM" },
 	{ "FEZ_ARS", "WEAPON RAISE SPEED" },
 	{ "FEZ_AA", "AIM ASSIST" },

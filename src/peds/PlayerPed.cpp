@@ -662,7 +662,8 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 			// before the trigger.  Hold the pose until the trigger is let go as well and
 			// until the shot that is owed has been taken, then drop it exactly the way
 			// letting go in the other order already did.
-			if (padUsed->GetWeapon() || CTimer::GetTimeInMilliseconds() < m_shootTimer)
+			if (m_nPedState == PED_ATTACK &&
+				(padUsed->GetWeapon() || CTimer::GetTimeInMilliseconds() < m_shootTimer))
 				return;
 
 			bIsAimPosed = false;
@@ -673,6 +674,14 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 			// is faded.  A real lock on target is somebody else's business and is left be.
 			if (bIsPointingGunAt && m_pPointGunAt == nil)
 				ClearPointGunAt();
+
+			// Cutting the animation short leaves nothing to raise the finish callback
+			// that would have ended the attack, so the player stood in PED_ATTACK long
+			// after the arm was down and could not walk away from it.  End it here.
+			if (m_nPedState == PED_ATTACK) {
+				bIsAttacking = false;
+				ClearAttack();
+			}
 
 			FadeAimPoseOut(this, info, Max(m_fAimRaiseSpeed, 0.1f));
 		}
@@ -721,6 +730,7 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	}
 }
 
+bool  CPlayerPed::bAimToFire = true;
 bool  CPlayerPed::bAimAssist = true;
 float CPlayerPed::m_fAimAssistStrength = 0.45f;
 float CPlayerPed::m_fAimAssistFactor = 1.0f;
@@ -1321,7 +1331,17 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 		}
 	}
 
-	if (padUsed->GetWeapon() && m_nMoveState != PEDMOVE_SPRINT) {
+	// A shot from the hip plays the weapon animation from its very start and lets it run
+	// its tail out afterwards, and the ready pose covers neither, so the arm goes up and
+	// comes down at a pace of its own - and letting go of aim in the middle of a burst
+	// drops the player onto that path mid-shot.  Asking for aim keeps every shot on the
+	// one path.  Fists, melee and thrown weapons never aim and are left alone.
+	bool mayFire = true;
+	if (bAimToFire && !bInVehicle && !padUsed->GetTarget() &&
+		weaponInfo->IsFlagSet(WEAPONFLAG_CANAIM) && weaponInfo->m_eWeaponFire != WEAPON_FIRE_MELEE)
+		mayFire = false;
+
+	if (padUsed->GetWeapon() && m_nMoveState != PEDMOVE_SPRINT && mayFire) {
 		if (m_nSelectedWepSlot == m_currentWeapon) {
 			if (m_pPointGunAt) {
 #ifdef FREE_CAM
