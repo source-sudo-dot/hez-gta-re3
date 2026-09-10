@@ -73,10 +73,16 @@ public:
 	void ProcessWeaponSwitch(CPad*);
 	void ProcessManualReload(CPad*);
 	void ProcessAimReadyPose(CPad*);
+	void ProcessAimAssist(void);
 
 	// AimReadyPose and AimRaiseSpeed under [Display] in re3.ini
 	static bool bAimReadyPose;
 	static float m_fAimRaiseSpeed;
+	// AimAssist and AimAssistStrength under [Display] in re3.ini
+	static bool bAimAssist;
+	static float m_fAimAssistStrength;
+	// what the look stick is multiplied by this frame, 1 when there is nobody near
+	static float m_fAimAssistFactor;
 	static bool bIsAimPosed;
 	void MakeObjectTargettable(int32);
 	void PlayerControl1stPersonRunAround(CPad *padUsed);

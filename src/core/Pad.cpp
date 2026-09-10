@@ -24,6 +24,7 @@
 #include "Timer.h"
 #include "Record.h"
 #include "World.h"
+#include "PlayerPed.h"
 #include "Vehicle.h"
 #include "Ped.h"
 #include "Population.h"
@@ -2799,7 +2800,7 @@ float
 CPad::GetLookStickSensitivity(void)
 {
 	if ( GetPad(0)->GetTarget() && FindPlayerVehicle() == nil )
-		return Max(m_fStickAimSensitivity, 0.05f);
+		return Max(m_fStickAimSensitivity, 0.05f) * CPlayerPed::m_fAimAssistFactor;
 	return Max(m_fStickSensitivity, 0.05f);
 }
 

@@ -688,6 +688,79 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	}
 }
 
+bool  CPlayerPed::bAimAssist = true;
+float CPlayerPed::m_fAimAssistStrength = 0.45f;
+float CPlayerPed::m_fAimAssistFactor = 1.0f;
+
+// how far off the sights someone still counts, measured on screen and so the same at
+// any distance
+#define AIM_ASSIST_CONE (DEGTORAD(7.0f))
+
+// Rotational slow down.  Nothing about where the shot lands changes; the stick simply
+// asks for less turn while the sights are near someone, which the player reads as his
+// own hand steadying rather than as the game taking over.  Worked out once a frame off
+// last frame's camera, which is a lag nobody can feel, and handed to the stick through
+// GetLookStickSensitivity so it lands exactly where the aiming sensitivity does.
+void
+CPlayerPed::ProcessAimAssist(void)
+{
+	m_fAimAssistFactor = 1.0f;
+
+	if (!bAimAssist || m_fAimAssistStrength <= 0.0f)
+		return;
+	// only for free aim; the game's own lock on already holds a target for you, and the
+	// two pulling at the same stick would fight
+	if (!CPad::GetPad(0)->GetTarget() || m_pPointGunAt != nil || bInVehicle)
+		return;
+
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	if (!info->IsFlagSet(WEAPONFLAG_CANAIM) && !info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM))
+		return;
+
+	CCam &cam = TheCamera.Cams[TheCamera.ActiveCam];
+	float tanX, tanY;
+	TheCamera.Find3rdPersonCamAimTangents(cam.FOV, tanX, tanY);
+	CVector aim = cam.Front + cam.Up * tanY + CrossProduct(cam.Front, cam.Up) * tanX;
+	aim.Normalise();
+
+	float bestCos = Cos(AIM_ASSIST_CONE);
+	for (int32 i = CPools::GetPedPool()->GetSize() - 1; i >= 0; i--) {
+		CPed *ped = CPools::GetPedPool()->GetSlot(i);
+		if (ped == nil || ped == this)
+			continue;
+		if (ped->DyingOrDead() || ped->bInVehicle || ped->m_leader == this)
+			continue;
+
+		RwV3d node;
+		ped->m_pedIK.GetComponentPosition(node, PED_MID);
+		CVector centre(node.x, node.y, node.z);
+
+		CVector toPed = centre - cam.Source;
+		float dist = toPed.Magnitude();
+		if (dist < 1.0f || dist > info->m_fRange)
+			continue;
+
+		// the widest cone found so far, so the nearest one to the sights wins
+		float dot = DotProduct(toPed, aim) / dist;
+		if (dot <= bestCos)
+			continue;
+		// peds do not block, or a crowd would shade itself out; glass and fences do not
+		// either, the shot goes through them
+		if (!CWorld::GetIsLineOfSightClear(cam.Source, centre, true, true, false, true, false, true))
+			continue;
+
+		bestCos = dot;
+	}
+
+	if (bestCos <= Cos(AIM_ASSIST_CONE))
+		return;
+
+	// full at the sights, nothing at the edge of the cone, so it eases in instead of
+	// switching on
+	float closeness = 1.0f - Acos(Clamp(bestCos, -1.0f, 1.0f)) / AIM_ASSIST_CONE;
+	m_fAimAssistFactor = 1.0f - Clamp(m_fAimAssistStrength, 0.0f, 1.0f) * closeness;
+}
+
 void
 CPlayerPed::ProcessManualReload(CPad *padUsed)
 {
@@ -1491,6 +1564,7 @@ CPlayerPed::ProcessControl(void)
 
 	ProcessManualReload(padUsed);
 	ProcessAimReadyPose(padUsed);
+	ProcessAimAssist();
 
 	if (m_nMoveState != PEDMOVE_RUN && m_nMoveState != PEDMOVE_SPRINT)
 		RestoreSprintEnergy(1.0f);
