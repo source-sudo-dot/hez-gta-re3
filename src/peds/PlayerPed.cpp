@@ -610,8 +610,15 @@ FadeAimPoseOut(CPed *ped, CWeaponInfo *info, float speed)
 	for (int32 i = 0; i < 2; i++) {
 		AnimationId id = i == 0 ? info->m_AnimToPlay : info->m_Anim2ToPlay;
 		CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(ped->GetClump(), id);
-		if (assoc && assoc->blendDelta < 0.0f)
-			assoc->blendDelta *= speed;
+		if (assoc == nil)
+			continue;
+
+		// Stop it running as well as fading it.  Coming out of a shot the animation is
+		// past its loop and on its way through a tail that lowers the arm on its own,
+		// and letting that play is the whole delay.
+		assoc->flags &= ~ASSOC_RUNNING;
+		assoc->flags |= ASSOC_DELETEFADEDOUT;
+		assoc->blendDelta = -4.0f * speed;
 	}
 }
 
@@ -648,25 +655,26 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 
 	if (!aiming) {
 		if (bIsAimPosed) {
+			// Aim let go in the middle of a shot.  Tearing the pose down there and then
+			// achieved nothing - ClearPointGunAt only drops the arm out of PED_AIM_GUN
+			// and a shot is PED_ATTACK - so the firing animation was left to run its own
+			// tail out, which is the long way down the player sees when he lets go of aim
+			// before the trigger.  Hold the pose until the trigger is let go as well and
+			// until the shot that is owed has been taken, then drop it exactly the way
+			// letting go in the other order already did.
+			if (padUsed->GetWeapon() || CTimer::GetTimeInMilliseconds() < m_shootTimer)
+				return;
+
 			bIsAimPosed = false;
 
 			// The end of a burst leaves the player pointing the gun at nothing, which is
 			// what keeps the weapon up between shots.  PointGunAt() puts the pose back on
-			// every frame while that lasts, so fading the animation here would achieve
-			// nothing: the state has to be left first.  A real lock on target is somebody
-			// else's business and is not touched.
-			if (bIsPointingGunAt && m_pPointGunAt == nil) {
+			// every frame while that lasts, so the state has to be left before anything
+			// is faded.  A real lock on target is somebody else's business and is left be.
+			if (bIsPointingGunAt && m_pPointGunAt == nil)
 				ClearPointGunAt();
-				FadeAimPoseOut(this, info, Max(m_fAimRaiseSpeed, 0.1f));
-				return;
-			}
 
-			// Otherwise let it go the way the game drops the lock on pose.  A running
-			// animation is one the player is firing with and is left well alone.
-			if (assoc && !assoc->IsRunning()) {
-				assoc->flags |= ASSOC_DELETEFADEDOUT;
-				assoc->blendDelta = -4.0f * Max(m_fAimRaiseSpeed, 0.1f);
-			}
+			FadeAimPoseOut(this, info, Max(m_fAimRaiseSpeed, 0.1f));
 		}
 		return;
 	}
