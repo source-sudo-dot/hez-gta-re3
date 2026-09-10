@@ -495,6 +495,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Controller", "StickDebug", &CPad::m_bStickDebug);
 	ReadIniIfExists("Display", "MoveWhileShooting", &CWeaponInfo::bMoveWhileShooting);
 	ReadIniIfExists("Display", "AltDamageModel", &CWeaponInfo::bAltDamageModel);
+	ReadIniIfExists("Display", "M16ThirdPerson", &CWeaponInfo::bM16ThirdPerson);
 	ReadIniIfExists("Display", "CarCamFollowVert", &CCamera::m_fCarCamFollowVert);
 	ReadIniIfExists("Display", "CarCamFollowDelay", &CCamera::m_fCarCamFollowDelay);
 	ReadIniIfExists("Display", "CarCamSmoothing", &CCamera::m_fCarCamSmoothing);
@@ -614,6 +615,7 @@ void SaveINISettings()
 	StoreIni("Controller", "StickDebug", CPad::m_bStickDebug);
 	StoreIni("Display", "MoveWhileShooting", CWeaponInfo::bMoveWhileShooting);
 	StoreIni("Display", "AltDamageModel", CWeaponInfo::bAltDamageModel);
+	StoreIni("Display", "M16ThirdPerson", CWeaponInfo::bM16ThirdPerson);
 	StoreIni("Display", "CarCamFollowVert", CCamera::m_fCarCamFollowVert);
 	StoreIni("Display", "CarCamFollowDelay", CCamera::m_fCarCamFollowDelay);
 	StoreIni("Display", "CarCamSmoothing", CCamera::m_fCarCamSmoothing);

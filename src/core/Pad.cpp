@@ -2873,6 +2873,38 @@ int16 CPad::LookAroundUpDown(void)
 	return (int16)GetPad(0)->LookAroundUpDownFloat();
 }
 
+// The sights were aimed with the left stick and a curve of their own.  They take the
+// same shaped right stick the follow camera does now, so the dead zone, the curve and the
+// two sensitivities all carry over and aiming feels the same everywhere.  The d-pad still
+// aims, for the keyboard's look keys.
+float CPad::SniperModeLookLeftRightFloat(void)
+{
+	float stick = LookAroundLeftRightFloat();
+	if ( stick != 0.0f )
+		return stick;
+
+	float dpad = (float)(NewState.DPadRight - NewState.DPadLeft) / 2.0f;
+	return dpad / 128.0f * STICK_LOOK_RANGE;
+}
+
+float CPad::SniperModeLookUpDownFloat(void)
+{
+	float stick = LookAroundUpDownFloat();
+	if ( stick != 0.0f )
+		return stick;
+
+	float dpad;
+#ifdef INVERT_LOOK_FOR_PAD
+	if ( CPad::bInvertLook4Pad )
+		dpad = (float)(NewState.DPadDown - NewState.DPadUp) / 2.0f;
+	else
+#endif
+		dpad = (float)(NewState.DPadUp - NewState.DPadDown) / 2.0f;
+
+	return dpad / 128.0f * STICK_LOOK_RANGE;
+}
+
+
 
 void CPad::ResetAverageWeapon(void)
 {

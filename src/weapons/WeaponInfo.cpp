@@ -163,6 +163,10 @@ CWeaponInfo::LoadWeaponData(void)
 
 bool CWeaponInfo::bMoveWhileShooting = false;
 bool CWeaponInfo::bAltDamageModel = false;
+// The M16 carries CANAIM in weapon.dat just like the AK and no 1ST_PERSON flag;
+// its scope is forced by hand in CPlayerPed.  Skipping that branch drops it back
+// onto the ordinary over-the-shoulder path.
+bool CWeaponInfo::bM16ThirdPerson = true;
 
 // Only the pistol and the uzi carry CANAIM_WITHARM in weapon.dat.  Without it the
 // whole body plays the firing animation and the player is planted where he stands;

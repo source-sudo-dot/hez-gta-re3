@@ -269,6 +269,10 @@ public:
 	// whole number version, or their scaling would be off by orders of magnitude.
 	float LookAroundLeftRightFloat(void);
 	float LookAroundUpDownFloat(void);
+	// the sights aim off the same shaped right stick as the follow camera, with the
+	// d-pad, which the keyboard's look keys are mapped to, still working
+	float SniperModeLookLeftRightFloat(void);
+	float SniperModeLookUpDownFloat(void);
 	static float GetLookStickSensitivity(void);
 
 	// StickDebug=1 under [Controller] in re3.ini puts the right stick's numbers on

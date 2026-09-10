@@ -110,6 +110,7 @@ static struct {
 	{ "FEZ_CSM", "CAR CAM SMOOTHING" },
 	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
 	{ "FEZ_ADM", "DAMAGE BY HIT ZONE" },
+	{ "FEZ_M16", "M16 THIRD PERSON AIM" },
 	{ "FEZ_BT", "SLOW MOTION" },
 	{ "FEZ_RLD", "RELOAD" },
 	{ "FEZ_MAP", "OPEN MAP" },
