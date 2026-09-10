@@ -9,4 +9,7 @@ public:
 	// once a frame, with what the game is asking of the two motors, 0 to 255
 	static void Update(uint8 left, uint8 right);
 	static void Shutdown(void);
+	// one line for the StickDebug overlay: whether a pad was found, what report it
+	// takes, and what the last write came back with
+	static void DebugLine(char *out);
 };

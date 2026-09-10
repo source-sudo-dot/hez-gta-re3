@@ -2834,6 +2834,11 @@ CPad::DrawStickDebug(void)
 	sprintf(buf, "raw %.4f  dz %.4f  x %.3f  y %.3f", m_fDebugRawLen, m_fDebugDeadzonedLen, out, outY);
 	AsciiToUnicode(buf, wbuf);
 
+	char rumbleBuf[128];
+	wchar rumbleWide[128];
+	CPadRumble::DebugLine(rumbleBuf);
+	AsciiToUnicode(rumbleBuf, rumbleWide);
+
 	CFont::SetBackgroundOff();
 	CFont::SetScale(SCREEN_SCALE_X(0.5f), SCREEN_SCALE_Y(0.8f));
 	CFont::SetCentreOff();
@@ -2842,6 +2847,7 @@ CPad::DrawStickDebug(void)
 	CFont::SetFontStyle(FONT_BANK);
 	CFont::SetColor(CRGBA(255, 255, 128, 255));
 	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(140.0f), wbuf);
+	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(155.0f), rumbleWide);
 }
 
 // what the camera code used to get at most, kept so the top speed does not change

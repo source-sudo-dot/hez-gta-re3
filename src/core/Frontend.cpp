@@ -151,7 +151,7 @@ int8 CMenuManager::m_PrefsControllerType = CONTROLLER_XBOXONE;
 #endif
 
 int32 CMenuManager::OS_Language = LANG_ENGLISH;
-int8 CMenuManager::m_PrefsUseVibration;
+int8 CMenuManager::m_PrefsUseVibration = 1;
 int8 CMenuManager::m_DisplayControllerOnFoot;
 int8 CMenuManager::m_PrefsVsync = 1;
 int8 CMenuManager::m_PrefsVsyncDisp = 1;
@@ -1978,6 +1978,18 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 	return number;
 }
 
+// The spacing was a fixed amount that happened to fit the list re3 ships with, so adding
+// actions to it ran the last few off the bottom of the box and over the text under it.
+// Squeeze the rows together when there are more than fit, never spread them wider.  The
+// labels and the bindings are drawn in two passes, so both ask here.
+static float
+ContSetupRowHeight(float rowHeight, int numOptions, float yStart)
+{
+	if (numOptions > 1)
+		rowHeight = Min(rowHeight, ((DEFAULT_SCREEN_HEIGHT - CONTSETUP_LIST_BOTTOM) - yStart) / (numOptions - 1));
+	return rowHeight;
+}
+
 void
 CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8 column)
 {
@@ -1997,6 +2009,7 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 		default:
 			break;
 	}
+	rowHeight = ContSetupRowHeight(rowHeight, numOptions, yStart);
 
 	// MENU_Y(rowHeight * 0.0f + yStart);
 	for (int optionIdx = 0; optionIdx < numOptions; nextY = MENU_Y(++optionIdx * rowHeight + yStart)) {
@@ -2507,6 +2520,8 @@ CMenuManager::DrawControllerSetupScreen()
 		yStart = CONTSETUP_LIST_TOP + CONTSETUP_LIST_HEADER_HEIGHT + 1;
 	else
 		yStart = CONTSETUP_LIST_TOP + CONTSETUP_LIST_HEADER_HEIGHT + 5;
+
+	rowHeight = ContSetupRowHeight(rowHeight, GetNumOptionsCntrlConfigScreens(), yStart);
 
 	float optionYBottom = yStart + rowHeight;
 	for (int i = 0; i < ARRAY_SIZE(actionTexts); ++i) {
@@ -6619,8 +6634,8 @@ CMenuManager::PrintMap(void)
 		if (Abs(pull) > 0.08f) {
 			float amount = (Abs(pull) - 0.08f) / 0.92f;
 			float seconds = CTimer::GetRenderFrameLength() / (float)LOGICAL_FRAME_RATE;
-			// not quite four times the size a second at a full pull
-			float factor = Pow(3.75f, amount * seconds);
+			// six and a half times the size a second at a full pull
+			float factor = Pow(6.5625f, amount * seconds);
 			ZOOM_BY(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, pull > 0.0f ? factor : 1.0f / factor);
 		}
 	}

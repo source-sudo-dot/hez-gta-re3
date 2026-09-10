@@ -16,7 +16,11 @@ bool  CCrosshair::m_bKill = false;
 // how long a marker stays up
 #define MARKER_SECONDS (0.30f)
 // how round the ring looks
-#define RING_SEGMENTS (28)
+#define RING_SEGMENTS (44)
+// how far the softened edge reaches, in pixels either side
+#define EDGE_FEATHER (0.75f)
+// the hairline of black that carries the shape over a bright road
+#define OUTLINE_WIDTH (1.0f)
 
 void
 CCrosshair::RegisterHit(bool headShot)
@@ -82,6 +86,24 @@ DrawRing(float x, float y, float radius, float half, const CRGBA &col)
 	}
 }
 
+// Flat polygons come out with hard edges, and at the size this is set to the ring is
+// only a couple of pixels across, so every stair step shows.  Laying a slightly wider
+// pass at part alpha underneath leaves a soft pixel along both edges, which is what the
+// hardware would have put there had it been antialiasing the scene.
+static void
+DrawRingSoft(float x, float y, float radius, float half, const CRGBA &col)
+{
+	DrawRing(x, y, radius, half + EDGE_FEATHER, CRGBA(col.r, col.g, col.b, col.a / 2));
+	DrawRing(x, y, radius, half, col);
+}
+
+static void
+DrawLineSoft(float x1, float y1, float x2, float y2, float half, const CRGBA &col)
+{
+	DrawLine(x1, y1, x2, y2, half + EDGE_FEATHER, CRGBA(col.r, col.g, col.b, col.a / 2));
+	DrawLine(x1, y1, x2, y2, half, col);
+}
+
 void
 CCrosshair::Draw(float x, float y, float scale)
 {
@@ -99,11 +121,13 @@ CCrosshair::Draw(float x, float y, float scale)
 	float half = Max(radius * 0.055f, 1.0f);
 	float ringHalf = Max(radius * 0.06875f, 1.25f);
 
-	CRGBA shadow(0, 0, 0, 110);
+	CRGBA outline(0, 0, 0, 205);
 	CRGBA white(255, 255, 255, 235);
 
-	DrawRing(x, y, radius, ringHalf * 1.9f, shadow);
-	DrawRing(x, y, radius, ringHalf, white);
+	// a hairline of black either side of the ring, in place of the soft halo that used
+	// to sit under it, so the shape holds against a pale road as well as a dark one
+	DrawRingSoft(x, y, radius, ringHalf + OUTLINE_WIDTH, outline);
+	DrawRingSoft(x, y, radius, ringHalf, white);
 
 	if(!bHitMarkers || m_fMarkerTime <= 0.0f)
 		return;
@@ -117,11 +141,15 @@ CCrosshair::Draw(float x, float y, float scale)
 	// how far the marker reaches, the same either way so they sit in the same place
 	float reach = radius * 1.10f;
 
+	CRGBA markerOutline(0, 0, 0, alpha * 205 / 235);
+
 	if(!m_bHeadShot){
 		// a cross through the ring
 		float d = reach * 0.7071f;
-		DrawLine(x - d, y - d, x + d, y + d, half, col);
-		DrawLine(x - d, y + d, x + d, y - d, half, col);
+		DrawLineSoft(x - d, y - d, x + d, y + d, half + OUTLINE_WIDTH, markerOutline);
+		DrawLineSoft(x - d, y + d, x + d, y - d, half + OUTLINE_WIDTH, markerOutline);
+		DrawLineSoft(x - d, y - d, x + d, y + d, half, col);
+		DrawLineSoft(x - d, y + d, x + d, y - d, half, col);
 		return;
 	}
 
@@ -132,6 +160,13 @@ CCrosshair::Draw(float x, float y, float scale)
 		float a = i * (TWOPI / 8) + PI / 8;
 		float s = Sin(a);
 		float c = -Cos(a);
-		DrawLine(x + s * inner, y + c * inner, x + s * reach, y + c * reach, half, col);
+		DrawLineSoft(x + s * inner, y + c * inner, x + s * reach, y + c * reach,
+			half + OUTLINE_WIDTH, markerOutline);
+	}
+	for(int32 i = 0; i < 8; i++){
+		float a = i * (TWOPI / 8) + PI / 8;
+		float s = Sin(a);
+		float c = -Cos(a);
+		DrawLineSoft(x + s * inner, y + c * inner, x + s * reach, y + c * reach, half, col);
 	}
 }
