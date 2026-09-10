@@ -638,6 +638,15 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 		 GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING))
 		assoc->speed = 1.0f;
 
+	// A trigger pulled halfway through the raise then had the rest of it to walk at that
+	// normal speed before the first shot went off, which made firing early slower than
+	// waiting for the arm to come up - the wrong way round, and the pause reads as the
+	// game ignoring the press.  Put the animation where the pose holds it, so an early
+	// press gets the same instant shot that waiting does.
+	if (assoc != nil && bIsAimPosed && padUsed->GetWeapon() &&
+		m_nPedState != PED_ATTACK && assoc->currentTime < info->m_fAnimLoopStart)
+		assoc->SetCurrentTime(info->m_fAnimLoopStart);
+
 	// Whether the player is asking to aim, and nothing else.  What the weapon is doing
 	// while he asks must not come into it: it stays in its firing state for as long as
 	// its rate of fire says, up to a second, and treating that as "not aiming" was what
