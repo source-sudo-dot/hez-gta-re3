@@ -30,6 +30,7 @@
 #include "IniFile.h"
 #include "BulletTime.h"
 #include "Crosshair.h"
+#include "WeaponWheel.h"
 #include "PlayerPed.h"
 #include "WeaponInfo.h"
 #include "CarCtrl.h"
@@ -69,6 +70,8 @@
 #define BULLET_TIME_TOGGLE MENUACTION_CFO_SELECT, "FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) },
 #define ALT_DAMAGE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADM", { new CCFOSelect((int8*)&CWeaponInfo::bAltDamageModel, "Display", "AltDamageModel", off_on, 2, false) },
 #define M16_THIRDPERSON_TOGGLE MENUACTION_CFO_SELECT, "FEZ_M16", { new CCFOSelect((int8*)&CWeaponInfo::bM16ThirdPerson, "Display", "M16ThirdPerson", off_on, 2, false) },
+#define WEAPON_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_WW", { new CCFOSelect((int8*)&CWeaponWheel::bEnabled, "Display", "WeaponWheel", off_on, 2, false) },
+#define AIM_FREECAM_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADF", { new CCFOSelect((int8*)&CCamera::bAimDisablesFreeCam, "Display", "AimDisablesFreeCam", off_on, 2, false) },
 #define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
 #define AIM_READY_POSE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ARP", { new CCFOSelect((int8*)&CPlayerPed::bAimReadyPose, "Display", "AimReadyPose", off_on, 2, false) },
 
@@ -485,12 +488,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		DUALPASS_SELECTOR
 		CUTSCENE_BORDERS_TOGGLE
 		FREE_CAM_TOGGLE
-		MOVE_WHILE_SHOOTING_TOGGLE
-		BULLET_TIME_TOGGLE
-		ALT_DAMAGE_TOGGLE
-		M16_THIRDPERSON_TOGGLE
-		MODERN_CROSSHAIR_TOGGLE
-		AIM_READY_POSE_TOGGLE
 		POSTFX_SELECTORS
 		// re3.cpp inserts here pipeline selectors if neo/neo.txd exists and EXTENDED_PIPELINES defined
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
@@ -504,12 +501,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		DENSITY_SLIDERS
 		CUTSCENE_BORDERS_TOGGLE
 		FREE_CAM_TOGGLE
-		MOVE_WHILE_SHOOTING_TOGGLE
-		BULLET_TIME_TOGGLE
-		ALT_DAMAGE_TOGGLE
-		M16_THIRDPERSON_TOGGLE
-		MODERN_CROSSHAIR_TOGGLE
-		AIM_READY_POSE_TOGGLE
 		MENUACTION_SUBTITLES,	"FED_SUB", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
 		MENUACTION_CFO_SELECT,	"FEM_EHU", { new CCFOSelect((int8*)&CDraw::ms_bExtendHud, "Display", "ExtendHud", off_on, 2, false) },
 		MENUACTION_CFO_DYNAMIC,	"FET_DEF", { new CCFODynamic(nil, nil, nil, nil, RestoreDefDisplay) },
@@ -794,6 +785,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 #endif
 		MENUACTION_LOADRADIO,		"FET_AUD", { nil, SAVESLOT_NONE, MENUPAGE_SOUND_SETTINGS },
 		MENUACTION_CHANGEMENU,		"FET_DIS", { nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS },
+		MENUACTION_CHANGEMENU,		"FEZ_GPL", { nil, SAVESLOT_NONE, MENUPAGE_GAMEPLAY_SETTINGS },
 #ifdef GRAPHICS_MENU_OPTIONS
 		MENUACTION_CHANGEMENU,		"FET_GFX", { nil, SAVESLOT_NONE, MENUPAGE_GRAPHICS_SETTINGS },
 #endif
@@ -960,22 +952,37 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 
 	// MENUPAGE_STICK_SETTINGS
 	{ "FEZ_STK", MENUPAGE_CONTROLLER_PC, MENUPAGE_CONTROLLER_PC,
-		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 60, 24, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
+		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 0, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
 
 		MENUACTION_CFO_SLIDER,	"FEZ_DZL", { new CCFOSlider(&CPad::m_fStickDeadzoneLeft, "Controller", "StickDeadzoneLeft", 0.0f, 0.4f, nil, 40, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_DZR", { new CCFOSlider(&CPad::m_fStickDeadzoneRight, "Controller", "StickDeadzoneRight", 0.0f, 0.4f, nil, 40, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f, nil, 56, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_AZ", { new CCFOSlider(&CCamera::m_fAimZoomDegrees, "Display", "AimZoomDegrees", 0.0f, 35.0f, nil, 70, true) },
+		AIM_FREECAM_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_CVF", { new CCFOSlider(&CCamera::m_fCarCamFollowVert, "Display", "CarCamFollowVert", 0.0f, 1.0f, nil, 20, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CVD", { new CCFOSlider(&CCamera::m_fCarCamFollowDelay, "Display", "CarCamFollowDelay", 0.0f, 5.0f, nil, 50, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CSM", { new CCFOSlider(&CCamera::m_fCarCamSmoothing, "Display", "CarCamSmoothing", 0.0f, 1.0f, nil, 20, true) },
+		MENUACTION_CFO_SLIDER,	"FEZ_MSS", { new CCFOSlider(&CMenuManager::m_fMapScrollSpeed, "Display", "MapScrollSpeed", 0.1f, 3.0f, nil, 58, true) },
+		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
+	},
+
+	// MENUPAGE_GAMEPLAY_SETTINGS
+	{ "FEZ_GPL", MENUPAGE_OPTIONS, MENUPAGE_OPTIONS,
+		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 0, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
+
+		MOVE_WHILE_SHOOTING_TOGGLE
+		AIM_READY_POSE_TOGGLE
+		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) },
+		M16_THIRDPERSON_TOGGLE
+		ALT_DAMAGE_TOGGLE
+		WEAPON_WHEEL_TOGGLE
+		BULLET_TIME_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) },
+		MODERN_CROSSHAIR_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 2.0f, 20.0f, nil, 36, true) },
-		MENUACTION_CFO_SLIDER,	"FEZ_AZ", { new CCFOSlider(&CCamera::m_fAimZoomDegrees, "Display", "AimZoomDegrees", 0.0f, 35.0f, nil, 70, true) },
-		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) },
-		MENUACTION_CFO_SLIDER,	"FEZ_MSS", { new CCFOSlider(&CMenuManager::m_fMapScrollSpeed, "Display", "MapScrollSpeed", 0.1f, 3.0f, nil, 58, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

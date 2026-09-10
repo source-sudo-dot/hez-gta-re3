@@ -252,6 +252,7 @@ enum eMenuScreen
 	MENUPAGE_DETECT_JOYSTICK,
 #endif
 	MENUPAGE_STICK_SETTINGS,
+	MENUPAGE_GAMEPLAY_SETTINGS,
 
 #endif
 	MENUPAGE_UNK, // originally 58. Custom screens are inserted above, because last screen in CMenuScreens should always be empty to make CFO work
