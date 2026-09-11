@@ -376,7 +376,7 @@ const char* MenuFilenames[][2] = {
 // value must be between 0.0-1.0
 #define ProcessSlider(value, increaseAction, decreaseAction, hoverStartX, hoverEndX) \
 	do { \
-		lastActiveBarX = DisplaySlider(MENU_X_RIGHT_ALIGNED(MENUSLIDER_X + columnWidth), MENU_Y(bitAboveNextItemY), MENU_Y(smallestSliderBar), MENU_Y(usableLineHeight), MENU_X(MENUSLIDER_UNK), value); \
+		lastActiveBarX = DisplaySlider(MENU_X_RIGHT_ALIGNED(sliderWidth + columnWidth), MENU_Y(bitAboveNextItemY), MENU_Y(smallestSliderBar), MENU_Y(usableLineHeight), MENU_X(sliderWidth), value); \
 		if (i != m_nCurrOption || !itemsAreSelectable) \
 			break; \
 		 \
@@ -387,7 +387,7 @@ const char* MenuFilenames[][2] = {
 			break; \
 		 \
 		m_nHoverOption = increaseAction; \
-		if (m_nMousePosX < MENU_X_RIGHT_ALIGNED(MENUSLIDER_X + columnWidth)) \
+		if (m_nMousePosX < MENU_X_RIGHT_ALIGNED(sliderWidth + columnWidth)) \
 			m_nHoverOption = HOVEROPTION_NOT_HOVERING; \
 	} while(0)
 
@@ -1203,6 +1203,7 @@ CMenuManager::Draw()
 	int lineHeight;
 	int headerHeight;
 	int columnWidth;
+	float sliderWidth = MENUSLIDER_X;
 	switch (m_nCurrScreen) {
 		case MENUPAGE_STATS:
 		case MENUPAGE_BRIEFS:
@@ -1292,6 +1293,8 @@ CMenuManager::Draw()
 			CCustomScreenLayout *custom = aScreens[m_nCurrScreen].layout;
 			if (custom) {
 				columnWidth = custom->columnWidth;
+				if (custom->sliderWidth)
+					sliderWidth = custom->sliderWidth;
 				headerHeight = custom->headerHeight;
 				lineHeight = custom->lineHeight;
 				CFont::SetFontStyle(FONT_LOCALE(custom->font));

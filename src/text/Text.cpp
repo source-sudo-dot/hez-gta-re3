@@ -98,8 +98,8 @@ static struct {
 	const char *key;
 	const char *text;
 } ExtraText[] = {
-	{ "FEZ_DZL", "LEFT STICK DEAD ZONE" },
-	{ "FEZ_DZR", "RIGHT STICK DEAD ZONE" },
+	{ "FEZ_DZL", "LEFT DEAD ZONE" },
+	{ "FEZ_DZR", "RIGHT DEAD ZONE" },
 	{ "FEZ_SN", "STICK SENSITIVITY" },
 	{ "FEZ_AS", "AIM SENSITIVITY" },
 	{ "FEZ_WW", "WEAPON WHEEL" },
@@ -107,12 +107,12 @@ static struct {
 	{ "FEZ_STK", "CAMERA AND STICK" },
 	{ "FEZ_GPL", "GAMEPLAY" },
 	{ "FEZ_ADF", "AIM OVER SHOULDER" },
-	{ "FEZ_CVF", "CAR CAM PITCH FOLLOW" },
-	{ "FEZ_CVD", "CAR CAM FOLLOW DELAY" },
+	{ "FEZ_CVF", "CAR CAM PITCH" },
+	{ "FEZ_CVD", "CAR CAM DELAY" },
 	{ "FEZ_CSM", "CAR CAM SMOOTHING" },
 	{ "FEZ_MWS", "MOVE WHILE SHOOTING" },
 	{ "FEZ_ADM", "DAMAGE BY HIT ZONE" },
-	{ "FEZ_M16", "M16 THIRD PERSON AIM" },
+	{ "FEZ_M16", "M16 OVER SHOULDER" },
 	{ "FEZ_BT", "SLOW MOTION" },
 	{ "FEZ_RLD", "RELOAD" },
 	{ "FEZ_MAP", "OPEN MAP" },
@@ -127,9 +127,9 @@ static struct {
 	{ "FEZ_ARP", "WEAPON READY ON AIM" },
 	{ "FEZ_ARS", "WEAPON RAISE SPEED" },
 	{ "FEZ_AA", "AIM ASSIST" },
-	{ "FEZ_AAS", "AIM ASSIST STRENGTH" },
-	{ "FEZ_BTS", "SLOW MOTION SECONDS" },
-	{ "FEZ_BTR", "SLOW MOTION RECHARGE" },
+	{ "FEZ_AAS", "ASSIST STRENGTH" },
+	{ "FEZ_BTS", "SLOW MO SECONDS" },
+	{ "FEZ_BTR", "SLOW MO RECHARGE" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

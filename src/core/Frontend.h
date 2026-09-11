@@ -498,6 +498,7 @@ extern CMenuScreen aScreens[MENUPAGES];
 struct CCustomScreenLayout {
 	eMenuSprites sprite;
 	int columnWidth;
+	int sliderWidth;	// 0 for the usual one
 	int headerHeight;
 	int lineHeight;
 	int8 font;
