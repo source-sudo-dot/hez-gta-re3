@@ -26,9 +26,14 @@ private:
 	// where the stick or the mouse is pointing, in screen directions
 	static float m_fPointX;
 	static float m_fPointY;
+	// a tap puts the weapon away and taps it back out, so what was put away is kept
+	static int32 m_nStowedWeapon;
+	static uint32 m_nOpenedAt;
+	static bool m_bPointed;
 
 	static bool CanOpen(void);
 	static void CollectSlots(void);
 	static void Open(void);
 	static void Close(bool takeSelection);
+	static void ToggleStow(void);
 };

@@ -27,6 +27,9 @@ int32 CWeaponWheel::m_nSelected = 0;
 float CWeaponWheel::m_fOpenAmount = 0.0f;
 float CWeaponWheel::m_fPointX = 0.0f;
 float CWeaponWheel::m_fPointY = 0.0f;
+int32 CWeaponWheel::m_nStowedWeapon = WEAPONTYPE_UNARMED;
+uint32 CWeaponWheel::m_nOpenedAt = 0;
+bool  CWeaponWheel::m_bPointed = false;
 
 // how far the stick has to be pushed before it counts as pointing somewhere
 #define WHEEL_STICK_DEADZONE (0.35f)
@@ -35,6 +38,8 @@ float CWeaponWheel::m_fPointY = 0.0f;
 // the ring, in the 640x448 units the rest of the hud is laid out in
 #define WHEEL_RADIUS (100.0f)
 #define WHEEL_ICON_SIZE (52.0f)
+// held no longer than this and never pointed anywhere, and it counts as a tap
+#define WHEEL_TAP_MS (250)
 
 void
 CWeaponWheel::Init(void)
@@ -45,6 +50,8 @@ CWeaponWheel::Init(void)
 	m_fOpenAmount = 0.0f;
 	m_fPointX = 0.0f;
 	m_fPointY = 0.0f;
+	m_nStowedWeapon = WEAPONTYPE_UNARMED;
+	m_bPointed = false;
 }
 
 bool
@@ -105,6 +112,8 @@ CWeaponWheel::Open(void)
 
 	m_fPointX = 0.0f;
 	m_fPointY = 0.0f;
+	m_nOpenedAt = CTimer::GetTimeInMillisecondsPauseMode();
+	m_bPointed = false;
 	bOpen = true;
 	CTimer::SetCodePause(true);
 }
@@ -124,6 +133,32 @@ CWeaponWheel::Close(bool takeSelection)
 
 	bOpen = false;
 	CTimer::SetCodePause(false);
+}
+
+// A tap of the button rather than a hold: the weapon goes away and the player is on his
+// fists, and the next tap takes back the one that was put away.
+void
+CWeaponWheel::ToggleStow(void)
+{
+	CPlayerPed *player = FindPlayerPed();
+	if(player == nil)
+		return;
+
+	if(player->m_currentWeapon != WEAPONTYPE_UNARMED){
+		m_nStowedWeapon = player->m_currentWeapon;
+		player->m_nSelectedWepSlot = WEAPONTYPE_UNARMED;
+		player->MakeChangesForNewWeapon(WEAPONTYPE_UNARMED);
+		return;
+	}
+
+	// only back to something still carried with something left in it
+	if(m_nStowedWeapon == WEAPONTYPE_UNARMED)
+		return;
+	if(!player->HasWeapon(m_nStowedWeapon) || !player->GetWeapon(m_nStowedWeapon).HasWeaponAmmoToBeUsed())
+		return;
+
+	player->m_nSelectedWepSlot = m_nStowedWeapon;
+	player->MakeChangesForNewWeapon(m_nStowedWeapon);
 }
 
 void
@@ -152,7 +187,11 @@ CWeaponWheel::Process(void)
 	}
 
 	if(!held){
-		Close(true);
+		bool tapped = !m_bPointed &&
+			CTimer::GetTimeInMillisecondsPauseMode() - m_nOpenedAt < WHEEL_TAP_MS;
+		if(tapped)
+			ToggleStow();
+		Close(!tapped);
 		return;
 	}
 
@@ -182,6 +221,7 @@ CWeaponWheel::Process(void)
 		while(angle >= TWOPI) angle -= TWOPI;
 		int32 slot = (int32)(angle / TWOPI * m_nSlots + 0.5f) % m_nSlots;
 		m_nSelected = slot;
+		m_bPointed = true;
 	}
 }
 

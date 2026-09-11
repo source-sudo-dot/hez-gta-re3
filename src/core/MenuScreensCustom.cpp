@@ -30,6 +30,7 @@
 #include "IniFile.h"
 #include "BulletTime.h"
 #include "Crosshair.h"
+#include "Completion.h"
 #include "AutoSave.h"
 #include "WeaponWheel.h"
 #include "PlayerPed.h"
@@ -869,6 +870,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 	   MENUACTION_CHANGEMENU,	"FEN_STA",	{ nil, SAVESLOT_NONE, MENUPAGE_NEW_GAME },
 	   // CMenuManager::LoadAllTextures will add map here, if MENU_MAP enabled and map textures are found
 	   MENUACTION_CHANGEMENU,	"FEP_STA",	{ nil, SAVESLOT_NONE, MENUPAGE_STATS },
+	   MENUACTION_CHANGEMENU,	"FEZ_CMP",	{ nil, SAVESLOT_NONE, MENUPAGE_COMPLETION },
 	   MENUACTION_CHANGEMENU,	"FEP_BRI",	{ nil, SAVESLOT_NONE, MENUPAGE_BRIEFS },
 	   MENUACTION_CHANGEMENU,	"FET_OPT",	{ nil, SAVESLOT_NONE, MENUPAGE_OPTIONS },
 	   MENUACTION_CHANGEMENU,	"FEM_QT",	{ nil, SAVESLOT_NONE, MENUPAGE_EXIT },
@@ -999,6 +1001,13 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MODERN_CROSSHAIR_TOGGLE
 		HIT_MARKERS_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 2.0f, 20.0f, nil, 36, true) },
+		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
+	},
+
+	// MENUPAGE_COMPLETION
+	{ "FEZ_CMP", MENUPAGE_PAUSE_MENU, MENUPAGE_PAUSE_MENU,
+		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 50, 0, 250, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, false, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
+
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

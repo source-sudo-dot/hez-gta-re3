@@ -31,6 +31,7 @@
 #include "CdStream.h"
 #include "Radar.h"
 #include "Stats.h"
+#include "Completion.h"
 #include "Messages.h"
 #include "FileLoader.h"
 #include "frontendoption.h"
@@ -1114,6 +1115,9 @@ CMenuManager::Draw()
 	CFont::SetRightJustifyWrap(MENU_X_LEFT_ALIGNED(MENU_X_MARGIN - 2.0f));
 
 	switch (m_nCurrScreen) {
+		case MENUPAGE_COMPLETION:
+			PrintCompletion();
+			break;
 		case MENUPAGE_STATS:
 			PrintStats();
 			break;
@@ -4172,6 +4176,106 @@ CMenuManager::PrintErrorMessage()
 	CFont::DrawFonts();
 }
 
+// where the page lays its two columns out, in the units the rest of the menu uses
+#define GOAL_LEFT (140.0f)
+#define GOAL_RIGHT (140.0f)
+#define GOAL_TOP (60.0f)
+#define GOAL_LINE (22.0f)
+
+void
+CMenuManager::PrintCompletion()
+{
+	CCompletion::tGoal goals[CCompletion::MAX_GOALS];
+	int32 count = CCompletion::Collect(goals);
+	char buf[64];
+	wchar wide[64];
+
+	CFont::SetBackgroundOff();
+	CFont::SetPropOn();
+	CFont::SetCentreOff();
+	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
+
+	float y = MENU_Y(GOAL_TOP);
+
+	// the figure the game itself works out, at the top and larger than the rest
+	CFont::SetScale(MENU_X(0.7f), MENU_Y(1.1f));
+	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
+	CFont::SetRightJustifyOff();
+	CFont::PrintString(MENU_X_LEFT_ALIGNED(GOAL_LEFT), y, TheText.Get("FEZ_CPC"));
+	sprintf(buf, "%d%%", CCompletion::Percent());
+	AsciiToUnicode(buf, wide);
+	CFont::SetRightJustifyOn();
+	CFont::PrintString(MENU_X_RIGHT_ALIGNED(GOAL_RIGHT), y, wide);
+
+	y += MENU_Y(GOAL_LINE * 1.8f);
+
+	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
+	for (int32 i = 0; i < count; i++) {
+		bool done = goals[i].total > 0 && goals[i].done >= goals[i].total;
+
+		if (done)
+			CFont::SetColor(CRGBA(SLIDERON_COLOR.r, SLIDERON_COLOR.g, SLIDERON_COLOR.b, FadeIn(255)));
+		else
+			CFont::SetColor(CRGBA(LABEL_COLOR.r, LABEL_COLOR.g, LABEL_COLOR.b, FadeIn(255)));
+
+		CFont::SetRightJustifyOff();
+		CFont::PrintString(MENU_X_LEFT_ALIGNED(GOAL_LEFT), y, TheText.Get(goals[i].key));
+
+		sprintf(buf, "%d / %d", goals[i].done, goals[i].total);
+		AsciiToUnicode(buf, wide);
+		CFont::SetRightJustifyOn();
+		CFont::PrintString(MENU_X_RIGHT_ALIGNED(GOAL_RIGHT), y, wide);
+
+		y += MENU_Y(GOAL_LINE);
+	}
+}
+
+// Small, in the corner of the map, to be read at a glance rather than studied.
+void
+CMenuManager::PrintCompletionOnMap()
+{
+	CCompletion::tGoal goals[CCompletion::MAX_GOALS];
+	int32 count = CCompletion::Collect(goals);
+	char buf[64];
+	wchar wide[64];
+
+	CFont::SetBackgroundOff();
+	CFont::SetPropOn();
+	CFont::SetCentreOff();
+	CFont::SetRightJustifyOn();
+	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
+	CFont::SetDropShadowPosition(1);
+	CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
+	CFont::SetScale(MENU_X(0.35f), MENU_Y(0.6f));
+
+	// counted up from the strip along the bottom so the two never meet
+	float lineHeight = MENU_Y(12.0f);
+	float y = SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TOP + 18.0f) - count * lineHeight;
+
+	for (int32 i = 0; i < count; i++) {
+		bool done = goals[i].total > 0 && goals[i].done >= goals[i].total;
+
+		if (done)
+			CFont::SetColor(CRGBA(SLIDERON_COLOR.r, SLIDERON_COLOR.g, SLIDERON_COLOR.b, FadeIn(255)));
+		else
+			CFont::SetColor(CRGBA(255, 255, 255, FadeIn(230)));
+
+		sprintf(buf, "%d/%d", goals[i].done, goals[i].total);
+		AsciiToUnicode(buf, wide);
+		CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
+		CFont::PrintString(MENU_X_RIGHT_ALIGNED(80.0f), y, TheText.Get(goals[i].key));
+		y += lineHeight;
+	}
+
+	sprintf(buf, "%d%%", CCompletion::Percent());
+	AsciiToUnicode(buf, wide);
+	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
+	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
+	CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
+
+	CFont::SetDropShadowPosition(0);
+}
+
 void
 CMenuManager::PrintStats()
 {
@@ -6712,6 +6816,8 @@ CMenuManager::PrintMap(void)
 	fMapCenterY = Min(fMapCenterY, fMapSize); // To not show beyond north border
 
 	bMenuMapActive = false;
+
+	PrintCompletionOnMap();
 
 	CSprite2d::DrawRect(CRect(MENU_X(14.0f), SCREEN_STRETCH_FROM_BOTTOM(MAP_STRIP_TOP),
 		SCREEN_STRETCH_FROM_RIGHT(11.0f), SCREEN_STRETCH_FROM_BOTTOM(MAP_STRIP_BOTTOM)),

@@ -259,6 +259,7 @@ enum eMenuScreen
 #endif
 	MENUPAGE_STICK_SETTINGS,
 	MENUPAGE_GAMEPLAY_SETTINGS,
+	MENUPAGE_COMPLETION,
 
 #endif
 	MENUPAGE_UNK, // originally 58. Custom screens are inserted above, because last screen in CMenuScreens should always be empty to make CFO work
@@ -831,6 +832,10 @@ public:
 	void PrintBriefs();
 	static void PrintErrorMessage();
 	void PrintStats();
+	void PrintCompletion();
+	void PrintCompletionOnMap();
+	void PrintCompletion();
+	void PrintCompletionOnMap();
 	void Process();
 	void ProcessButtonPresses();
 	void ProcessOnOffMenuOptions();
