@@ -1,6 +1,7 @@
 #include "common.h"
 #include "AutoSave.h"
 
+#include "crossplatform.h"
 #include "Camera.h"
 #include "CutsceneMgr.h"
 #include "Frontend.h"
