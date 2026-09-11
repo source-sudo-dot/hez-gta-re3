@@ -834,8 +834,6 @@ public:
 	void PrintStats();
 	void PrintCompletion();
 	void PrintCompletionOnMap();
-	void PrintCompletion();
-	void PrintCompletionOnMap();
 	void Process();
 	void ProcessButtonPresses();
 	void ProcessOnOffMenuOptions();

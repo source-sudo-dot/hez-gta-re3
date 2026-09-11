@@ -5,6 +5,7 @@
 #include "Frontend.h"
 #include "Game.h"
 #include "Messages.h"
+#include "Lists.h"
 #include "PlayerInfo.h"
 #include "Stats.h"
 #include "Text.h"
