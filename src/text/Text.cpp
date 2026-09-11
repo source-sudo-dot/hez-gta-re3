@@ -108,6 +108,7 @@ static struct {
 	{ "FEZ_GPL", "GAMEPLAY" },
 	{ "FEZ_ASV", "AUTOSAVE" },
 	{ "FEZ_ASD", "AUTOSAVED" },
+	{ "FEZ_ASL", "AUTOSAVE" },
 	{ "FEZ_ADF", "AIM OVER SHOULDER" },
 	{ "FEZ_CVF", "CAR CAM PITCH" },
 	{ "FEZ_CVD", "CAR CAM DELAY" },

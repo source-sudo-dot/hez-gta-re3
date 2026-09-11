@@ -21,10 +21,6 @@ bool   CAutoSave::bEnabled = true;
 bool   CAutoSave::m_bPending = false;
 uint32 CAutoSave::m_nEarliest = 0;
 
-// The last of the eight the player sees.  The mobile version wrote to a ninth one kept
-// for the mission replay, which no load list shows, so its saves could not be loaded.
-#define AUTOSAVE_SLOT (SLOT_COUNT - 1)
-
 // A mission reports itself passed a good few lines before it has finished with the
 // world, so the state is given a moment to settle before it is written.
 #define SETTLE_MS (2500)

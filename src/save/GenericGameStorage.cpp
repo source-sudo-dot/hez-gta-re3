@@ -51,12 +51,12 @@ const int PAUSE_SAVE_SLOT = SLOT_COUNT;
 char DefaultPCSaveFileName[260];
 char ValidSaveName[260];
 char LoadFileName[256];
-wchar SlotFileName[SLOT_COUNT][260];
-wchar SlotSaveDate[SLOT_COUNT][70];
+wchar SlotFileName[SLOT_TOTAL][260];
+wchar SlotSaveDate[SLOT_TOTAL][70];
 int CheckSum;
 eLevelName m_LevelToLoad;
 char SaveFileNameJustSaved[260];
-int Slots[SLOT_COUNT+1];
+int Slots[SLOT_TOTAL+1];
 CDate CompileDateAndTime;
 
 bool b_FoundRecentSavedGameWantToLoad;

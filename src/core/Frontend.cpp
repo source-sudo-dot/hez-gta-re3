@@ -1393,16 +1393,25 @@ CMenuManager::Draw()
 			wchar *rightText = nil;
 			wchar *leftText;
 
-			if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_1 && aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot <= SAVESLOT_8) {
+			int saveSlot = aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot;
+			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10) {
 				CFont::SetRightJustifyOff();
-				leftText = GetNameOfSavedGame(i - 1);
+				// Which save a row stood for was taken from where the row sat, so a row
+				// anywhere but in the numbered run read the wrong one.  It is taken from the
+				// slot the row names now.
+				leftText = GetNameOfSavedGame(saveSlot - 2);
 
-				if (Slots[i] != SLOT_EMPTY)
-					rightText = GetSavedGameDateAndTime(i - 1);
+				if (Slots[saveSlot - 1] != SLOT_EMPTY)
+					rightText = GetSavedGameDateAndTime(saveSlot - 2);
 
 				if (leftText[0] == '\0') {
-					sprintf(gString, "FEM_SL%d", i);
-					leftText = TheText.Get(gString);
+					// the autosave row carries a name of its own, the numbered ones build theirs
+					if (saveSlot == SAVESLOT_10) {
+						leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
+					} else {
+						sprintf(gString, "FEM_SL%d", i);
+						leftText = TheText.Get(gString);
+					}
 				}
 			} else {
 				leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
@@ -5110,7 +5119,7 @@ CMenuManager::ProcessButtonPresses(void)
 				{
 					int saveSlot = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_SaveSlot;
 
-					if (saveSlot >= 2 && saveSlot <= 9) {
+					if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10) {
 						m_nCurrSaveSlot = saveSlot - 2;
 						if (Slots[m_nCurrSaveSlot + 1] != SLOT_EMPTY && Slots[m_nCurrSaveSlot + 1] != SLOT_CORRUPTED) {
 							ChangeScreen(aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_TargetMenu, 0, true, true);

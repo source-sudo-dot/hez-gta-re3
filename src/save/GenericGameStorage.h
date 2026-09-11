@@ -4,6 +4,12 @@
 #include "PCSave.h"
 
 #define SLOT_COUNT (8)
+// The autosave writes here.  It sits past the eight the player saves into and past
+// the ninth that mission retry keeps for itself, so nothing can write over it by
+// hand and it cannot be written over by a failed mission either.  The load list is
+// the only place it shows.
+#define AUTOSAVE_SLOT (SLOT_COUNT + 1)
+#define SLOT_TOTAL (AUTOSAVE_SLOT + 1)
 
 bool GenericSave(int file);
 bool GenericLoad();
@@ -32,11 +38,11 @@ extern class CDate CompileDateAndTime;
 extern char DefaultPCSaveFileName[260];
 extern char ValidSaveName[260];
 extern char LoadFileName[256];
-extern wchar SlotFileName[SLOT_COUNT][260];
-extern wchar SlotSaveDate[SLOT_COUNT][70];
+extern wchar SlotFileName[SLOT_TOTAL][260];
+extern wchar SlotSaveDate[SLOT_TOTAL][70];
 extern int CheckSum;
 extern enum eLevelName m_LevelToLoad;
-extern int Slots[SLOT_COUNT+1];
+extern int Slots[SLOT_TOTAL+1];
 
 extern bool b_FoundRecentSavedGameWantToLoad;
 extern bool JustLoadedDontFadeInYet;

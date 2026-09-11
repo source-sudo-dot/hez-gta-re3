@@ -164,6 +164,8 @@ enum eSaveSlot
 	SAVESLOT_6,
 	SAVESLOT_7,
 	SAVESLOT_8,
+	SAVESLOT_9,
+	SAVESLOT_10,	// the autosave, load only
 	SAVESLOT_LABEL = 36,
 };
 
