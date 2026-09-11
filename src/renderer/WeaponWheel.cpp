@@ -28,8 +28,8 @@ float CWeaponWheel::m_fOpenAmount = 0.0f;
 float CWeaponWheel::m_fPointX = 0.0f;
 float CWeaponWheel::m_fPointY = 0.0f;
 int32 CWeaponWheel::m_nStowedWeapon = WEAPONTYPE_UNARMED;
-uint32 CWeaponWheel::m_nOpenedAt = 0;
-bool  CWeaponWheel::m_bPointed = false;
+uint32 CWeaponWheel::m_nPressedAt = 0;
+bool  CWeaponWheel::m_bWaitingToOpen = false;
 
 // how far the stick has to be pushed before it counts as pointing somewhere
 #define WHEEL_STICK_DEADZONE (0.35f)
@@ -38,8 +38,9 @@ bool  CWeaponWheel::m_bPointed = false;
 // the ring, in the 640x448 units the rest of the hud is laid out in
 #define WHEEL_RADIUS (100.0f)
 #define WHEEL_ICON_SIZE (52.0f)
-// held no longer than this and never pointed anywhere, and it counts as a tap
-#define WHEEL_TAP_MS (250)
+// The button is given this long before the ring opens.  Let go inside it and nothing
+// opens at all - the weapon simply goes away or comes back.
+#define WHEEL_HOLD_MS (50)
 
 void
 CWeaponWheel::Init(void)
@@ -51,7 +52,7 @@ CWeaponWheel::Init(void)
 	m_fPointX = 0.0f;
 	m_fPointY = 0.0f;
 	m_nStowedWeapon = WEAPONTYPE_UNARMED;
-	m_bPointed = false;
+	m_bWaitingToOpen = false;
 }
 
 bool
@@ -112,8 +113,6 @@ CWeaponWheel::Open(void)
 
 	m_fPointX = 0.0f;
 	m_fPointY = 0.0f;
-	m_nOpenedAt = CTimer::GetTimeInMillisecondsPauseMode();
-	m_bPointed = false;
 	bOpen = true;
 	CTimer::SetCodePause(true);
 }
@@ -175,8 +174,30 @@ CWeaponWheel::Process(void)
 	bool held = pad->GetWeaponWheel();
 
 	if(!bOpen){
-		if(held && CanOpen())
+		if(!held){
+			// let go before the ring had its chance: a tap, and the ring stays shut
+			if(m_bWaitingToOpen){
+				m_bWaitingToOpen = false;
+				ToggleStow();
+			}
+			return;
+		}
+
+		if(!CanOpen()){
+			m_bWaitingToOpen = false;
+			return;
+		}
+
+		if(!m_bWaitingToOpen){
+			m_bWaitingToOpen = true;
+			m_nPressedAt = CTimer::GetTimeInMillisecondsPauseMode();
+			return;
+		}
+
+		if(CTimer::GetTimeInMillisecondsPauseMode() - m_nPressedAt >= WHEEL_HOLD_MS){
+			m_bWaitingToOpen = false;
 			Open();
+		}
 		return;
 	}
 
@@ -187,11 +208,7 @@ CWeaponWheel::Process(void)
 	}
 
 	if(!held){
-		bool tapped = !m_bPointed &&
-			CTimer::GetTimeInMillisecondsPauseMode() - m_nOpenedAt < WHEEL_TAP_MS;
-		if(tapped)
-			ToggleStow();
-		Close(!tapped);
+		Close(true);
 		return;
 	}
 
@@ -221,7 +238,6 @@ CWeaponWheel::Process(void)
 		while(angle >= TWOPI) angle -= TWOPI;
 		int32 slot = (int32)(angle / TWOPI * m_nSlots + 0.5f) % m_nSlots;
 		m_nSelected = slot;
-		m_bPointed = true;
 	}
 }
 

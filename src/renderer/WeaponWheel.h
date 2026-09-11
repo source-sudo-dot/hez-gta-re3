@@ -28,8 +28,8 @@ private:
 	static float m_fPointY;
 	// a tap puts the weapon away and taps it back out, so what was put away is kept
 	static int32 m_nStowedWeapon;
-	static uint32 m_nOpenedAt;
-	static bool m_bPointed;
+	static uint32 m_nPressedAt;
+	static bool m_bWaitingToOpen;
 
 	static bool CanOpen(void);
 	static void CollectSlots(void);

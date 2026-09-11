@@ -4221,7 +4221,10 @@ CMenuManager::PrintCompletion()
 		CFont::SetRightJustifyOff();
 		CFont::PrintString(MENU_X_LEFT_ALIGNED(GOAL_LEFT), y, TheText.Get(goals[i].key));
 
-		sprintf(buf, "%d / %d", goals[i].done, goals[i].total);
+		if (goals[i].total > 0)
+			sprintf(buf, "%d / %d", goals[i].done, goals[i].total);
+		else
+			sprintf(buf, "%d", goals[i].done);
 		AsciiToUnicode(buf, wide);
 		CFont::SetRightJustifyOn();
 		CFont::PrintString(MENU_X_RIGHT_ALIGNED(GOAL_RIGHT), y, wide);
@@ -4260,7 +4263,10 @@ CMenuManager::PrintCompletionOnMap()
 		else
 			CFont::SetColor(CRGBA(255, 255, 255, FadeIn(230)));
 
-		sprintf(buf, "%d/%d", goals[i].done, goals[i].total);
+		if (goals[i].total > 0)
+			sprintf(buf, "%d/%d", goals[i].done, goals[i].total);
+		else
+			sprintf(buf, "%d", goals[i].done);
 		AsciiToUnicode(buf, wide);
 		CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
 		CFont::PrintString(MENU_X_RIGHT_ALIGNED(80.0f), y, TheText.Get(goals[i].key));

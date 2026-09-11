@@ -11,11 +11,9 @@
 #include "Text.h"
 #include "World.h"
 
-// What the four side jobs ask for.  They are the only goals the game holds no total for.
-#define PARAMEDIC_LEVELS (12)
-#define FIRES_TO_PUT_OUT (20)
-#define CRIMINALS_TO_CATCH (20)
-#define TAXI_FARES (100)
+// The four side jobs carry no total: the script simply awards the progress once the
+// threshold is passed and never says what it was, and a number invented here would be
+// a claim the game never makes.  They are counted, not measured.
 
 int32
 CCompletion::Collect(tGoal *out)
@@ -45,19 +43,19 @@ CCompletion::Collect(tGoal *out)
 
 	out[n].key = "FEZ_CPM";
 	out[n].done = CStats::HighestLevelAmbulanceMission;
-	out[n++].total = PARAMEDIC_LEVELS;
+	out[n++].total = 0;
 
 	out[n].key = "FEZ_CFF";
 	out[n].done = CStats::FiresExtinguished;
-	out[n++].total = FIRES_TO_PUT_OUT;
+	out[n++].total = 0;
 
 	out[n].key = "FEZ_CVG";
 	out[n].done = CStats::CriminalsCaught;
-	out[n++].total = CRIMINALS_TO_CATCH;
+	out[n++].total = 0;
 
 	out[n].key = "FEZ_CTX";
 	out[n].done = CStats::PassengersDroppedOffWithTaxi;
-	out[n++].total = TAXI_FARES;
+	out[n++].total = 0;
 
 	return n;
 }
