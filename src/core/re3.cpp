@@ -29,6 +29,7 @@
 #include "BulletTime.h"
 #include "Crosshair.h"
 #include "AutoSave.h"
+#include "RadioWheel.h"
 #include "WeaponWheel.h"
 #include "SceneEdit.h"
 #include "Pad.h"
@@ -493,6 +494,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "AimZoomDegrees", &CCamera::m_fAimZoomDegrees);
 	ReadIniIfExists("Display", "AimDisablesFreeCam", &CCamera::bAimDisablesFreeCam);
 	ReadIniIfExists("Display", "WeaponWheel", &CWeaponWheel::bEnabled);
+	ReadIniIfExists("Display", "RadioWheel", &CRadioWheel::bEnabled);
 	ReadIniIfExists("Controller", "StickDebug", &CPad::m_bStickDebug);
 	ReadIniIfExists("Display", "MoveWhileShooting", &CWeaponInfo::bMoveWhileShooting);
 	ReadIniIfExists("Display", "AltDamageModel", &CWeaponInfo::bAltDamageModel);
@@ -618,6 +620,7 @@ void SaveINISettings()
 	StoreIni("Display", "AimZoomDegrees", CCamera::m_fAimZoomDegrees);
 	StoreIni("Display", "AimDisablesFreeCam", CCamera::bAimDisablesFreeCam);
 	StoreIni("Display", "WeaponWheel", CWeaponWheel::bEnabled);
+	StoreIni("Display", "RadioWheel", CRadioWheel::bEnabled);
 	StoreIni("Controller", "StickDebug", CPad::m_bStickDebug);
 	StoreIni("Display", "MoveWhileShooting", CWeaponInfo::bMoveWhileShooting);
 	StoreIni("Display", "AltDamageModel", CWeaponInfo::bAltDamageModel);

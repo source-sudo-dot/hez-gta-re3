@@ -38,6 +38,7 @@
 #include "Hud.h"
 #include "WeaponInfo.h"
 #include "BulletTime.h"
+#include "RadioWheel.h"
 #include "AutoSave.h"
 #include "WeaponWheel.h"
 #include "IniFile.h"
@@ -1043,6 +1044,7 @@ void CGame::Process(void)
 	// The weapon wheel stops the game while it is up, so it is processed before the
 	// paused check, or it could never be closed again.
 	CWeaponWheel::Process();
+	CRadioWheel::Process();
 	CBulletTime::Process();
 	CAutoSave::Process();
 #ifdef MENU_MAP

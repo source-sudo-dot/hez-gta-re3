@@ -131,6 +131,8 @@ static struct {
 	{ "FEZ_MAP", "OPEN MAP" },
 	{ "FEZ_DBL", "DRIVE-BY LEFT" },
 	{ "FEZ_DBR", "DRIVE-BY RIGHT" },
+	{ "FEZ_RW", "RADIO WHEEL" },
+	{ "FEZ_ROF", "RADIO OFF" },
 	{ "FEZ_MSS", "MAP SCROLL SPEED" },
 	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_HM", "HIT MARKERS" },

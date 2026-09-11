@@ -82,6 +82,7 @@ public:
 	uint8 GetCarTuning();
 	uint8 GetNextCarTuning();
 	bool8 ChangeRadioChannel();
+	void TuneToStation(uint8 station);
 };
 
 VALIDATE_SIZE(cMusicManager, 0x95C);

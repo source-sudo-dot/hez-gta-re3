@@ -1006,6 +1006,24 @@ cMusicManager::GetNextCarTuning()
 	return veh->m_nRadioStation;
 }
 
+// The wheel picks a station outright rather than stepping through them a press at a
+// time, so the car is tuned and the service told to act on it at once.
+void
+cMusicManager::TuneToStation(uint8 station)
+{
+	if (!m_bIsInitialised || !m_bPlayerInCar)
+		return;
+
+	CVehicle *veh = FindPlayerVehicle();
+	if (veh == nil || UsesPoliceRadio(veh))
+		return;
+
+	veh->m_nRadioStation = station;
+	gNumRetunePresses = 0;
+	gRetuneCounter = 0;
+	m_bSetNextStation = TRUE;
+}
+
 bool8
 cMusicManager::ChangeRadioChannel()
 {

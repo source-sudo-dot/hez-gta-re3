@@ -33,6 +33,7 @@
 #include "Completion.h"
 #include "AutoSave.h"
 #include "WeaponWheel.h"
+#include "RadioWheel.h"
 #include "PlayerPed.h"
 #include "WeaponInfo.h"
 #include "CarCtrl.h"
@@ -72,6 +73,7 @@
 #define BULLET_TIME_TOGGLE MENUACTION_CFO_SELECT, "FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) },
 #define ALT_DAMAGE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADM", { new CCFOSelect((int8*)&CWeaponInfo::bAltDamageModel, "Display", "AltDamageModel", off_on, 2, false) },
 #define M16_THIRDPERSON_TOGGLE MENUACTION_CFO_SELECT, "FEZ_M16", { new CCFOSelect((int8*)&CWeaponInfo::bM16ThirdPerson, "Display", "M16ThirdPerson", off_on, 2, false) },
+#define RADIO_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_RW", { new CCFOSelect((int8*)&CRadioWheel::bEnabled, "Display", "RadioWheel", off_on, 2, false) },
 #define WEAPON_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_WW", { new CCFOSelect((int8*)&CWeaponWheel::bEnabled, "Display", "WeaponWheel", off_on, 2, false) },
 #define AIM_FREECAM_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADF", { new CCFOSelect((int8*)&CCamera::bAimDisablesFreeCam, "Display", "AimDisablesFreeCam", off_on, 2, false) },
 #define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
@@ -995,6 +997,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		M16_THIRDPERSON_TOGGLE
 		ALT_DAMAGE_TOGGLE
 		WEAPON_WHEEL_TOGGLE
+		RADIO_WHEEL_TOGGLE
 		BULLET_TIME_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) },

@@ -67,6 +67,7 @@ enum e_ControllerAction
 	PED_MAP,
 	// A drive-by needs a look held and the trigger pulled together, which is two hands
 	// on a pad.  These do both off one button.
+	VEHICLE_RADIO_WHEEL,
 	VEHICLE_LOOKLEFT_FIRE,
 	VEHICLE_LOOKRIGHT_FIRE,
 	MAX_CONTROLLERACTIONS,
