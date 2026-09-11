@@ -38,6 +38,7 @@
 #include "Hud.h"
 #include "WeaponInfo.h"
 #include "BulletTime.h"
+#include "AutoSave.h"
 #include "WeaponWheel.h"
 #include "IniFile.h"
 #include "Lights.h"
@@ -1043,6 +1044,7 @@ void CGame::Process(void)
 	// paused check, or it could never be closed again.
 	CWeaponWheel::Process();
 	CBulletTime::Process();
+	CAutoSave::Process();
 #ifdef MENU_MAP
 	if (!CPad::GetPad(0)->NewState.Map)
 		CMenuManager::m_bMapKeyHeldOver = false;

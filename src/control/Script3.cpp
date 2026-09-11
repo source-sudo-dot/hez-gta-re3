@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "Script.h"
+#include "AutoSave.h"
 #include "ScriptCommands.h"
 
 #include "Boat.h"
@@ -2298,6 +2299,7 @@ int8 CRunningScript::ProcessCommands700To799(int32 command)
 		strncpy(CStats::LastMissionPassedName, name, KEY_LENGTH_IN_SCRIPT);
 		++CStats::MissionsPassed;
 		CStats::CheckPointReachedSuccessfully();
+		CAutoSave::Request();
 		return 0;
 	}
 	case COMMAND_SET_CHAR_RUNNING:

@@ -28,6 +28,7 @@
 #include "WeaponInfo.h"
 #include "BulletTime.h"
 #include "Crosshair.h"
+#include "AutoSave.h"
 #include "WeaponWheel.h"
 #include "SceneEdit.h"
 #include "Pad.h"
@@ -507,6 +508,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "CrosshairSize", &CCrosshair::m_fSize);
 	ReadIniIfExists("Display", "AimReadyPose", &CPlayerPed::bAimReadyPose);
 	ReadIniIfExists("Display", "AimRaiseSpeed", &CPlayerPed::m_fAimRaiseSpeed);
+	ReadIniIfExists("Display", "AutoSave", &CAutoSave::bEnabled);
 	ReadIniIfExists("Display", "AimToFire", &CPlayerPed::bAimToFire);
 	ReadIniIfExists("Display", "AimAssist", &CPlayerPed::bAimAssist);
 	ReadIniIfExists("Display", "AimAssistStrength", &CPlayerPed::m_fAimAssistStrength);
@@ -631,6 +633,7 @@ void SaveINISettings()
 	StoreIni("Display", "CrosshairSize", CCrosshair::m_fSize);
 	StoreIni("Display", "AimReadyPose", CPlayerPed::bAimReadyPose);
 	StoreIni("Display", "AimRaiseSpeed", CPlayerPed::m_fAimRaiseSpeed);
+	StoreIni("Display", "AutoSave", CAutoSave::bEnabled);
 	StoreIni("Display", "AimToFire", CPlayerPed::bAimToFire);
 	StoreIni("Display", "AimAssist", CPlayerPed::bAimAssist);
 	StoreIni("Display", "AimAssistStrength", CPlayerPed::m_fAimAssistStrength);

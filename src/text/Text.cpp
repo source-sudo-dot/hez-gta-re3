@@ -106,6 +106,8 @@ static struct {
 	{ "FEZ_CV", "STICK CURVE" },
 	{ "FEZ_STK", "CAMERA AND STICK" },
 	{ "FEZ_GPL", "GAMEPLAY" },
+	{ "FEZ_ASV", "AUTOSAVE" },
+	{ "FEZ_ASD", "AUTOSAVED" },
 	{ "FEZ_ADF", "AIM OVER SHOULDER" },
 	{ "FEZ_CVF", "CAR CAM PITCH" },
 	{ "FEZ_CVD", "CAR CAM DELAY" },
