@@ -21,6 +21,12 @@ static_assert(false, "RADIO_SCROLL_TO_PREV_STATION and RADIO_OFF_TEXT won't work
 
 cMusicManager MusicManager;
 int32 gNumRetunePresses;
+// how long the station button has to be held before it means the radio off instead
+#define RADIO_HOLD_MS (250)
+static uint32 gRadioHeldSince;
+static bool8 gRadioHoldUsed;
+// what was playing before it was turned off
+static uint8 gRadioBeforeOff = HEAD_RADIO;
 int32 gRetuneCounter;
 bool8 bHasStarted;
 
@@ -514,7 +520,24 @@ cMusicManager::ServiceGameMode()
 			&& FindPlayerVehicle() != nil
 			&& !UsesPoliceRadio(FindPlayerVehicle())) {
 
+				// The button steps through the stations when it is tapped.  Held, it turns the
+				// radio off instead, and held again brings back the station it was on - so the
+				// step waits for the button to be let go rather than firing on the way down.
 				if (CPad::GetPad(0)->ChangeStationJustDown()) {
+					gRadioHeldSince = CTimer::GetTimeInMillisecondsPauseMode();
+					gRadioHoldUsed = FALSE;
+				} else if (CPad::GetPad(0)->ChangeStationHeld()) {
+					if (!gRadioHoldUsed && gRadioHeldSince != 0 &&
+						CTimer::GetTimeInMillisecondsPauseMode() - gRadioHeldSince >= RADIO_HOLD_MS) {
+						gRadioHoldUsed = TRUE;
+						ToggleRadioOff();
+						AudioManager.PlayOneShot(AudioManager.m_nFrontEndEntity, SOUND_FRONTEND_RADIO_CHANGE, 1.0f);
+					}
+				} else if (gRadioHeldSince != 0) {
+					bool8 stepIt = !gRadioHoldUsed;
+					gRadioHeldSince = 0;
+					gRadioHoldUsed = FALSE;
+					if (stepIt) {
 					gRetuneCounter = 30;
 					gNumRetunePresses++;
 					AudioManager.PlayOneShot(AudioManager.m_nFrontEndEntity, SOUND_FRONTEND_RADIO_CHANGE, 1.0f);
@@ -525,6 +548,7 @@ cMusicManager::ServiceGameMode()
 							gNumRetunePresses -= RADIO_OFF;
 					}
 #endif
+					}
 				}
 #ifdef RADIO_SCROLL_TO_PREV_STATION
 				else if(!CPad::GetPad(0)->ArePlayerControlsDisabled() && (CPad::GetPad(0)->GetMouseWheelDownJustDown() || CPad::GetPad(0)->GetMouseWheelUpJustDown())) {
@@ -1006,8 +1030,8 @@ cMusicManager::GetNextCarTuning()
 	return veh->m_nRadioStation;
 }
 
-// The wheel picks a station outright rather than stepping through them a press at a
-// time, so the car is tuned and the service told to act on it at once.
+// Tuning to a station outright, rather than stepping through them a press at a time:
+// the car is tuned and the service told to act on it at once.
 void
 cMusicManager::TuneToStation(uint8 station)
 {
@@ -1022,6 +1046,21 @@ cMusicManager::TuneToStation(uint8 station)
 	gNumRetunePresses = 0;
 	gRetuneCounter = 0;
 	m_bSetNextStation = TRUE;
+}
+
+void
+cMusicManager::ToggleRadioOff(void)
+{
+	CVehicle *veh = FindPlayerVehicle();
+	if (veh == nil)
+		return;
+
+	if (veh->m_nRadioStation == RADIO_OFF) {
+		TuneToStation(gRadioBeforeOff);
+	} else {
+		gRadioBeforeOff = veh->m_nRadioStation;
+		TuneToStation(RADIO_OFF);
+	}
 }
 
 bool8

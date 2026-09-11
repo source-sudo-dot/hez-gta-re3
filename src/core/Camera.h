@@ -564,7 +564,6 @@ public:
 	static bool bFreeCamSetting;
 	// hold Target/Aim on foot and the free camera steps aside for the classic
 	// controls, AimDisablesFreeCam under [Display] in re3.ini
-	static bool bAimDisablesFreeCam;
 	// How hard the car camera pulls itself back in line with the car's pitch, 0 not at
 	// all and 1 as hard as it used to, and how long the right stick has to be still
 	// first.  CarCamFollowVert and CarCamFollowDelay under [Display] in re3.ini.

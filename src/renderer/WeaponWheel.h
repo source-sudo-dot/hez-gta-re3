@@ -8,8 +8,6 @@
 class CWeaponWheel
 {
 public:
-	// WeaponWheel under [Display] in re3.ini
-	static bool bEnabled;
 	static bool bOpen;
 
 	static void Init(void);

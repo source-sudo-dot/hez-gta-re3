@@ -809,7 +809,7 @@ CCamera::UpdatePadInput(void)
 	// whether a look around should throw the player into first person: switching it off
 	// under them meant a nudge of the right stick dropped the scope.
 	bFreeCam = bFreeCamSetting;
-	if(bFreeCamSetting && bAimDisablesFreeCam &&
+	if(bFreeCamSetting &&
 	   Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED &&
 	   FindPlayerPed() != nil && FindPlayerVehicle() == nil &&
 	   !CWeaponInfo::UsesScopeAim(FindPlayerPed()->GetWeapon()->m_eWeaponType) &&

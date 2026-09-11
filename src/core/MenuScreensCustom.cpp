@@ -33,7 +33,6 @@
 #include "Completion.h"
 #include "AutoSave.h"
 #include "WeaponWheel.h"
-#include "RadioWheel.h"
 #include "PlayerPed.h"
 #include "WeaponInfo.h"
 #include "CarCtrl.h"
@@ -69,19 +68,13 @@
 	#define FREE_CAM_TOGGLE
 #endif
 
-#define MOVE_WHILE_SHOOTING_TOGGLE MENUACTION_CFO_SELECT, "FEZ_MWS", { new CCFOSelect((int8*)&CWeaponInfo::bMoveWhileShooting, "Display", "MoveWhileShooting", off_on, 2, false, MoveWhileShootingChange) },
 #define BULLET_TIME_TOGGLE MENUACTION_CFO_SELECT, "FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) },
 #define ALT_DAMAGE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADM", { new CCFOSelect((int8*)&CWeaponInfo::bAltDamageModel, "Display", "AltDamageModel", off_on, 2, false) },
 #define M16_THIRDPERSON_TOGGLE MENUACTION_CFO_SELECT, "FEZ_M16", { new CCFOSelect((int8*)&CWeaponInfo::bM16ThirdPerson, "Display", "M16ThirdPerson", off_on, 2, false) },
-#define RADIO_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_RW", { new CCFOSelect((int8*)&CRadioWheel::bEnabled, "Display", "RadioWheel", off_on, 2, false) },
-#define WEAPON_WHEEL_TOGGLE MENUACTION_CFO_SELECT, "FEZ_WW", { new CCFOSelect((int8*)&CWeaponWheel::bEnabled, "Display", "WeaponWheel", off_on, 2, false) },
-#define AIM_FREECAM_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ADF", { new CCFOSelect((int8*)&CCamera::bAimDisablesFreeCam, "Display", "AimDisablesFreeCam", off_on, 2, false) },
 #define MODERN_CROSSHAIR_TOGGLE MENUACTION_CFO_SELECT, "FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) },
 #define AUTOSAVE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ASV", { new CCFOSelect((int8*)&CAutoSave::bEnabled, "Display", "AutoSave", off_on, 2, false) },
-#define AIM_TO_FIRE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ATF", { new CCFOSelect((int8*)&CPlayerPed::bAimToFire, "Display", "AimToFire", off_on, 2, false) },
 #define AIM_ASSIST_TOGGLE MENUACTION_CFO_SELECT, "FEZ_AA", { new CCFOSelect((int8*)&CPlayerPed::bAimAssist, "Display", "AimAssist", off_on, 2, false) },
 #define HIT_MARKERS_TOGGLE MENUACTION_CFO_SELECT, "FEZ_HM", { new CCFOSelect((int8*)&CCrosshair::bHitMarkers, "Display", "HitMarkers", off_on, 2, false) },
-#define AIM_READY_POSE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ARP", { new CCFOSelect((int8*)&CPlayerPed::bAimReadyPose, "Display", "AimReadyPose", off_on, 2, false) },
 
 #ifdef PS2_ALPHA_TEST
 	#define DUALPASS_SELECTOR MENUACTION_CFO_SELECT, "FEM_2PR", { new CCFOSelect((int8*)&gPS2alphaTest, "Graphics", "PS2AlphaTest", off_on, 2, false) },
@@ -310,11 +303,6 @@ wchar* MultiSamplingDraw(bool *disabled, bool userHovering) {
 	}
 }
 #endif
-
-void MoveWhileShootingChange(int8 before, int8 after)
-{
-	CWeaponInfo::ApplyMoveWhileShooting();
-}
 
 #ifdef IMPROVED_VIDEOMODE
 const char* screenModes[] = { "FED_FLS", "FED_WND" };
@@ -738,11 +726,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CHANGEMENU,	"FEC_JOD", { nil, SAVESLOT_NONE, MENUPAGE_DETECT_JOYSTICK },
 #endif
 		MENUACTION_CHANGEMENU,	"FEZ_STK", { nil, SAVESLOT_NONE, MENUPAGE_STICK_SETTINGS },
-#ifndef GAMEPAD_MENU
-		// GAMEPAD_MENU wants XInput, which this build does not use, so the gamepad page
-		// it would have put the vibration switch on is never compiled
-		MENUACTION_CTRLVIBRATION,	"FEC_VIB", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_PC },
-#endif
 		MENUACTION_CHANGEMENU,	"FET_AMS", { nil, SAVESLOT_NONE, MENUPAGE_MOUSE_CONTROLS },
 		MENUACTION_RESTOREDEF,	"FET_DEF", { nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_PC },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
@@ -975,10 +958,13 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_AZ", { new CCFOSlider(&CCamera::m_fAimZoomDegrees, "Display", "AimZoomDegrees", 0.0f, 35.0f, nil, 70, true) },
-		AIM_FREECAM_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_CVF", { new CCFOSlider(&CCamera::m_fCarCamFollowVert, "Display", "CarCamFollowVert", 0.0f, 1.0f, nil, 20, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CVD", { new CCFOSlider(&CCamera::m_fCarCamFollowDelay, "Display", "CarCamFollowDelay", 0.0f, 5.0f, nil, 50, true) },
-		MENUACTION_CFO_SLIDER,	"FEZ_CSM", { new CCFOSlider(&CCamera::m_fCarCamSmoothing, "Display", "CarCamSmoothing", 0.0f, 1.0f, nil, 20, true) },
+#ifndef GAMEPAD_MENU
+		// GAMEPAD_MENU wants XInput, which this build does not use, so the gamepad page
+		// it would have put the vibration switch on is never compiled
+		MENUACTION_CTRLVIBRATION,	"FEC_VIB", { nil, SAVESLOT_NONE, MENUPAGE_STICK_SETTINGS },
+#endif
 		MENUACTION_CFO_SLIDER,	"FEZ_MSS", { new CCFOSlider(&CMenuManager::m_fMapScrollSpeed, "Display", "MapScrollSpeed", 0.1f, 3.0f, nil, 58, true) },
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
@@ -988,16 +974,11 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 165, 0, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
 
 		AUTOSAVE_TOGGLE
-		MOVE_WHILE_SHOOTING_TOGGLE
-		AIM_TO_FIRE_TOGGLE
-		AIM_READY_POSE_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) },
 		AIM_ASSIST_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_AAS", { new CCFOSlider(&CPlayerPed::m_fAimAssistStrength, "Display", "AimAssistStrength", 0.0f, 0.9f, nil, 45, true) },
 		M16_THIRDPERSON_TOGGLE
 		ALT_DAMAGE_TOGGLE
-		WEAPON_WHEEL_TOGGLE
-		RADIO_WHEEL_TOGGLE
 		BULLET_TIME_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) },

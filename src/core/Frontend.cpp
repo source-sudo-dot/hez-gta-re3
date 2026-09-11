@@ -570,7 +570,7 @@ CMenuManager::ProcessList(bool &goBack, bool &optionSelected)
 	}
 	if (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS) {
 		// GetNumOptionsCntrlConfigScreens would have been a better choice
-		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 37 : 32;
+		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 36 : 31;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
 	}
@@ -1995,10 +1995,10 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 		case MENUPAGE_KEYBOARD_CONTROLS:
 			switch (m_ControlMethod) {
 				case CONTROL_STANDARD:
-					number = 32;
+					number = 31;
 					break;
 				case CONTROL_CLASSIC:
-					number = 37;
+					number = 36;
 					break;
 			}
 			break;
@@ -2246,13 +2246,6 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 				case 35:
 					controllerAction = VEHICLE_LOOKRIGHT_FIRE;
 					break;
-				case 31:
-					if (m_ControlMethod == CONTROL_STANDARD)
-						controllerAction = VEHICLE_RADIO_WHEEL;
-					break;
-				case 36:
-					controllerAction = VEHICLE_RADIO_WHEEL;
-					break;
 				default:
 					break;
 			}
@@ -2494,7 +2487,7 @@ CMenuManager::DrawControllerSetupScreen()
 		default:
 			break;
 	}
-	wchar *actionTexts[39];
+	wchar *actionTexts[37];
 	actionTexts[0] = TheText.Get("FEC_FIR");
 	actionTexts[1] = TheText.Get("FEC_NWE");
 	actionTexts[2] = TheText.Get("FEC_PWE");
@@ -2532,8 +2525,7 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[33] = TheText.Get("FEZ_MAP");
 		actionTexts[34] = TheText.Get("FEZ_DBL");
 		actionTexts[35] = TheText.Get("FEZ_DBR");
-		actionTexts[36] = TheText.Get("FEZ_RW");
-		actionTexts[37] = nil;
+		actionTexts[36] = nil;
 	} else {
 		actionTexts[18] = TheText.Get("FEC_TFL");
 		actionTexts[19] = TheText.Get("FEC_TFR");
@@ -2548,8 +2540,7 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[28] = TheText.Get("FEZ_MAP");
 		actionTexts[29] = TheText.Get("FEZ_DBL");
 		actionTexts[30] = TheText.Get("FEZ_DBR");
-		actionTexts[31] = TheText.Get("FEZ_RW");
-		actionTexts[32] = nil;
+		actionTexts[31] = nil;
 	}
 
 	// Gray panel background

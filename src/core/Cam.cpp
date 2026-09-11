@@ -32,10 +32,9 @@ int16 DebugCamMode;
 #ifdef FREE_CAM
 bool CCamera::bFreeCam = false;
 bool CCamera::bFreeCamSetting = false;
-bool CCamera::bAimDisablesFreeCam = true;
 float CCamera::m_fCarCamFollowVert = 0.25f;
 float CCamera::m_fCarCamFollowDelay = 1.5f;
-float CCamera::m_fCarCamSmoothing = 0.3f;
+float CCamera::m_fCarCamSmoothing = 0.0f;
 int nPreviousMode = -1;
 #endif
 

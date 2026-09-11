@@ -19,7 +19,6 @@
 #include "WeaponInfo.h"
 #include "World.h"
 
-bool  CWeaponWheel::bEnabled = true;
 bool  CWeaponWheel::bOpen = false;
 int32 CWeaponWheel::m_aSlots[WEAPONTYPE_TOTAL_INVENTORY_WEAPONS];
 int32 CWeaponWheel::m_nSlots = 0;
@@ -40,7 +39,7 @@ bool  CWeaponWheel::m_bWaitingToOpen = false;
 #define WHEEL_ICON_SIZE (52.0f)
 // The button is given this long before the ring opens.  Let go inside it and nothing
 // opens at all - the weapon simply goes away or comes back.
-#define WHEEL_HOLD_MS (50)
+#define WHEEL_HOLD_MS (200)
 
 void
 CWeaponWheel::Init(void)
@@ -164,12 +163,6 @@ void
 CWeaponWheel::Process(void)
 {
 	CPad *pad = CPad::GetPad(0);
-
-	if(!bEnabled){
-		if(bOpen)
-			Close(false);
-		return;
-	}
 
 	bool held = pad->GetWeaponWheel();
 

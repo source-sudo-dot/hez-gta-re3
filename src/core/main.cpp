@@ -40,7 +40,6 @@
 #include "Pad.h"
 #include "Hud.h"
 #include "WeaponWheel.h"
-#include "RadioWheel.h"
 #include "User.h"
 #include "Messages.h"
 #include "Darkel.h"
@@ -1525,7 +1524,6 @@ Render2dStuff(void)
 #endif
 		CHud::Draw();
 	CWeaponWheel::Draw();
-	CRadioWheel::Draw();
 	CPad::DrawStickDebug();
 	CUserDisplay::OnscnTimer.ProcessForDisplay();
 	CMessages::Display();

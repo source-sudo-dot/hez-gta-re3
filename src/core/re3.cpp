@@ -29,7 +29,6 @@
 #include "BulletTime.h"
 #include "Crosshair.h"
 #include "AutoSave.h"
-#include "RadioWheel.h"
 #include "WeaponWheel.h"
 #include "SceneEdit.h"
 #include "Pad.h"
@@ -492,11 +491,7 @@ bool LoadINISettings()
 	ReadIniIfExists("Graphics", "VideoMode", &FrontEndMenuManager.m_nDisplayVideoMode);
 #endif
 	ReadIniIfExists("Display", "AimZoomDegrees", &CCamera::m_fAimZoomDegrees);
-	ReadIniIfExists("Display", "AimDisablesFreeCam", &CCamera::bAimDisablesFreeCam);
-	ReadIniIfExists("Display", "WeaponWheel", &CWeaponWheel::bEnabled);
-	ReadIniIfExists("Display", "RadioWheel", &CRadioWheel::bEnabled);
 	ReadIniIfExists("Controller", "StickDebug", &CPad::m_bStickDebug);
-	ReadIniIfExists("Display", "MoveWhileShooting", &CWeaponInfo::bMoveWhileShooting);
 	ReadIniIfExists("Display", "AltDamageModel", &CWeaponInfo::bAltDamageModel);
 	ReadIniIfExists("Display", "M16ThirdPerson", &CWeaponInfo::bM16ThirdPerson);
 	ReadIniIfExists("Display", "CarCamFollowVert", &CCamera::m_fCarCamFollowVert);
@@ -508,10 +503,8 @@ bool LoadINISettings()
 	ReadIniIfExists("Display", "ModernCrosshair", &CCrosshair::bModern);
 	ReadIniIfExists("Display", "HitMarkers", &CCrosshair::bHitMarkers);
 	ReadIniIfExists("Display", "CrosshairSize", &CCrosshair::m_fSize);
-	ReadIniIfExists("Display", "AimReadyPose", &CPlayerPed::bAimReadyPose);
 	ReadIniIfExists("Display", "AimRaiseSpeed", &CPlayerPed::m_fAimRaiseSpeed);
 	ReadIniIfExists("Display", "AutoSave", &CAutoSave::bEnabled);
-	ReadIniIfExists("Display", "AimToFire", &CPlayerPed::bAimToFire);
 	ReadIniIfExists("Display", "AimAssist", &CPlayerPed::bAimAssist);
 	ReadIniIfExists("Display", "AimAssistStrength", &CPlayerPed::m_fAimAssistStrength);
 	ReadIniIfExists("Display", "MapScrollSpeed", &CMenuManager::m_fMapScrollSpeed);
@@ -618,11 +611,7 @@ void SaveINISettings()
 	StoreIni("Graphics", "VideoMode", FrontEndMenuManager.m_nDisplayVideoMode);
 #endif
 	StoreIni("Display", "AimZoomDegrees", CCamera::m_fAimZoomDegrees);
-	StoreIni("Display", "AimDisablesFreeCam", CCamera::bAimDisablesFreeCam);
-	StoreIni("Display", "WeaponWheel", CWeaponWheel::bEnabled);
-	StoreIni("Display", "RadioWheel", CRadioWheel::bEnabled);
 	StoreIni("Controller", "StickDebug", CPad::m_bStickDebug);
-	StoreIni("Display", "MoveWhileShooting", CWeaponInfo::bMoveWhileShooting);
 	StoreIni("Display", "AltDamageModel", CWeaponInfo::bAltDamageModel);
 	StoreIni("Display", "M16ThirdPerson", CWeaponInfo::bM16ThirdPerson);
 	StoreIni("Display", "CarCamFollowVert", CCamera::m_fCarCamFollowVert);
@@ -634,10 +623,8 @@ void SaveINISettings()
 	StoreIni("Display", "ModernCrosshair", CCrosshair::bModern);
 	StoreIni("Display", "HitMarkers", CCrosshair::bHitMarkers);
 	StoreIni("Display", "CrosshairSize", CCrosshair::m_fSize);
-	StoreIni("Display", "AimReadyPose", CPlayerPed::bAimReadyPose);
 	StoreIni("Display", "AimRaiseSpeed", CPlayerPed::m_fAimRaiseSpeed);
 	StoreIni("Display", "AutoSave", CAutoSave::bEnabled);
-	StoreIni("Display", "AimToFire", CPlayerPed::bAimToFire);
 	StoreIni("Display", "AimAssist", CPlayerPed::bAimAssist);
 	StoreIni("Display", "AimAssistStrength", CPlayerPed::m_fAimAssistStrength);
 	StoreIni("Display", "MapScrollSpeed", CMenuManager::m_fMapScrollSpeed);

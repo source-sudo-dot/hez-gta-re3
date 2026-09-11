@@ -76,9 +76,6 @@ public:
 	void ProcessAimAssist(void);
 
 	// AimReadyPose and AimRaiseSpeed under [Display] in re3.ini
-	static bool bAimReadyPose;
-	// AimToFire under [Display] in re3.ini
-	static bool bAimToFire;
 	static float m_fAimRaiseSpeed;
 	// AimAssist and AimAssistStrength under [Display] in re3.ini
 	static bool bAimAssist;

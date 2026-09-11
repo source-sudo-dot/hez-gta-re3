@@ -43,14 +43,11 @@ public:
 	static void Initialise(void);
 	static void LoadWeaponData(void);
 
-	// MoveWhileShooting under [Display] in re3.ini
-	static bool bMoveWhileShooting;
 	// AltDamageModel under [Display] in re3.ini
 	static bool bAltDamageModel;
 	// M16ThirdPerson under [Display] in re3.ini
 	static bool bM16ThirdPerson;
 	static bool UsesScopeAim(eWeaponType weaponType);
-	static void ApplyMoveWhileShooting(void);
 	static CWeaponInfo *GetWeaponInfo(eWeaponType weaponType);
 	static eWeaponFire FindWeaponFireType(char *name);
 	static eWeaponType FindWeaponType(char *name);

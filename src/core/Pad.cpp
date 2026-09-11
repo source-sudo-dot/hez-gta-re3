@@ -370,7 +370,6 @@ CControllerState::Clear(void)
 	LeftShock = RightShock = 0;
 	NetworkTalk = 0;
 	WeaponWheel = 0;
-	RadioWheel = 0;
 	BulletTime = 0;
 	Reload = 0;
 	Map = 0;
@@ -679,7 +678,6 @@ CControllerState CPad::ReconcileTwoControllersInput(CControllerState const &Stat
 	_RECONCILE_BUTTON(RightShock);
 	_RECONCILE_BUTTON(NetworkTalk);
 	_RECONCILE_BUTTON(WeaponWheel);
-	_RECONCILE_BUTTON(RadioWheel);
 	_RECONCILE_BUTTON(BulletTime);
 	_RECONCILE_BUTTON(Reload);
 	_RECONCILE_BUTTON(Map);
@@ -1829,13 +1827,6 @@ bool CPad::GetBulletTime(void)
 	return !!NewState.BulletTime;
 }
 
-bool CPad::GetRadioWheel(void)
-{
-	if ( ArePlayerControlsDisabled() )
-		return false;
-	return !!NewState.RadioWheel;
-}
-
 bool CPad::GetWeaponWheel(void)
 {
 	if ( ArePlayerControlsDisabled() )
@@ -2293,6 +2284,45 @@ bool CPad::ChangeStationJustDown(void)
 		case 3:
 		{
 			return !!(NewState.Circle && !OldState.Circle);
+
+			break;
+		}
+	}
+
+	return false;
+}
+
+bool CPad::ChangeStationHeld(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	switch (CURMODE)
+	{
+		case 0:
+		{
+			return !!NewState.LeftShoulder1;
+
+			break;
+		}
+
+		case 1:
+		{
+			return !!NewState.Select;
+
+			break;
+		}
+
+		case 2:
+		{
+			return !!NewState.LeftShock;
+
+			break;
+		}
+
+		case 3:
+		{
+			return !!NewState.Circle;
 
 			break;
 		}

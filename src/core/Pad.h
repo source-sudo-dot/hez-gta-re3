@@ -28,7 +28,6 @@ public:
 	int16 BulletTime;
 	int16 Reload;
 	int16 Map;
-	int16 RadioWheel;
 	float GetLeftStickX(void) { return LeftStickX/32767.0f; };
 	float GetLeftStickY(void) { return LeftStickY/32767.0f; };
 	float GetRightStickX(void) { return RightStickX/32767.0f; };
@@ -37,7 +36,7 @@ public:
 	bool CheckForInput();
 	void Clear(void);
 };
-VALIDATE_SIZE(CControllerState, 0x34);
+VALIDATE_SIZE(CControllerState, 0x32);
 
 class CMouseControllerState
 {
@@ -246,11 +245,11 @@ public:
 	bool CycleCameraModeUpJustDown(void);
 	bool CycleCameraModeDownJustDown(void);
 	bool ChangeStationJustDown(void);
+	bool ChangeStationHeld(void);
 	bool CycleWeaponLeftJustDown(void);
 	bool CycleWeaponRightJustDown(void);
 	bool GetTarget(void);
 	bool GetWeaponWheel(void);
-	bool GetRadioWheel(void);
 	bool GetBulletTime(void);
 	bool GetReloadJustDown(void);
 	bool GetMapJustDown(void);

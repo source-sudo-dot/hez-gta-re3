@@ -546,7 +546,6 @@ void CControllerConfigManager::InitialiseControllerActionNameArray()
 	SETACTIONNAME(PED_BULLET_TIME);
 	SETACTIONNAME(PED_RELOAD);
 	SETACTIONNAME(PED_MAP);
-	SETACTIONNAME(VEHICLE_RADIO_WHEEL);
 	SETACTIONNAME(VEHICLE_LOOKLEFT_FIRE);
 	SETACTIONNAME(VEHICLE_LOOKRIGHT_FIRE);
 	SETACTIONNAME(TOGGLE_DPAD);
@@ -769,8 +768,6 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_Driving(int32 
 		state.RightShoulder2 = 255;
 		state.Circle = 255;
 	}
-	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_RADIO_WHEEL, type))
-		state.RadioWheel = 255;
 	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_HORN, type))
 		state.LeftShock = 255;
 	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_HANDBRAKE, type))
@@ -1194,8 +1191,6 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonUp_All_Player_State
 		state.Map = 0;
 	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
 		state.WeaponWheel = 0;
-	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_RADIO_WHEEL, type))
-		state.RadioWheel = 0;
 	if (button == GetControllerKeyAssociatedWithAction(PED_BULLET_TIME, type))
 		state.BulletTime = 0;
 	if (button == GetControllerKeyAssociatedWithAction(PED_RELOAD, type))
@@ -1805,7 +1800,6 @@ void CControllerConfigManager::DeleteMatchingVehicleControls(e_ControllerAction 
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKBEHIND);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKLEFT);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKRIGHT);
-		CLEAR_ACTION_IF_NEEDED(VEHICLE_RADIO_WHEEL);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKLEFT_FIRE);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKRIGHT_FIRE);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKBEHIND); // note: duplicate
@@ -1857,7 +1851,6 @@ bool CControllerConfigManager::IsAnyVehicleActionAssignedToMouseKey(int32 key)
 		CHECK_ACTION(VEHICLE_LOOKBEHIND);
 		CHECK_ACTION(VEHICLE_LOOKLEFT);
 		CHECK_ACTION(VEHICLE_LOOKRIGHT);
-		CHECK_ACTION(VEHICLE_RADIO_WHEEL);
 		CHECK_ACTION(VEHICLE_LOOKLEFT_FIRE);
 		CHECK_ACTION(VEHICLE_LOOKRIGHT_FIRE);
 		CHECK_ACTION(VEHICLE_LOOKBEHIND); // note: duplicate
@@ -2003,7 +1996,6 @@ e_ControllerActionType CControllerConfigManager::GetActionType(e_ControllerActio
 	case VEHICLE_LOOKBEHIND:
 	case VEHICLE_LOOKLEFT:
 	case VEHICLE_LOOKRIGHT:
-	case VEHICLE_RADIO_WHEEL:
 	case VEHICLE_LOOKLEFT_FIRE:
 	case VEHICLE_LOOKRIGHT_FIRE:
 	case VEHICLE_HORN:

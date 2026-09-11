@@ -585,7 +585,6 @@ CPlayerPed::IsThisPedAttackingPlayer(CPed *suspect)
 // is the same two lines: put the weapon in its reloading state and set the timer, and
 // CWeapon::Update() plays the sound and fills the clip when the timer runs out, exactly
 // as it does for the automatic one.  The fast reload cheat is honoured the same way too.
-bool CPlayerPed::bAimReadyPose = true;
 float CPlayerPed::m_fAimRaiseSpeed = 2.0f;
 bool CPlayerPed::bIsAimPosed = false;
 
@@ -652,7 +651,6 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	// its rate of fire says, up to a second, and treating that as "not aiming" was what
 	// took the pose off and dropped the arm between shots.
 	bool aiming =
-		bAimReadyPose &&
 		padUsed->GetTarget() &&
 		!bInVehicle &&
 		info->IsFlagSet(WEAPONFLAG_CANAIM) &&
@@ -739,7 +737,6 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	}
 }
 
-bool  CPlayerPed::bAimToFire = true;
 bool  CPlayerPed::bAimAssist = true;
 float CPlayerPed::m_fAimAssistStrength = 0.45f;
 float CPlayerPed::m_fAimAssistFactor = 1.0f;
@@ -1346,7 +1343,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 	// drops the player onto that path mid-shot.  Asking for aim keeps every shot on the
 	// one path.  Fists, melee and thrown weapons never aim and are left alone.
 	bool mayFire = true;
-	if (bAimToFire && !bInVehicle && !padUsed->GetTarget() &&
+	if (!bInVehicle && !padUsed->GetTarget() &&
 		weaponInfo->IsFlagSet(WEAPONFLAG_CANAIM) && weaponInfo->m_eWeaponFire != WEAPON_FIRE_MELEE)
 		mayFire = false;
 
