@@ -77,7 +77,7 @@ const CRGBA TEXT_COLOR = CRGBA(150, 110, 30, 255); // PS2 option color
 		
 #ifdef SCROLLABLE_PAGES
 #define MAX_VISIBLE_OPTION 12
-#define MAX_VISIBLE_OPTION_ON_SCREEN (hasNativeList(m_nCurrScreen) ? MAX_VISIBLE_LIST_ROW : MAX_VISIBLE_OPTION)
+#define MAX_VISIBLE_OPTION_ON_SCREEN (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS ? CONTSETUP_MAX_VISIBLE_ROWS : \n	hasNativeList(m_nCurrScreen) ? MAX_VISIBLE_LIST_ROW : MAX_VISIBLE_OPTION)
 #define SCREEN_HAS_AUTO_SCROLLBAR (m_nTotalListRow > MAX_VISIBLE_OPTION && !hasNativeList(m_nCurrScreen))
 
 int GetOptionCount(int screen)
@@ -573,6 +573,8 @@ CMenuManager::ProcessList(bool &goBack, bool &optionSelected)
 		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 36 : 31;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
+		if (m_nFirstVisibleRowOnList > m_nTotalListRow - CONTSETUP_MAX_VISIBLE_ROWS)
+			m_nFirstVisibleRowOnList = Max(0, m_nTotalListRow - CONTSETUP_MAX_VISIBLE_ROWS);
 	}
 
 #ifndef TIDY_UP_PBP
@@ -1115,9 +1117,6 @@ CMenuManager::Draw()
 	CFont::SetRightJustifyWrap(MENU_X_LEFT_ALIGNED(MENU_X_MARGIN - 2.0f));
 
 	switch (m_nCurrScreen) {
-		case MENUPAGE_COMPLETION:
-			PrintCompletion();
-			break;
 		case MENUPAGE_STATS:
 			PrintStats();
 			break;
@@ -2006,18 +2005,6 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 	return number;
 }
 
-// The spacing was a fixed amount that happened to fit the list re3 ships with, so adding
-// actions to it ran the last few off the bottom of the box and over the text under it.
-// Squeeze the rows together when there are more than fit, never spread them wider.  The
-// labels and the bindings are drawn in two passes, so both ask here.
-static float
-ContSetupRowHeight(float rowHeight, int numOptions, float yStart)
-{
-	if (numOptions > 1)
-		rowHeight = Min(rowHeight, ((DEFAULT_SCREEN_HEIGHT - CONTSETUP_LIST_BOTTOM) - yStart) / (numOptions - 1));
-	return rowHeight;
-}
-
 void
 CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8 column)
 {
@@ -2036,10 +2023,12 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 		default:
 			break;
 	}
-	rowHeight = ContSetupRowHeight(rowHeight, numOptions, yStart);
 
-	// MENU_Y(rowHeight * 0.0f + yStart);
-	for (int optionIdx = 0; optionIdx < numOptions; nextY = MENU_Y(++optionIdx * rowHeight + yStart)) {
+	// Only the rows on screen are drawn, and from where the list has been scrolled to.
+	int firstRow = m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS ? m_nFirstVisibleRowOnList : 0;
+	int lastRow = Min(numOptions, firstRow + CONTSETUP_MAX_VISIBLE_ROWS);
+	nextY = MENU_Y(yStart);
+	for (int optionIdx = firstRow; optionIdx < lastRow; nextY = MENU_Y((++optionIdx - firstRow) * rowHeight + yStart)) {
 		int nextX = xStart;
 		int bindingsForThisOpt = 0;
 		int contSetOrder = SETORDER_1;
@@ -2254,7 +2243,7 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 
 		// Highlight selected column(and make its text black)
 		if (m_nSelectedListRow == optionIdx) {
-			int bgY = m_nSelectedListRow * rowHeight + yStart + 1.0f;
+			int bgY = (m_nSelectedListRow - firstRow) * rowHeight + yStart + 1.0f;
 			if (m_nCurrExLayer == HOVEROPTION_LIST) {
 
 				if (column == CONTSETUP_PED_COLUMN && m_nSelectedContSetupColumn == CONTSETUP_PED_COLUMN) {
@@ -2568,18 +2557,18 @@ CMenuManager::DrawControllerSetupScreen()
 	else
 		yStart = CONTSETUP_LIST_TOP + CONTSETUP_LIST_HEADER_HEIGHT + 5;
 
-	rowHeight = ContSetupRowHeight(rowHeight, GetNumOptionsCntrlConfigScreens(), yStart);
-
 	float optionYBottom = yStart + rowHeight;
-	for (int i = 0; i < ARRAY_SIZE(actionTexts); ++i) {
+	int firstRow = m_nFirstVisibleRowOnList;
+	for (int i = firstRow; i < firstRow + CONTSETUP_MAX_VISIBLE_ROWS && i < ARRAY_SIZE(actionTexts); ++i) {
 		wchar *actionText = actionTexts[i];
 		if (!actionText)
 			break;
+		int row = i - firstRow;
 
 		if (m_nMousePosX > MENU_X_LEFT_ALIGNED(CONTSETUP_LIST_LEFT + 2.0f) &&
 			m_nMousePosX < MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_3_X + CONTSETUP_BOUND_COLUMN_WIDTH)) {
 
-			if (m_nMousePosY > MENU_Y(i * rowHeight + yStart) && m_nMousePosY < MENU_Y(i * rowHeight + optionYBottom)) {
+			if (m_nMousePosY > MENU_Y(row * rowHeight + yStart) && m_nMousePosY < MENU_Y(row * rowHeight + optionYBottom)) {
 					if (m_nOptionMouseHovering != i && m_nCurrExLayer == HOVEROPTION_LIST)
 						DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_NAVIGATION, 0);
 
@@ -2632,7 +2621,7 @@ CMenuManager::DrawControllerSetupScreen()
 		else
 			CFont::SetScale(MENU_X(SMALLESTTEXT_X_SCALE), MENU_Y(SMALLESTTEXT_Y_SCALE));
 
-		CFont::PrintString(MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_1_X), MENU_Y(i * rowHeight + yStart), actionText);
+		CFont::PrintString(MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_1_X), MENU_Y(row * rowHeight + yStart), actionText);
 	}
 	DrawControllerBound(yStart, MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_2_X), rowHeight, CONTSETUP_PED_COLUMN);
 	DrawControllerBound(yStart, MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_3_X), rowHeight, CONTSETUP_VEHICLE_COLUMN);
@@ -4174,63 +4163,6 @@ CMenuManager::PrintErrorMessage()
 	CFont::PrintString(SCREEN_SCALE_FROM_LEFT(50.0f), SCREEN_SCALE_Y(40.0f), TheText.Get(CPad::bDisplayNoControllerMessage ? "NOCONT" : "WRCONT"));
 #endif
 	CFont::DrawFonts();
-}
-
-// where the page lays its two columns out, in the units the rest of the menu uses
-#define GOAL_LEFT (140.0f)
-#define GOAL_RIGHT (140.0f)
-#define GOAL_TOP (60.0f)
-#define GOAL_LINE (22.0f)
-
-void
-CMenuManager::PrintCompletion()
-{
-	CCompletion::tGoal goals[CCompletion::MAX_GOALS];
-	int32 count = CCompletion::Collect(goals);
-	char buf[64];
-	wchar wide[64];
-
-	CFont::SetBackgroundOff();
-	CFont::SetPropOn();
-	CFont::SetCentreOff();
-	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
-
-	float y = MENU_Y(GOAL_TOP);
-
-	// the figure the game itself works out, at the top and larger than the rest
-	CFont::SetScale(MENU_X(0.7f), MENU_Y(1.1f));
-	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
-	CFont::SetRightJustifyOff();
-	CFont::PrintString(MENU_X_LEFT_ALIGNED(GOAL_LEFT), y, TheText.Get("FEZ_CPC"));
-	sprintf(buf, "%d%%", CCompletion::Percent());
-	AsciiToUnicode(buf, wide);
-	CFont::SetRightJustifyOn();
-	CFont::PrintString(MENU_X_RIGHT_ALIGNED(GOAL_RIGHT), y, wide);
-
-	y += MENU_Y(GOAL_LINE * 1.8f);
-
-	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
-	for (int32 i = 0; i < count; i++) {
-		bool done = goals[i].total > 0 && goals[i].done >= goals[i].total;
-
-		if (done)
-			CFont::SetColor(CRGBA(SLIDERON_COLOR.r, SLIDERON_COLOR.g, SLIDERON_COLOR.b, FadeIn(255)));
-		else
-			CFont::SetColor(CRGBA(LABEL_COLOR.r, LABEL_COLOR.g, LABEL_COLOR.b, FadeIn(255)));
-
-		CFont::SetRightJustifyOff();
-		CFont::PrintString(MENU_X_LEFT_ALIGNED(GOAL_LEFT), y, TheText.Get(goals[i].key));
-
-		if (goals[i].total > 0)
-			sprintf(buf, "%d / %d", goals[i].done, goals[i].total);
-		else
-			sprintf(buf, "%d", goals[i].done);
-		AsciiToUnicode(buf, wide);
-		CFont::SetRightJustifyOn();
-		CFont::PrintString(MENU_X_RIGHT_ALIGNED(GOAL_RIGHT), y, wide);
-
-		y += MENU_Y(GOAL_LINE);
-	}
 }
 
 // Small, in the corner of the map, to be read at a glance rather than studied.

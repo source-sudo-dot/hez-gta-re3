@@ -855,7 +855,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 	   MENUACTION_CHANGEMENU,	"FEN_STA",	{ nil, SAVESLOT_NONE, MENUPAGE_NEW_GAME },
 	   // CMenuManager::LoadAllTextures will add map here, if MENU_MAP enabled and map textures are found
 	   MENUACTION_CHANGEMENU,	"FEP_STA",	{ nil, SAVESLOT_NONE, MENUPAGE_STATS },
-	   MENUACTION_CHANGEMENU,	"FEZ_CMP",	{ nil, SAVESLOT_NONE, MENUPAGE_COMPLETION },
 	   MENUACTION_CHANGEMENU,	"FEP_BRI",	{ nil, SAVESLOT_NONE, MENUPAGE_BRIEFS },
 	   MENUACTION_CHANGEMENU,	"FET_OPT",	{ nil, SAVESLOT_NONE, MENUPAGE_OPTIONS },
 	   MENUACTION_CHANGEMENU,	"FEM_QT",	{ nil, SAVESLOT_NONE, MENUPAGE_EXIT },
@@ -958,8 +957,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) },
 		MENUACTION_CFO_SLIDER,	"FEZ_AZ", { new CCFOSlider(&CCamera::m_fAimZoomDegrees, "Display", "AimZoomDegrees", 0.0f, 35.0f, nil, 70, true) },
-		MENUACTION_CFO_SLIDER,	"FEZ_CVF", { new CCFOSlider(&CCamera::m_fCarCamFollowVert, "Display", "CarCamFollowVert", 0.0f, 1.0f, nil, 20, true) },
-		MENUACTION_CFO_SLIDER,	"FEZ_CVD", { new CCFOSlider(&CCamera::m_fCarCamFollowDelay, "Display", "CarCamFollowDelay", 0.0f, 5.0f, nil, 50, true) },
 #ifndef GAMEPAD_MENU
 		// GAMEPAD_MENU wants XInput, which this build does not use, so the gamepad page
 		// it would have put the vibration switch on is never compiled
@@ -985,13 +982,6 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		MODERN_CROSSHAIR_TOGGLE
 		HIT_MARKERS_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 2.0f, 20.0f, nil, 36, true) },
-		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
-	},
-
-	// MENUPAGE_COMPLETION
-	{ "FEZ_CMP", MENUPAGE_PAUSE_MENU, MENUPAGE_PAUSE_MENU,
-		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 50, 0, 250, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, false, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
-
 		MENUACTION_CHANGEMENU,	"FEDS_TB", { nil, SAVESLOT_NONE, MENUPAGE_NONE },
 	},
 

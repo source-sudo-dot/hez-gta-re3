@@ -32,7 +32,9 @@ int16 DebugCamMode;
 #ifdef FREE_CAM
 bool CCamera::bFreeCam = false;
 bool CCamera::bFreeCamSetting = false;
-float CCamera::m_fCarCamFollowVert = 0.25f;
+// The car camera does not pull itself back to level behind the car; it stays where it
+// is put.  Both of these are here only so re3.ini can still ask for the old behaviour.
+float CCamera::m_fCarCamFollowVert = 0.0f;
 float CCamera::m_fCarCamFollowDelay = 1.5f;
 float CCamera::m_fCarCamSmoothing = 0.0f;
 int nPreviousMode = -1;

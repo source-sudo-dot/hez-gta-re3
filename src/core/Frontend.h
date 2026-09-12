@@ -77,6 +77,10 @@
 #define BRIEFS_LINE_X 50.0f
 #define BRIEFS_LINE_HEIGHT 60.0f
 
+// The rows used to be squeezed together to make everything fit, which only works up to
+// a point and then runs over the text under the box.  This many fit at the spacing the
+// game was drawn with; the rest are reached by scrolling.
+#define CONTSETUP_MAX_VISIBLE_ROWS 24
 #define CONTSETUP_STANDARD_ROW_HEIGHT 10.7f
 #define CONTSETUP_CLASSIC_ROW_HEIGHT 9.0f
 #define CONTSETUP_BOUND_HIGHLIGHT_HEIGHT 10
@@ -259,7 +263,6 @@ enum eMenuScreen
 #endif
 	MENUPAGE_STICK_SETTINGS,
 	MENUPAGE_GAMEPLAY_SETTINGS,
-	MENUPAGE_COMPLETION,
 
 #endif
 	MENUPAGE_UNK, // originally 58. Custom screens are inserted above, because last screen in CMenuScreens should always be empty to make CFO work
@@ -832,7 +835,6 @@ public:
 	void PrintBriefs();
 	static void PrintErrorMessage();
 	void PrintStats();
-	void PrintCompletion();
 	void PrintCompletionOnMap();
 	void Process();
 	void ProcessButtonPresses();
