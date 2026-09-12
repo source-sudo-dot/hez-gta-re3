@@ -34,6 +34,8 @@
 #include "Weather.h"
 #include "Streaming.h"
 #include "PathFind.h"
+#include "CarCtrl.h"
+#include "Zones.h"
 #include "Wanted.h"
 #include "General.h"
 
@@ -139,27 +141,41 @@ void TankCheat()
 
 // Ray leaves a Patriot behind after his last job, proofed against everything there is.
 // Miss it and the script never offers it a second time, so here is one on demand: the
-// same car, carrying the same five proofs the script hands the original.
+// same car, carrying the same five proofs the script hands the original, and put down
+// the way the script puts a car down rather than dropped out of the air.
 void BulletproofPatriotCheat()
 {
-	CHud::SetHelpMessage(TheText.Get("CHEAT1"), true);
-	CStreaming::RequestModel(MI_PATRIOT, 0);
+	CStreaming::RequestModel(MI_PATRIOT, STREAMFLAGS_DONT_REMOVE);
 	CStreaming::LoadAllRequestedModels(false);
-	if (CStreaming::ms_aInfoForModel[MI_PATRIOT].m_loadState != STREAMSTATE_LOADED)
+	if (CStreaming::ms_aInfoForModel[MI_PATRIOT].m_loadState != STREAMSTATE_LOADED) {
+		CHud::SetHelpMessage(TheText.Get("CHEATNL"), true);
 		return;
-
-	int32 node = ThePaths.FindNodeClosestToCoors(FindPlayerCoors(), PATH_CAR, 100.0f);
-	if (node < 0)
-		return;
+	}
 
 	CAutomobile *patriot = new CAutomobile(MI_PATRIOT, RANDOM_VEHICLE);
-	if (patriot == nil)
+	if (patriot == nil) {
+		CHud::SetHelpMessage(TheText.Get("CHEATNR"), true);
 		return;
+	}
 
-	CVector pos = ThePaths.m_pathNodes[node].GetPosition();
-	pos.z += 4.0f;
+	// On the nearest piece of road if there is one within range, and otherwise simply
+	// in front of the player, so standing somewhere the traffic never goes is no reason
+	// for nothing at all to happen.
+	CVector pos;
+	int32 node = ThePaths.FindNodeClosestToCoors(FindPlayerCoors(), PATH_CAR, 100.0f);
+	if (node >= 0) {
+		pos = ThePaths.m_pathNodes[node].GetPosition();
+	} else {
+		pos = FindPlayerCoors();
+		if (FindPlayerPed() != nil)
+			pos += FindPlayerPed()->GetForward() * 6.0f;
+	}
+	pos.z = CWorld::FindGroundZForCoord(pos.x, pos.y);
+	pos.z += patriot->GetDistanceFromCentreOfMassToBaseOfModel();
+
 	patriot->SetPosition(pos);
-	patriot->SetOrientation(0.0f, 0.0f, DEGTORAD(200.0f));
+	patriot->SetOrientation(0.0f, 0.0f, 0.0f);
+	CWorld::ClearExcitingStuffFromArea(pos, 8.0f, false);
 
 	patriot->bBulletProof = true;
 	patriot->bFireProof = true;
@@ -169,7 +185,19 @@ void BulletproofPatriotCheat()
 
 	patriot->SetStatus(STATUS_ABANDONED);
 	patriot->m_nDoorLock = CARLOCK_UNLOCKED;
+	patriot->bEngineOn = false;
+	patriot->bHasBeenOwnedByPlayer = true;
+	patriot->m_nZoneLevel = CTheZones::GetLevelFromPosition(&pos);
+	patriot->AutoPilot.m_nCarMission = MISSION_NONE;
+	patriot->AutoPilot.m_nTempAction = TEMPACT_NONE;
+	patriot->AutoPilot.m_nDrivingStyle = DRIVINGSTYLE_STOP_FOR_CARS;
+	patriot->AutoPilot.m_nCruiseSpeed = patriot->AutoPilot.m_fMaxTrafficSpeed = 9.0f;
+	patriot->AutoPilot.m_nCurrentLane = patriot->AutoPilot.m_nNextLane = 0;
+
 	CWorld::Add(patriot);
+	CCarCtrl::JoinCarWithRoadSystem(patriot);
+
+	CHud::SetHelpMessage(TheText.Get("CHEAT1"), true);
 }
 
 void BlowUpCarsCheat()
