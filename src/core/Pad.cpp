@@ -137,6 +137,41 @@ void TankCheat()
 	}
 }
 
+// Ray leaves a Patriot behind after his last job, proofed against everything there is.
+// Miss it and the script never offers it a second time, so here is one on demand: the
+// same car, carrying the same five proofs the script hands the original.
+void BulletproofPatriotCheat()
+{
+	CHud::SetHelpMessage(TheText.Get("CHEAT1"), true);
+	CStreaming::RequestModel(MI_PATRIOT, 0);
+	CStreaming::LoadAllRequestedModels(false);
+	if (CStreaming::ms_aInfoForModel[MI_PATRIOT].m_loadState != STREAMSTATE_LOADED)
+		return;
+
+	int32 node = ThePaths.FindNodeClosestToCoors(FindPlayerCoors(), PATH_CAR, 100.0f);
+	if (node < 0)
+		return;
+
+	CAutomobile *patriot = new CAutomobile(MI_PATRIOT, RANDOM_VEHICLE);
+	if (patriot == nil)
+		return;
+
+	CVector pos = ThePaths.m_pathNodes[node].GetPosition();
+	pos.z += 4.0f;
+	patriot->SetPosition(pos);
+	patriot->SetOrientation(0.0f, 0.0f, DEGTORAD(200.0f));
+
+	patriot->bBulletProof = true;
+	patriot->bFireProof = true;
+	patriot->bExplosionProof = true;
+	patriot->bCollisionProof = true;
+	patriot->bMeleeProof = true;
+
+	patriot->SetStatus(STATUS_ABANDONED);
+	patriot->m_nDoorLock = CARLOCK_UNLOCKED;
+	CWorld::Add(patriot);
+}
+
 void BlowUpCarsCheat()
 {
 	CHud::SetHelpMessage(TheText.Get("CHEAT1"), true);
@@ -940,6 +975,10 @@ void CPad::AddToPCCheatString(char c)
 	// "GIVEUSATANK"
 	if ( !_CHEATCMP("KNATASUEVIG") )
 		TankCheat();
+
+	// "RAYSPATRIOT"
+	if ( !_CHEATCMP("TOIRTAPSYAR") )
+		BulletproofPatriotCheat();
 
 	// "BANGBANGBANG"
 	if ( !_CHEATCMP("GNABGNABGNAB") )
