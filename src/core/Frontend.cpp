@@ -3784,7 +3784,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				// This is else block of GetLeftMouse() if MAP_ENHANCEMENTS defined, so all of GetLeftMouse() conditions below being rendered useless. 
 
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosY < m_nMouseOldPosY || CPad::GetPad(0)->GetUp() ||
-					CPad::GetPad(0)->GetDPadUp() || CPad::GetPad(0)->GetAnalogueUpDown() < 0) {
+					CPad::GetPad(0)->GetDPadUp()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if ((m_fMapSize - MENU_Y(MAP_MIN_SIZE)) + SCREEN_HEIGHT/2 > m_fMapCenterY)
 							m_fMapCenterY += MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f);
@@ -3793,7 +3793,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				}
 
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosY > m_nMouseOldPosY || CPad::GetPad(0)->GetDown() ||
-					CPad::GetPad(0)->GetDPadDown() || CPad::GetPad(0)->GetAnalogueUpDown() > 0) {
+					CPad::GetPad(0)->GetDPadDown()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)) < m_fMapCenterY)
 							m_fMapCenterY -= MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f);
@@ -3802,12 +3802,32 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				}
 
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosX < m_nMouseOldPosX || CPad::GetPad(0)->GetLeft() ||
-					CPad::GetPad(0)->GetDPadLeft() || CPad::GetPad(0)->GetAnalogueLeftRight() < 0) {
+					CPad::GetPad(0)->GetDPadLeft()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2 > m_fMapCenterX)
 							m_fMapCenterX += MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f);
 						m_bShowMouse = false;
 					}				
+				}
+
+				// The stick only told which way it was pushed, so the lightest touch scrolled
+				// as fast as a full push.  It scrolls by how far it is pushed now, a light push
+				// creeping and a full one covering what the fixed step did, and per rendered
+				// frame, so the same push covers the same ground at any frame rate.
+				{
+					float stickX = CPad::GetPad(0)->NewState.LeftStickX / 128.0f;
+					float stickY = CPad::GetPad(0)->NewState.LeftStickY / 128.0f;
+					if (stickX != 0.0f || stickY != 0.0f) {
+						// the fixed step came at most about once every sixtieth of a second, and
+						// the render frame length is counted in thirtieths
+						float step = 15.0f * 2.0f * CTimer::GetRenderFrameLength() * Max(m_fMapScrollSpeed, 0.05f);
+						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE))
+							m_fMapCenterX -= MENU_X(Clamp(stickX, -1.0f, 1.0f) * step);
+						m_fMapCenterY -= MENU_Y(Clamp(stickY, -1.0f, 1.0f) * step);
+						m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2);
+						m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2);
+						m_bShowMouse = false;
+					}
 				}
 
 				if (CPad::GetPad(0)->GetLeftMouseJustUp()) {
@@ -3821,7 +3841,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				}
 
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosX > m_nMouseOldPosX || CPad::GetPad(0)->GetRight() ||
-					CPad::GetPad(0)->GetDPadRight() || CPad::GetPad(0)->GetAnalogueLeftRight() > 0) {
+					CPad::GetPad(0)->GetDPadRight()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)) < m_fMapCenterX)
 							m_fMapCenterX -= MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f);
