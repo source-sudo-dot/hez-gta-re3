@@ -138,10 +138,10 @@ void TankCheat()
 	}
 }
 
-// Ray leaves a Patriot behind after his last job, proofed against everything there is.
-// Miss it and the script never offers it a second time, so here is one on demand: the
-// same car, carrying the same five proofs the script hands the original, and put down
-// the way the script puts a car down rather than dropped out of the air.
+// Ray leaves a Patriot behind after his last job, and it is the same model as any
+// other with one thing done to it: the script makes it proof against bullets.  Miss
+// it and it is never offered again, so here is one on demand, proofed the same way
+// and no more than that.
 void BulletproofPatriotCheat()
 {
 	CStreaming::RequestModel(MI_PATRIOT, STREAMFLAGS_DONT_REMOVE);
@@ -176,11 +176,10 @@ void BulletproofPatriotCheat()
 	patriot->SetPosition(pos);
 	patriot->SetOrientation(0.0f, 0.0f, 0.0f);
 
+	// Bullets and nothing else.  main.scm creates the original at 241, -997, 20 and
+	// calls SET_CAR_PROOFS on it with 1 0 0 0 0 the very next line, so fire, explosions,
+	// collisions and fists all go through it exactly as they go through any other car.
 	patriot->bBulletProof = true;
-	patriot->bFireProof = true;
-	patriot->bExplosionProof = true;
-	patriot->bCollisionProof = true;
-	patriot->bMeleeProof = true;
 
 	patriot->SetStatus(STATUS_ABANDONED);
 	patriot->m_nDoorLock = CARLOCK_UNLOCKED;
