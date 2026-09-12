@@ -139,9 +139,9 @@ bool CMenuManager::m_PrefsMarketing = false;
 bool CMenuManager::m_PrefsDisableTutorials = false;
 #endif // !MASTER
 
-#ifdef GAMEPAD_MENU
+// Also used by the vibration switch on the gamepad settings page, which stands in for the
+// gamepad page when that is not built
 uint32 TimeToStopPadShaking;
-#endif
 
 const char* FrontendFilenames[][2] = {
 	{"background", ""},
@@ -5783,13 +5783,12 @@ CMenuManager::SwitchMenuOnAndOff()
 	m_bStartUpFrontEndRequested = false;
 	m_bShutDownFrontEndRequested = false;
 
-#ifdef GAMEPAD_MENU
-	// Reset pad shaking.
+	// Reset pad shaking.  The game's clock stands still in the menu, so a shake started here
+	// would never count down on its own.
 	if (TimeToStopPadShaking && TimeToStopPadShaking < CTimer::GetTimeInMillisecondsPauseMode()) {
 		CPad::StopPadsShaking();
 		TimeToStopPadShaking = 0;
 	}
-#endif
 }
 
 void
