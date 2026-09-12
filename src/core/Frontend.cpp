@@ -1904,7 +1904,6 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 				case 28:
 				case 29:
 				case 30:
-				case 31:
 					controllerAction = -1;
 					break;
 				case 3:
@@ -1957,12 +1956,6 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 					break;
 				case 26:
 					controllerAction = VEHICLE_LOOKRIGHT;
-					break;
-				case 27:
-				case 28:
-				case 29:
-				case 30:
-					controllerAction = -1;
 					break;
 				case 31:
 					if (m_ControlMethod == CONTROL_STANDARD)
