@@ -108,6 +108,7 @@ CVector2D mapCrosshair;
 
 #ifdef CUTSCENE_BORDERS_SWITCH
 bool CMenuManager::m_PrefsCutsceneBorders = true;
+bool CMenuManager::m_bBorderless = false;
 
 // index of m_PrefsFrameLimiter, 0 is no limit
 const int32 frameLimits[] = { 0, 30, 60, 75, 90, 120, 144, 165, 240 };
@@ -783,7 +784,7 @@ CMenuManager::CheckSliderMovement(int value)
 	{
 		CMenuScreenCustom::CMenuEntry &option = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption];
 		float oldValue = *(float*)option.m_CFOSlider->value;
-		*(float*)option.m_CFOSlider->value += value * ((option.m_CFOSlider->max - option.m_CFOSlider->min) / MENUSLIDER_LOGICAL_BARS);
+		*(float*)option.m_CFOSlider->value += value * ((option.m_CFOSlider->max - option.m_CFOSlider->min) / Max(option.m_CFOSlider->steps, 1));
 		*(float*)option.m_CFOSlider->value = Clamp(*(float*)option.m_CFOSlider->value, option.m_CFOSlider->min, option.m_CFOSlider->max);
 
 		if (*(float*)option.m_CFOSlider->value != oldValue && option.m_CFOSlider->changeFunc)
@@ -1594,6 +1595,18 @@ CMenuManager::DrawStandardMenus(bool activeScreen)
 						case MENUACTION_CFO_SLIDER:
 							CMenuScreenCustom::CMenuEntry &option = aScreens[m_nCurrScreen].m_aEntries[i];
 							ProcessSlider((*(float*)option.m_CFOSlider->value - option.m_CFOSlider->min) / (option.m_CFOSlider->max - option.m_CFOSlider->min), SLIDER_Y(0), HOVEROPTION_INCREASE_CFO_SLIDER, HOVEROPTION_DECREASE_CFO_SLIDER, SCREEN_WIDTH, true);
+							if (option.m_CFOSlider->showValue) {
+								char valueStr[16];
+								wchar valueUni[16];
+								sprintf(valueStr, "%.2f", *(float*)option.m_CFOSlider->value);
+								AsciiToUnicode(valueStr, valueUni);
+								bool wasCentred = CFont::Details.centre;
+								CFont::SetCentreOff();
+								CFont::SetRightJustifyOff();
+								CFont::PrintString(MENU_X_LEFT_ALIGNED(MENUSLIDER_VALUE_X), MENU_Y(aScreens[m_nCurrScreen].m_aEntries[i].m_Y MINUS_SCROLL_OFFSET), valueUni);
+								if (wasCentred)
+									CFont::SetCentreOn();
+							}
 							break;
 #endif
 					}
@@ -1695,15 +1708,23 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 		case MENUPAGE_KEYBOARD_CONTROLS:
 			switch (m_ControlMethod) {
 				case CONTROL_STANDARD:
-					number = 27;
+					number = 33;
 					break;
 				case CONTROL_CLASSIC:
-					number = 32;
+					number = 38;
 					break;
 			}
 			break;
 	}
 	return number;
+}
+
+static float
+ContSetupRowHeight(float rowHeight, int numOptions, float yStart)
+{
+	if (numOptions > 1)
+		rowHeight = Min(rowHeight, ((DEFAULT_SCREEN_HEIGHT - CONTSETUP_LIST_BOTTOM) - yStart) / (numOptions - 1));
+	return rowHeight;
 }
 
 void
@@ -1725,6 +1746,7 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 		default:
 			break;
 	}
+	rowHeight = ContSetupRowHeight(rowHeight, numOptions, yStart);
 
 	for (int optionIdx = 0; optionIdx < numOptions; nextY = MENU_Y(++optionIdx * rowHeight + yStart)) {
 		int nextX = xStart;
@@ -1808,19 +1830,54 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 						controllerAction = PED_1RST_PERSON_LOOK_RIGHT;
 					break;
 				case 27:
-					controllerAction = PED_1RST_PERSON_LOOK_UP;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = PED_WEAPON_WHEEL;
+					else
+						controllerAction = PED_1RST_PERSON_LOOK_UP;
 					break;
 				case 28:
-					controllerAction = PED_1RST_PERSON_LOOK_DOWN;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = PED_BULLET_TIME;
+					else
+						controllerAction = PED_1RST_PERSON_LOOK_DOWN;
 					break;
 				case 29:
-					controllerAction = PED_CYCLE_TARGET_LEFT;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = PED_RELOAD;
+					else
+						controllerAction = PED_CYCLE_TARGET_LEFT;
 					break;
 				case 30:
-					controllerAction = PED_CYCLE_TARGET_RIGHT;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = PED_MAP;
+					else
+						controllerAction = PED_CYCLE_TARGET_RIGHT;
 					break;
 				case 31:
-					controllerAction = PED_CENTER_CAMERA_BEHIND_PLAYER;
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = -1;
+					else
+						controllerAction = PED_CENTER_CAMERA_BEHIND_PLAYER;
+					break;
+				// the two drive-by rows carry nothing on foot
+				case 32:
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = -1;
+					else
+						controllerAction = PED_WEAPON_WHEEL;
+					break;
+				case 33:
+					controllerAction = PED_BULLET_TIME;
+					break;
+				case 34:
+					controllerAction = PED_RELOAD;
+					break;
+				case 35:
+					controllerAction = PED_MAP;
+					break;
+				case 36:
+				case 37:
+					controllerAction = -1;
 					break;
 				default:
 					break;
@@ -1900,6 +1957,35 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 					break;
 				case 26:
 					controllerAction = VEHICLE_LOOKRIGHT;
+					break;
+				case 27:
+				case 28:
+				case 29:
+				case 30:
+					controllerAction = -1;
+					break;
+				case 31:
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = VEHICLE_LOOKLEFT_FIRE;
+					else
+						controllerAction = -1;
+					break;
+				case 32:
+					if (m_ControlMethod == CONTROL_STANDARD)
+						controllerAction = VEHICLE_LOOKRIGHT_FIRE;
+					else
+						controllerAction = -1;
+					break;
+				case 33:
+				case 34:
+				case 35:
+					controllerAction = -1;
+					break;
+				case 36:
+					controllerAction = VEHICLE_LOOKLEFT_FIRE;
+					break;
+				case 37:
+					controllerAction = VEHICLE_LOOKRIGHT_FIRE;
 					break;
 				default:
 					break;
@@ -2121,7 +2207,7 @@ CMenuManager::DrawControllerSetupScreen()
 	else if (m_ControlMethod == CONTROL_CLASSIC)
 		CFont::PrintString(SCREEN_STRETCH_FROM_RIGHT(MENUHEADER_POS_X), SCREEN_SCALE_Y(MENUHEADER_POS_Y), TheText.Get("FET_CTI"));
 
-	wchar *actionTexts[33];
+	wchar *actionTexts[39];
 	actionTexts[0] = TheText.Get("FEC_FIR");
 	actionTexts[1] = TheText.Get("FEC_NWE");
 	actionTexts[2] = TheText.Get("FEC_PWE");
@@ -2155,7 +2241,13 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[29] = TheText.Get("FEC_NTR");
 		actionTexts[30] = TheText.Get("FEC_PTT");
 		actionTexts[31] = TheText.Get("FEC_CEN");
-		actionTexts[32] = nil;
+		actionTexts[32] = TheText.Get("FEZ_WW");
+		actionTexts[33] = TheText.Get("FEZ_BT");
+		actionTexts[34] = TheText.Get("FEZ_RLD");
+		actionTexts[35] = TheText.Get("FEZ_MAP");
+		actionTexts[36] = TheText.Get("FEZ_DBL");
+		actionTexts[37] = TheText.Get("FEZ_DBR");
+		actionTexts[38] = nil;
 	} else {
 		actionTexts[20] = TheText.Get("FEC_TFL");
 		actionTexts[21] = TheText.Get("FEC_TFR");
@@ -2164,7 +2256,13 @@ CMenuManager::DrawControllerSetupScreen()
 		actionTexts[24] = TheText.Get("FEC_LBA");
 		actionTexts[25] = TheText.Get("FEC_LOL");
 		actionTexts[26] = TheText.Get("FEC_LOR");
-		actionTexts[27] = nil;
+		actionTexts[27] = TheText.Get("FEZ_WW");
+		actionTexts[28] = TheText.Get("FEZ_BT");
+		actionTexts[29] = TheText.Get("FEZ_RLD");
+		actionTexts[30] = TheText.Get("FEZ_MAP");
+		actionTexts[31] = TheText.Get("FEZ_DBL");
+		actionTexts[32] = TheText.Get("FEZ_DBR");
+		actionTexts[33] = nil;
 	}
 
 	// Blue panel background
@@ -2193,6 +2291,8 @@ CMenuManager::DrawControllerSetupScreen()
 		yStart = CONTSETUP_LIST_TOP + 18;
 	else
 		yStart = CONTSETUP_LIST_TOP + 21;
+
+	rowHeight = ContSetupRowHeight(rowHeight, GetNumOptionsCntrlConfigScreens(), yStart);
 
 	float optionYBottom = yStart + rowHeight;
 	for (int i = 0; i < ARRAY_SIZE(actionTexts); ++i) {
@@ -4054,7 +4154,7 @@ CMenuManager::ProcessList(bool &optionSelected, bool &goBack)
 	}
 	if (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS) {
 		// GetNumOptionsCntrlConfigScreens would have been a better choice
-		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 32 : 27;
+		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 38 : 33;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
 	}
@@ -5590,6 +5690,8 @@ CMenuManager::SwitchMenuOnAndOff()
 				m_bMenuActive = !m_bMenuActive;
 
 			if (m_bMenuActive) {
+				ControlsManager.HoldOverHeldButtons();
+				CPad::HoldOverHeldTriggers();
 				if (_InputMouseNeedsExclusive()) {
 					_InputShutdownMouse();
 					_InputInitialiseMouse(false);
@@ -5636,6 +5738,9 @@ CMenuManager::SwitchMenuOnAndOff()
 				int16 start1 = CPad::GetPad(0)->PCTempJoyState.Start, start2 = CPad::GetPad(0)->PCTempKeyState.Start,
 					start3 = CPad::GetPad(0)->OldState.Start, start4 = CPad::GetPad(0)->NewState.Start;
 #endif
+				ControlsManager.HoldOverHeldButtons();
+				CPad::HoldOverHeldTriggers();
+
 				CPad::GetPad(0)->Clear(false);
 				CPad::GetPad(1)->Clear(false);
 #ifdef REGISTER_START_BUTTON

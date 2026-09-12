@@ -43,6 +43,7 @@ long _dwOperatingSystemVersion;
 #include "Timer.h"
 #include "DMAudio.h"
 #include "ControllerConfig.h"
+#include "PadRumble.h"
 #include "Frontend.h"
 #include "Game.h"
 #include "PCSave.h"
@@ -596,6 +597,7 @@ psInitialize(void)
 void
 psTerminate(void)
 {
+	CPadRumble::Shutdown();
 	return;
 }
 
@@ -886,7 +888,7 @@ psSelectDevice()
 	RwEngineGetVideoModeInfo(&vm, GcurSelVM);
 
 #ifdef IMPROVED_VIDEOMODE
-	if (FrontEndMenuManager.m_nPrefsWindowed)
+	if ((FrontEndMenuManager.m_nPrefsWindowed || CMenuManager::m_bBorderless) && bestWndMode >= 0)
 		GcurSelVM = bestWndMode;
 
 	// Now GcurSelVM is 0 but vm has sizes(and fullscreen flag) of the video mode we want, that's why we changed the rwVIDEOMODEEXCLUSIVE conditions below
@@ -936,7 +938,7 @@ psSelectDevice()
 		RsGlobal.width = FrontEndMenuManager.m_nPrefsWidth;
 		RsGlobal.height = FrontEndMenuManager.m_nPrefsHeight;
 		
-		PSGLOBAL(fullScreen) = !FrontEndMenuManager.m_nPrefsWindowed;
+		PSGLOBAL(fullScreen) = !FrontEndMenuManager.m_nPrefsWindowed && !CMenuManager::m_bBorderless;
 #endif
 
 #ifdef MULTISAMPLING
@@ -1080,6 +1082,66 @@ void psPostRWinit(void)
 
 	if(!(vm.flags & rwVIDEOMODEEXCLUSIVE))
 		glfwSetWindowSize(PSGLOBAL(window), RsGlobal.maximumWidth, RsGlobal.maximumHeight);
+
+#ifdef IMPROVED_VIDEOMODE
+	// Borderless fullscreen.  The window is kept out of the exclusive video mode above,
+	// so all that is left is taking the frame off and laying it over the monitor it is
+	// on.  Borderless=1 under [VideoMode] in re3.ini.
+	if(CMenuManager::m_bBorderless){
+		int winX, winY;
+		glfwGetWindowPos(PSGLOBAL(window), &winX, &winY);
+
+		// the monitor holding the top left corner of the window, or the primary one
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		int numMonitors = 0;
+		GLFWmonitor **monitors = glfwGetMonitors(&numMonitors);
+		for(int i = 0; i < numMonitors; i++){
+			const GLFWvidmode *monMode = glfwGetVideoMode(monitors[i]);
+			if(monMode == nil)
+				continue;
+			int monX, monY;
+			glfwGetMonitorPos(monitors[i], &monX, &monY);
+			if(winX >= monX && winX < monX + monMode->width &&
+			   winY >= monY && winY < monY + monMode->height){
+				monitor = monitors[i];
+				break;
+			}
+		}
+
+		const GLFWvidmode *mode = monitor ? glfwGetVideoMode(monitor) : nil;
+		if(mode != nil){
+			int monX, monY;
+			glfwGetMonitorPos(monitor, &monX, &monY);
+
+			// One row of pixels taller than the monitor, hanging off the bottom edge.
+			// A window covering a monitor to the pixel is taken off the desktop compositor
+			// by the driver and presented like exclusive fullscreen, and every alt tab then
+			// costs the seconds of black screen borderless is meant to save.  The extra row
+			// is never on screen.
+			const int width = mode->width;
+			const int height = mode->height + 1;
+
+			// Hand the window back to the desktop first.  librw makes a real fullscreen
+			// window for an exclusive video mode, and GLFW minimises one of those the
+			// moment it loses focus, which is the black screen alt tabbing gives.  Passing
+			// no monitor turns it into an ordinary window, and does nothing if it already
+			// is one.  Then take the frame off and lay it over the monitor.
+			glfwSetWindowMonitor(PSGLOBAL(window), nil, monX, monY, width, height, GLFW_DONT_CARE);
+			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_AUTO_ICONIFY, GLFW_FALSE);
+			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_DECORATED, GLFW_FALSE);
+			glfwSetWindowAttrib(PSGLOBAL(window), GLFW_RESIZABLE, GLFW_FALSE);
+			glfwSetWindowPos(PSGLOBAL(window), monX, monY);
+			glfwSetWindowSize(PSGLOBAL(window), width, height);
+
+			RsGlobal.maximumWidth = width;
+			RsGlobal.maximumHeight = height;
+			RsGlobal.width = width;
+			RsGlobal.height = height;
+
+			PSGLOBAL(fullScreen) = FALSE;
+		}
+	}
+#endif
 
 	// Make sure all keys are released
 	CPad::GetPad(0)->Clear(true);
@@ -2515,6 +2577,8 @@ void CapturePad(RwInt32 padID)
 
 	ControlsManager.m_NewState.buttons = (uint8*)buttons;
 	ControlsManager.m_NewState.numButtons = numButtons;
+	for (int i = 0; i < JOY_RAW_BUTTONS; i++)
+		ControlsManager.m_NewState.rawButtons[i] = i < numButtons && buttons[i];
 	ControlsManager.m_NewState.id = glfwPad;
 	ControlsManager.m_NewState.isGamepad = glfwGetGamepadState(glfwPad, &gamepadState);
 	if (ControlsManager.m_NewState.isGamepad) {
@@ -2523,11 +2587,16 @@ void CapturePad(RwInt32 padID)
 
 		// glfw returns 0.0 for non-existent axises(which is bullocks) so we treat it as deadzone, and keep value of previous frame.
 		// otherwise if this axis is present, -1 = released, 1 = pressed
-		if (lt != 0.0f)
+		if (lt != 0.0f) {
 			ControlsManager.m_NewState.mappedButtons[15] = lt > -0.8f;
+			// how far it is pushed, which the button above throws away
+			CPad::m_fTriggerLeft = Clamp((lt + 1.0f) * 0.5f, 0.0f, 1.0f);
+		}
 
-		if (rt != 0.0f)
+		if (rt != 0.0f) {
 			ControlsManager.m_NewState.mappedButtons[16] = rt > -0.8f;
+			CPad::m_fTriggerRight = Clamp((rt + 1.0f) * 0.5f, 0.0f, 1.0f);
+		}
 	}
 	// TODO? L2-R2 axes(not buttons-that's fine) on joysticks that don't have SDL gamepad mapping AREN'T handled, and I think it's impossible to do without mapping.
 
@@ -2566,17 +2635,19 @@ void CapturePad(RwInt32 padID)
 		
 		CPad *pad = CPad::GetPad(bs.padID);
 
-		if ( Abs(leftStickPos.x)  > 0.3f )
-			pad->PCTempJoyState.LeftStickX	= (int32)(leftStickPos.x  * 128.0f);
-		
-		if ( Abs(leftStickPos.y)  > 0.3f )
-			pad->PCTempJoyState.LeftStickY	= (int32)(leftStickPos.y  * 128.0f);
-		
-		if ( Abs(rightStickPos.x) > 0.3f )
-			pad->PCTempJoyState.RightStickX = (int32)(rightStickPos.x * 128.0f);
+		// The dead zone used to be a fixed 0.3 per axis, and the value was left at what
+		// it was below it instead of being cleared, so a stick let go could keep the
+		// camera turning.  CPad takes it out as a circle now and stretches the rest back
+		// over the full range, and the value is always written.
+		CPad::m_fDebugRawLen = Sqrt(SQR(rightStickPos.x) + SQR(rightStickPos.y));
+		CPad::ApplyStickDeadzone(leftStickPos.x, leftStickPos.y, CPad::m_fStickDeadzoneLeft);
+		CPad::ApplyStickDeadzone(rightStickPos.x, rightStickPos.y, CPad::m_fStickDeadzoneRight);
+		CPad::m_fDebugDeadzonedLen = Sqrt(SQR(rightStickPos.x) + SQR(rightStickPos.y));
 
-		if ( Abs(rightStickPos.y) > 0.3f )
-			pad->PCTempJoyState.RightStickY = (int32)(rightStickPos.y * 128.0f);
+		pad->PCTempJoyState.LeftStickX	= (int32)(leftStickPos.x  * 128.0f);
+		pad->PCTempJoyState.LeftStickY	= (int32)(leftStickPos.y  * 128.0f);
+		pad->PCTempJoyState.RightStickX = (int32)(rightStickPos.x * 128.0f);
+		pad->PCTempJoyState.RightStickY = (int32)(rightStickPos.y * 128.0f);
 	}
 
 	_psHandleVibration();

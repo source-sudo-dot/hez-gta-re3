@@ -27,6 +27,7 @@
 
 #define PAD_MOVE_TO_GAME_WORLD_MOVE 60.0f
 
+float CPlayerPed::m_fAimAssistFactor = 1.0f;
 bool CPlayerPed::bDontAllowWeaponChange;
 #ifndef MASTER
 bool CPlayerPed::bDebugPlayerInfo;

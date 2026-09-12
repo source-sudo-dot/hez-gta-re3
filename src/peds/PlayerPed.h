@@ -51,6 +51,8 @@ public:
 	CVector m_cachedCamUp;
 #endif
 
+	// what the look stick is multiplied by this frame, 1 when there is nobody near
+	static float m_fAimAssistFactor;
 	static bool bDontAllowWeaponChange;
 #ifndef MASTER
 	static bool bDebugPlayerInfo;

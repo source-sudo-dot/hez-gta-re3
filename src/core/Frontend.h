@@ -44,6 +44,9 @@
 
 #define MENUSLIDER_X 500.0f
 #define MENUSLIDER_UNK 100.0f
+// where the printed value of a slider sits: just left of the bar, which runs from
+// MENUSLIDER_X for MENUSLIDER_UNK and leaves no room on its right
+#define MENUSLIDER_VALUE_X (MENUSLIDER_X - 45.0f)
 #define MENUSLIDER_SMALLEST_BAR 8.0f
 #define MENUSLIDER_BIGGEST_BAR 25.0f
 
@@ -229,6 +232,7 @@ enum eMenuScreen
 #ifdef DETECT_JOYSTICK_MENU
 	MENUPAGE_DETECT_JOYSTICK,
 #endif
+	MENUPAGE_STICK_SETTINGS,
 #endif
 #ifdef MISSION_REPLAY
 	MENUPAGE_MISSION_RETRY,
@@ -460,15 +464,22 @@ struct CCFOSlider : CCFO
 	ChangeFuncFloat changeFunc;
 	float min;
 	float max;
+	// how many presses it takes to go from one end to the other.  The bar is drawn with
+	// MENUSLIDER_BARS blocks whatever this is, so a slider can be finer than it looks.
+	int steps;
+	// print the number next to the bar, for the ones where the exact value matters
+	bool showValue;
 
 	CCFOSlider() {};
-	CCFOSlider(float* value, const char* saveCat, const char* save, float min, float max, ChangeFuncFloat changeFunc = nil){
+	CCFOSlider(float* value, const char* saveCat, const char* save, float min, float max, ChangeFuncFloat changeFunc = nil, int steps = MENUSLIDER_LOGICAL_BARS, bool showValue = false){
 		this->value = value;
 		this->saveCat = saveCat;
 		this->save = save;
 		this->changeFunc = changeFunc;
 		this->min = min;
 		this->max = max;
+		this->steps = steps;
+		this->showValue = showValue;
 	}
 };
 
@@ -754,6 +765,8 @@ public:
 
 #ifdef CUTSCENE_BORDERS_SWITCH
 	static bool m_PrefsCutsceneBorders;
+	// borderless fullscreen, Borderless=1 under [VideoMode] in reVC.ini
+	static bool m_bBorderless;
 #endif
 
 #ifndef MASTER

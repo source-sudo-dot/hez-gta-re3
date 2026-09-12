@@ -59,12 +59,19 @@ enum e_ControllerAction
 	NETWORK_TALK,
 	PED_1RST_PERSON_LOOK_UP,
 	PED_1RST_PERSON_LOOK_DOWN,
-	_CONTROLLERACTION_36,					// Unused
+	PED_WEAPON_WHEEL,						// was _CONTROLLERACTION_36, unused in the original
 	TOGGLE_DPAD,
 	SWITCH_DEBUG_CAM_ON,
 	TAKE_SCREEN_SHOT,
 	SHOW_MOUSE_POINTER_TOGGLE,
 	UNKNOWN_ACTION,
+	PED_BULLET_TIME,
+	PED_RELOAD,
+	PED_MAP,
+	// A drive-by needs a look held and the trigger pulled together, which is two hands
+	// on a pad.  These do both off one button.
+	VEHICLE_LOOKLEFT_FIRE,
+	VEHICLE_LOOKRIGHT_FIRE,
 	MAX_CONTROLLERACTIONS,
 };
 
@@ -102,7 +109,14 @@ class CControllerState;
 
 
 #define JOY_BUTTONS 16
-#define MAX_BUTTONS (JOY_BUTTONS+1)
+// GLFW's gamepad mapping only knows the fifteen buttons a standard pad has, so what a
+// controller carries on top of them - the DualSense touchpad and mute, a pad's extra
+// paddles - never reaches the binding screen.  Those are offered under ids of their own,
+// past the mapped ones, straight off the raw button list.
+#define JOY_MAPPED_BUTTONS 17
+#define JOY_RAW_BUTTONS 24
+#define RAW_BUTTON_ID(i) (JOY_BUTTONS + 1 + (i))
+#define MAX_BUTTONS (JOY_BUTTONS + JOY_RAW_BUTTONS + 1)
 
 #define ACTIONNAME_LENGTH 40
 
@@ -113,6 +127,7 @@ struct GlfwJoyState {
 	uint8 numButtons;
 	uint8* buttons;
 	bool mappedButtons[17];
+	bool rawButtons[JOY_RAW_BUTTONS];
 };
 #endif
 
@@ -141,6 +156,10 @@ public:
 #endif
 	wchar                 m_aActionNames[MAX_CONTROLLERACTIONS][ACTIONNAME_LENGTH];
 	bool                  m_aButtonStates[MAX_BUTTONS];
+	// Leaving a menu clears the pads, so a button still held reads as a fresh press the
+	// moment the game is back and sets off everything it is bound to.  Held over here,
+	// where the bindings are read, so none of it is handed on until it is let go.
+	bool                  m_aButtonHeldOver[MAX_BUTTONS];
 	tControllerConfigBind m_aSettings[MAX_CONTROLLERACTIONS][MAX_CONTROLLERTYPES];
 	bool                  m_aSimCheckers[MAX_SIMS][MAX_CONTROLLERTYPES];
 	bool                  m_bMouseAssociated;
@@ -213,6 +232,7 @@ public:
 	int32 GetControllerKeyAssociatedWithAction(e_ControllerAction action, eControllerType type);
 
 	void  UpdateJoyButtonState(int32 padnumber);
+	void  HoldOverHeldButtons(void);
 	
 	bool  GetIsActionAButtonCombo             (e_ControllerAction action);
 	wchar *GetButtonComboText                 (e_ControllerAction action);

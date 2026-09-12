@@ -25,6 +25,10 @@ public:
 	int16 Square, Triangle, Cross, Circle;
 	int16 LeftShock, RightShock;
 	int16 NetworkTalk;
+	int16 WeaponWheel;
+	int16 BulletTime;
+	int16 Reload;
+	int16 Map;
 	float GetLeftStickX(void) { return LeftStickX/32767.0f; };
 	float GetLeftStickY(void) { return LeftStickY/32767.0f; };
 	float GetRightStickX(void) { return RightStickX/32767.0f; };
@@ -33,7 +37,7 @@ public:
 	bool CheckForInput();
 	void Clear(void);
 };
-VALIDATE_SIZE(CControllerState, 0x2A);
+VALIDATE_SIZE(CControllerState, 0x32);
 
 class CMouseControllerState
 {
@@ -249,9 +253,51 @@ public:
 	bool CycleCameraModeUpJustDown(void);
 	bool CycleCameraModeDownJustDown(void);
 	bool ChangeStationJustDown(void);
+	bool ChangeStationHeld(void);
 	bool CycleWeaponLeftJustDown(void);
 	bool CycleWeaponRightJustDown(void);
 	bool GetTarget(void);
+	bool GetWeaponWheel(void);
+	bool GetBulletTime(void);
+	bool GetReloadJustDown(void);
+	bool GetMapJustDown(void);
+
+	// How much of the stick is thrown away around the middle, and how fast the camera
+	// turns for the rest of it.  All three are set in Options, Controller, Gamepad
+	// Settings and saved under [Controller] in re3.ini.
+	static float m_fStickDeadzoneLeft;
+	static float m_fStickDeadzoneRight;
+	static float m_fStickSensitivity;
+	static float m_fStickAimSensitivity;
+	static float m_fStickCurve;
+	static void ApplyStickDeadzone(float &x, float &y, float deadzone);
+	// 0 to 1, how far each trigger is pushed.  The pad state squares them off into a
+	// button, which is all the game needs but not all the map zoom wants.
+	static float m_fTriggerLeft;
+	static float m_fTriggerRight;
+	static bool m_bTriggerHeldOver[2];
+	static float GetTriggerLeft(void)  { return m_bTriggerHeldOver[0] ? 0.0f : m_fTriggerLeft; }
+	static float GetTriggerRight(void) { return m_bTriggerHeldOver[1] ? 0.0f : m_fTriggerRight; }
+	static void HoldOverHeldTriggers(void);
+	// The same value LookAround* gives, without being cut down to a whole number.
+	// One step of the whole number version is the smallest turn the camera can make,
+	// and that step is already a visible nudge, so the cameras that turn smoothly take
+	// these instead.  The first person ones square the value themselves and keep the
+	// whole number version, or their scaling would be off by orders of magnitude.
+	float LookAroundLeftRightFloat(void);
+	float LookAroundUpDownFloat(void);
+	// the sights aim off the same shaped right stick as the follow camera, with the
+	// d-pad, which the keyboard's look keys are mapped to, still working
+	float SniperModeLookLeftRightFloat(void);
+	float SniperModeLookUpDownFloat(void);
+	static float GetLookStickSensitivity(void);
+
+	// StickDebug=1 under [Controller] in re3.ini puts the right stick's numbers on
+	// screen, to see at which stage a jump comes in
+	static bool m_bStickDebug;
+	static float m_fDebugRawLen;
+	static float m_fDebugDeadzonedLen;
+	static void DrawStickDebug(void);
 	bool TargetJustDown(void);
 	bool DuckJustDown(void);
 	bool CollectPickupJustDown(void);

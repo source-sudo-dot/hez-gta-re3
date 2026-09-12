@@ -637,6 +637,7 @@ CMenuScreenCustom aScreens[] = {
 #ifdef DETECT_JOYSTICK_MENU
 		MENUACTION_CHANGEMENU,	"FEC_JOD", {nil, SAVESLOT_NONE, MENUPAGE_DETECT_JOYSTICK}, 0, 0, MENUALIGN_CENTER,
 #endif
+		MENUACTION_CHANGEMENU,	"FEZ_STK", {nil, SAVESLOT_NONE, MENUPAGE_STICK_SETTINGS}, 0, 0, MENUALIGN_CENTER,
 		MENUACTION_CHANGEMENU,	"FEC_MOU", {nil, SAVESLOT_NONE, MENUPAGE_MOUSE_CONTROLS}, 0, 0, MENUALIGN_CENTER,
 		MENUACTION_RESTOREDEF,	"FET_DEF", {nil, SAVESLOT_NONE, MENUPAGE_CONTROLLER_PC}, 320, 0, MENUALIGN_CENTER,
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, 0}, 320, 0, MENUALIGN_CENTER,
@@ -804,6 +805,16 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 320, 225, MENUALIGN_CENTER,
 	},
 #endif
+
+	// MENUPAGE_STICK_SETTINGS
+	{ "FEZ_STK", MENUPAGE_CONTROLLER_PC, new CCustomScreenLayout({40, 100, MENU_DEFAULT_LINE_HEIGHT, true, true}), nil,
+		MENUACTION_CFO_SLIDER,	"FEZ_DZL", { new CCFOSlider(&CPad::m_fStickDeadzoneLeft, "Controller", "StickDeadzoneLeft", 0.0f, 0.4f, nil, 40, true) }, 40, 100, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_DZR", { new CCFOSlider(&CPad::m_fStickDeadzoneRight, "Controller", "StickDeadzoneRight", 0.0f, 0.4f, nil, 40, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f, nil, 56, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
+	},
 
 		
 #ifdef MISSION_REPLAY

@@ -734,7 +734,9 @@ HandlePadButtonDown(RsPadButtonStatus *padButtonStatus)
 	
 	ControlsManager.UpdateJoyButtonState(padNumber);
 	
-	for ( int32 i = 0; i < _TODOCONST(16); i++ )
+	// This walked sixteen states because that was every button a pad had.  A binding
+	// past the sixteenth was stored and shown but never once applied.
+	for ( int32 i = 0; i < MAX_BUTTONS; i++ )
 	{
 		RsPadButtons btn = rsPADNULL;
 		if ( ControlsManager.m_aButtonStates[i] == TRUE )
@@ -774,7 +776,7 @@ HandlePadButtonUp(RsPadButtonStatus *padButtonStatus)
 	
 	ControlsManager.UpdateJoyButtonState(padNumber);
 	
-	for ( int32 i = 1; i < _TODOCONST(16); i++ )
+	for ( int32 i = 1; i < MAX_BUTTONS; i++ )
 	{
 		RsPadButtons btn = rsPADNULL;
 		if ( ControlsManager.m_aButtonStates[i] == FALSE )

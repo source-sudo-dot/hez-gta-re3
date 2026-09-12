@@ -99,13 +99,18 @@ int32 CControllerConfigManager::GetJoyButtonJustDown()
 	}
 #elif defined RW_GL3
 	if (m_NewState.isGamepad) {
-		for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		for (int32 i = 0; i < JOY_MAPPED_BUTTONS; i++) {
 			if (m_NewState.mappedButtons[i] && !(m_OldState.mappedButtons[i]))
 				return MapIdToButtonId(i);
 		}
+		// nothing the mapping knows, so let anything else the pad reports have a turn
+		for (int32 i = 0; i < JOY_RAW_BUTTONS; i++) {
+			if (m_NewState.rawButtons[i] && !(m_OldState.rawButtons[i]))
+				return RAW_BUTTON_ID(i);
+		}
 	} else {
-		for (int32 i = 0; i < Min(m_NewState.numButtons, MAX_BUTTONS); i++) {
-			if (m_NewState.buttons[i] && !(m_OldState.buttons[i]))
+		for (int32 i = 0; i < JOY_BUTTONS; i++) {
+			if (m_NewState.rawButtons[i] && !(m_OldState.rawButtons[i]))
 				return i + 1;
 		}
 	}
@@ -406,6 +411,7 @@ void CControllerConfigManager::InitDefaultControlConfigJoyPad(uint32 buttons)
 		IF_BTN_IN_RANGE(7)
 			SetControllerKeyAssociatedWithAction(PED_ANSWER_PHONE,                   7, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_CHANGE_RADIO_STATION,       7, JOYSTICK);
+			SetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL,                   7, JOYSTICK);
 		IF_BTN_IN_RANGE(6)
 			SetControllerKeyAssociatedWithAction(PED_CYCLE_WEAPON_RIGHT,             6, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_LOOKRIGHT,                  6, JOYSTICK);
@@ -458,6 +464,7 @@ void CControllerConfigManager::InitDefaultControlConfigJoyPad(uint32 buttons)
 		IF_BTN_IN_RANGE(7)
 			SetControllerKeyAssociatedWithAction(PED_ANSWER_PHONE,                   7, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_CHANGE_RADIO_STATION,       7, JOYSTICK);
+			SetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL,                   7, JOYSTICK);
 		IF_BTN_IN_RANGE(6)
 			SetControllerKeyAssociatedWithAction(PED_CYCLE_WEAPON_RIGHT,             6, JOYSTICK);
 			SetControllerKeyAssociatedWithAction(VEHICLE_LOOKRIGHT,                  6, JOYSTICK);
@@ -534,6 +541,12 @@ void CControllerConfigManager::InitialiseControllerActionNameArray()
 	SETACTIONNAME(VEHICLE_TURRETUP);
 	SETACTIONNAME(VEHICLE_TURRETDOWN);
 	SETACTIONNAME(NETWORK_TALK);
+	SETACTIONNAME(PED_WEAPON_WHEEL);
+	SETACTIONNAME(PED_BULLET_TIME);
+	SETACTIONNAME(PED_RELOAD);
+	SETACTIONNAME(PED_MAP);
+	SETACTIONNAME(VEHICLE_LOOKLEFT_FIRE);
+	SETACTIONNAME(VEHICLE_LOOKRIGHT_FIRE);
 	SETACTIONNAME(TOGGLE_DPAD);
 	SETACTIONNAME(SWITCH_DEBUG_CAM_ON);
 	SETACTIONNAME(TAKE_SCREEN_SHOT);
@@ -548,6 +561,12 @@ void CControllerConfigManager::UpdateJoyInConfigMenus_ButtonDown(int32 button, i
 		CPad *pad = CPad::GetPad(padnumber);
 		if (pad != NULL)
 		{
+			// The map is opened and closed with the same key, so it has to get through
+			// here too.  Everything else in this function is menu navigation on fixed
+			// button numbers, which is why a bound action needs saying separately.
+			if (button == GetControllerKeyAssociatedWithAction(PED_MAP, JOYSTICK))
+				pad->PCTempJoyState.Map = 255;
+
 			switch (button)
 			{
 			case 16:
@@ -739,6 +758,17 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_Driving(int32 
 		state.LeftShoulder2 = 255;
 	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_LOOKRIGHT, type))
 		state.RightShoulder2 = 255;
+	// the look and the trigger together, which is what a drive-by wants held
+	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_LOOKLEFT_FIRE, type))
+	{
+		state.LeftShoulder2 = 255;
+		state.Circle = 255;
+	}
+	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_LOOKRIGHT_FIRE, type))
+	{
+		state.RightShoulder2 = 255;
+		state.Circle = 255;
+	}
 	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_HORN, type))
 		state.LeftShock = 255;
 	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_HANDBRAKE, type))
@@ -861,6 +891,12 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_ThirdPersonOnl
 		state.Cross = 255;
 	if (button == GetControllerKeyAssociatedWithAction(PED_DUCK, type))
 		state.LeftShock = 255;
+	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
+		state.WeaponWheel = 255;
+	if (button == GetControllerKeyAssociatedWithAction(PED_BULLET_TIME, type))
+		state.BulletTime = 255;
+	if (button == GetControllerKeyAssociatedWithAction(PED_RELOAD, type))
+		state.Reload = 255;
 	
 	if (FrontEndMenuManager.m_ControlMethod == CONTROL_CLASSIC)
 	{
@@ -994,6 +1030,9 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_AllStates(int3
 
 	if (button == GetControllerKeyAssociatedWithAction(NETWORK_TALK, type))
 		state.NetworkTalk = 255;
+
+	if (button == GetControllerKeyAssociatedWithAction(PED_MAP, type))
+		state.Map = 255;
 }
 
 void CControllerConfigManager::AffectControllerStateOn_ButtonDown_VehicleAndThirdPersonOnly(int32 button, eControllerType type, CControllerState &state)
@@ -1010,6 +1049,9 @@ void CControllerConfigManager::UpdateJoyInConfigMenus_ButtonUp(int32 button, int
 
 		if (pad != NULL)
 		{
+			if (button == GetControllerKeyAssociatedWithAction(PED_MAP, JOYSTICK))
+				pad->PCTempJoyState.Map = 0;
+
 			switch (button)
 			{
 			case 16:
@@ -1149,6 +1191,14 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonUp_All_Player_State
 {
 	if (button == GetControllerKeyAssociatedWithAction(NETWORK_TALK, type))
 		state.NetworkTalk = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_MAP, type))
+		state.Map = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_WEAPON_WHEEL, type))
+		state.WeaponWheel = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_BULLET_TIME, type))
+		state.BulletTime = 0;
+	if (button == GetControllerKeyAssociatedWithAction(PED_RELOAD, type))
+		state.Reload = 0;
 }
 
 void CControllerConfigManager::AffectPadFromKeyBoard()
@@ -1761,6 +1811,8 @@ void CControllerConfigManager::DeleteMatchingVehicleControls(e_ControllerAction 
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_HANDBRAKE);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKLEFT);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKRIGHT);
+		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKLEFT_FIRE);
+		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKRIGHT_FIRE);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_LOOKBEHIND);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_TURRETLEFT);
 		CLEAR_ACTION_IF_NEEDED(VEHICLE_TURRETRIGHT);
@@ -1804,6 +1856,8 @@ bool CControllerConfigManager::IsAnyVehicleActionAssignedToMouseKey(int32 key)
 		CHECK_ACTION(VEHICLE_LOOKBEHIND);
 		CHECK_ACTION(VEHICLE_LOOKLEFT);
 		CHECK_ACTION(VEHICLE_LOOKRIGHT);
+		CHECK_ACTION(VEHICLE_LOOKLEFT_FIRE);
+		CHECK_ACTION(VEHICLE_LOOKRIGHT_FIRE);
 		CHECK_ACTION(VEHICLE_HORN);
 		CHECK_ACTION(VEHICLE_HANDBRAKE);
 		CHECK_ACTION(VEHICLE_ACCELERATE);
@@ -1934,7 +1988,12 @@ e_ControllerActionType CControllerConfigManager::GetActionType(e_ControllerActio
 	case PED_CYCLE_TARGET_LEFT:
 	case PED_CYCLE_TARGET_RIGHT:
 	case PED_CENTER_CAMERA_BEHIND_PLAYER:
+	case PED_WEAPON_WHEEL:
+	case PED_BULLET_TIME:
+	case PED_RELOAD:
 		return ACTIONTYPE_3RDPERSON;
+	case PED_MAP:
+		return ACTIONTYPE_COMMON;
 		break;
 
 #ifdef BIND_VEHICLE_FIREWEAPON
@@ -1948,6 +2007,8 @@ e_ControllerActionType CControllerConfigManager::GetActionType(e_ControllerActio
 	case VEHICLE_HANDBRAKE:
 	case VEHICLE_LOOKLEFT:
 	case VEHICLE_LOOKRIGHT:
+	case VEHICLE_LOOKLEFT_FIRE:
+	case VEHICLE_LOOKRIGHT_FIRE:
 	case VEHICLE_LOOKBEHIND:
 	case VEHICLE_TURRETLEFT:
 	case VEHICLE_TURRETRIGHT:
@@ -2480,7 +2541,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2527,7 +2588,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2574,7 +2635,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2621,7 +2682,7 @@ int32 CControllerConfigManager::GetNumOfSettingsForAction(e_ControllerAction act
 	     nil,    /* NETWORK_TALK */                                                                                                                            \
 	     nil,    /* PED_1RST_PERSON_LOOK_UP */                                                                                                                 \
 	     nil,    /* PED_1RST_PERSON_LOOK_DOWN */                                                                                                               \
-	     nil,    /* _CONTROLLERACTION_36 */                                                                                                                    \
+	     nil,    /* PED_WEAPON_WHEEL */                                                                                                                    \
 	     nil,    /* TOGGLE_DPAD */                                                                                                                             \
 	     nil,    /* SWITCH_DEBUG_CAM_ON */                                                                                                                     \
 	     nil,    /* TAKE_SCREEN_SHOT */                                                                                                                        \
@@ -2804,18 +2865,40 @@ void CControllerConfigManager::UpdateJoyButtonState(int32 padnumber)
 	}
 #elif defined RW_GL3
 	if (m_NewState.isGamepad) {
-		for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		for (int32 i = 0; i < JOY_MAPPED_BUTTONS; i++) {
 			if (i == GLFW_GAMEPAD_BUTTON_GUIDE)
 				continue;
 
 			m_aButtonStates[MapIdToButtonId(i)-1] = m_NewState.mappedButtons[i];
 		}
+		for (int32 i = 0; i < JOY_RAW_BUTTONS; i++) {
+			m_aButtonStates[RAW_BUTTON_ID(i)-1] = m_NewState.rawButtons[i];
+		}
 	} else {
-		for (int32 i = 0; i < Min(m_NewState.numButtons, MAX_BUTTONS); i++) {
-			m_aButtonStates[i] = m_NewState.buttons[i];
+		for (int32 i = 0; i < JOY_BUTTONS; i++) {
+			m_aButtonStates[i] = m_NewState.rawButtons[i];
 		}
 	}
 #endif
+
+	for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		if (!m_aButtonHeldOver[i])
+			continue;
+
+		if (!m_aButtonStates[i])
+			m_aButtonHeldOver[i] = false;
+		else
+			m_aButtonStates[i] = false;
+	}
+}
+
+// Whatever is down at this moment does not count as pressed again until it is let go.
+void CControllerConfigManager::HoldOverHeldButtons(void)
+{
+	for (int32 i = 0; i < MAX_BUTTONS; i++) {
+		if (m_aButtonStates[i])
+			m_aButtonHeldOver[i] = true;
+	}
 }
 
 bool CControllerConfigManager::GetIsActionAButtonCombo(e_ControllerAction action)

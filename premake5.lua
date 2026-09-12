@@ -451,11 +451,13 @@ project "reVC"
 
 	filter "platforms:win-x86*gl3_glfw*"
 		libdirs { path.join(_OPTIONS["glfwdir32"], "lib-" .. string.gsub(_ACTION or '', "vs", "vc")) }
-		links { "opengl32", "glfw3" }
+		-- hid and setupapi carry the rumble report to a pad windows hands out as plain hid
+		links { "opengl32", "glfw3", "hid", "setupapi" }
 
 	filter "platforms:win-amd64*gl3_glfw*"
 		libdirs { path.join(_OPTIONS["glfwdir64"], "lib-" .. string.gsub(_ACTION or '', "vs", "vc")) }
-		links { "opengl32", "glfw3" }
+		-- hid and setupapi carry the rumble report to a pad windows hands out as plain hid
+		links { "opengl32", "glfw3", "hid", "setupapi" }
 
 	filter "platforms:linux*gl3_glfw*"
 		links { "GL", "glfw" }

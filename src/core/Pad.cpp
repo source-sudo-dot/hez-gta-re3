@@ -24,6 +24,8 @@
 #include "Timer.h"
 #include "Record.h"
 #include "World.h"
+#include "PadRumble.h"
+#include "PlayerPed.h"
 #include "Vehicle.h"
 #include "Ped.h"
 #include "Population.h"
@@ -683,6 +685,10 @@ CControllerState::Clear(void)
 	Square = Triangle = Cross = Circle = 0;
 	LeftShock = RightShock = 0;
 	NetworkTalk = 0;
+	WeaponWheel = 0;
+	BulletTime = 0;
+	Reload = 0;
+	Map = 0;
 }
 
 void CKeyboardState::Clear()
@@ -1007,6 +1013,10 @@ CControllerState CPad::ReconcileTwoControllersInput(CControllerState const &Stat
 	_RECONCILE_BUTTON(LeftShock);
 	_RECONCILE_BUTTON(RightShock);
 	_RECONCILE_BUTTON(NetworkTalk);
+	_RECONCILE_BUTTON(WeaponWheel);
+	_RECONCILE_BUTTON(BulletTime);
+	_RECONCILE_BUTTON(Reload);
+	_RECONCILE_BUTTON(Map);
 	_RECONCILE_AXIS(LeftStickX);
 	_RECONCILE_AXIS(LeftStickY);
 	_FIX_AXIS_DIR(LeftStickX);
@@ -1657,9 +1667,22 @@ void CPad::AffectFromXinput(uint32 pad)
 }
 #endif
 
+// A trigger already pulled when a menu opened - the throttle, say - would have had the
+// map zooming from the first frame.  Held over, the same as the buttons are.
+void CPad::HoldOverHeldTriggers(void)
+{
+	m_bTriggerHeldOver[0] = m_fTriggerLeft > 0.08f;
+	m_bTriggerHeldOver[1] = m_fTriggerRight > 0.08f;
+}
+
 void CPad::UpdatePads(void)
 {
 	bool bUpdate = true;
+
+	if ( m_bTriggerHeldOver[0] && m_fTriggerLeft <= 0.08f )
+		m_bTriggerHeldOver[0] = false;
+	if ( m_bTriggerHeldOver[1] && m_fTriggerRight <= 0.08f )
+		m_bTriggerHeldOver[1] = false;
 
 	GetPad(0)->UpdateMouseForLogicalFrame();
 #ifdef XINPUT
@@ -1667,6 +1690,18 @@ void CPad::UpdatePads(void)
 	GetPad(1)->AffectFromXinput(m_bMapPadOneToPadTwo ? 0 : 1);
 #else
 	CapturePad(0);
+
+	{
+		CPad *shaking = GetPad(0);
+		uint8 motor = shaking->ShakeFreq;
+		if (shaking->ShakeDur < CTimer::GetTimeStepInMilliseconds())
+			shaking->ShakeDur = 0;
+		else
+			shaking->ShakeDur -= (int16)CTimer::GetTimeStepInMilliseconds();
+		if (shaking->ShakeDur == 0)
+			shaking->ShakeFreq = 0;
+		CPadRumble::Update(motor, motor);
+	}
 #endif
 
 	// Improve keyboard input latency part 1
@@ -2371,6 +2406,38 @@ bool CPad::GetLookBehindForCar(void)
 	return !!(NewState.RightShoulder2 && NewState.LeftShoulder2);
 }
 
+bool CPad::GetMapJustDown(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	return !!(NewState.Map && !OldState.Map);
+}
+
+bool CPad::GetReloadJustDown(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	return !!(NewState.Reload && !OldState.Reload);
+}
+
+bool CPad::GetBulletTime(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	return !!NewState.BulletTime;
+}
+
+bool CPad::GetWeaponWheel(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	return !!NewState.WeaponWheel;
+}
+
 bool CPad::GetLookBehindForPed(void)
 {
 	if ( ArePlayerControlsDisabled() )
@@ -2881,6 +2948,46 @@ bool CPad::ChangeStationJustDown(void)
 	return false;
 }
 
+bool CPad::ChangeStationHeld(void)
+{
+	if ( ArePlayerControlsDisabled() )
+		return false;
+
+	switch (CURMODE)
+	{
+		case 0:
+		{
+			return !!NewState.LeftShoulder1;
+
+			break;
+		}
+
+		case 1:
+		{
+			return !!NewState.Select;
+
+			break;
+		}
+
+		case 2:
+		{
+			return !!NewState.LeftShock;
+
+			break;
+		}
+
+		case 3:
+		{
+			return !!NewState.Circle;
+
+			break;
+		}
+	}
+
+	return false;
+}
+
+
 bool CPad::CycleWeaponLeftJustDown(void)
 {
 	if ( ArePlayerControlsDisabled() )
@@ -3283,39 +3390,178 @@ int16 CPad::SniperModeLookUpDown(void)
 		return dpad;
 }
 
+float CPad::m_fStickDeadzoneLeft = 0.15f;
+float CPad::m_fStickDeadzoneRight = 0.08f;
+float CPad::m_fStickSensitivity = 1.0f;
+float CPad::m_fStickAimSensitivity = 0.5f;
+float CPad::m_fStickCurve = 2.0f;
+float CPad::m_fTriggerLeft = 0.0f;
+float CPad::m_fTriggerRight = 0.0f;
+bool  CPad::m_bTriggerHeldOver[2] = { false, false };
+bool  CPad::m_bStickDebug = false;
+float CPad::m_fDebugRawLen = 0.0f;
+float CPad::m_fDebugDeadzonedLen = 0.0f;
+
+// Take the dead zone out of the stick as a circle rather than per axis, and stretch
+// what is left back over the whole range.  Cutting each axis on its own and leaving the
+// rest where it was, which is what the pad code used to do, means the camera jumps to a
+// quarter of its top speed the moment the stick leaves the middle and there is no way
+// to turn slowly.
+void
+CPad::ApplyStickDeadzone(float &x, float &y, float deadzone)
+{
+	deadzone = Clamp(deadzone, 0.0f, 0.9f);
+	float len = Sqrt(SQR(x) + SQR(y));
+	if(len <= deadzone || len == 0.0f){
+		x = 0.0f;
+		y = 0.0f;
+		return;
+	}
+	float scaled = Min((len - deadzone) / (1.0f - deadzone), 1.0f);
+	x = x / len * scaled;
+	y = y / len * scaled;
+}
+
+// Bend the stick along its length, not each axis on its own, so a small push turns the
+// camera slowly and the speed builds up towards the edge.  Curving the axes apart makes
+// the diagonals slow: at full tilt each axis only reads 0.707, squaring that leaves
+// half, and the two halves come back out at 0.707 of a straight push, so the stick
+// feels like a cross with the corners cut off.  Working on the length keeps the speed
+// the same in every direction.  A curve of 1 is a straight line, 2 is squared, higher
+// makes the middle slower still.  The dead zone is already gone by the time this runs.
+static void
+ShapeLookStick(float &outX, float &outY)
+{
+	float x = CPad::GetPad(0)->NewState.RightStickX / 128.0f;
+	float y = CPad::GetPad(0)->NewState.RightStickY / 128.0f;
+
+	float len = Sqrt(SQR(x) + SQR(y));
+	if(len < 0.0001f){
+		outX = 0.0f;
+		outY = 0.0f;
+		return;
+	}
+
+	float shaped = Pow(Min(len, 1.0f), Max(CPad::m_fStickCurve, 1.0f)) * CPad::GetLookStickSensitivity();
+	outX = x / len * shaped;
+	outY = y / len * shaped;
+}
+
+// A second sensitivity for while Target/Aim is held on foot, so the camera can be
+// quick for looking around and slow for lining a shot up.
+float
+CPad::GetLookStickSensitivity(void)
+{
+	if ( GetPad(0)->GetTarget() && FindPlayerVehicle() == nil )
+		return Max(m_fStickAimSensitivity, 0.05f) * CPlayerPed::m_fAimAssistFactor;
+	return Max(m_fStickSensitivity, 0.05f);
+}
+
+// What the right stick reads at each stage, printed on screen with StickDebug=1, so a
+// jump can be pinned on the hardware, the dead zone or the curve instead of guessed at.
+void
+CPad::DrawStickDebug(void)
+{
+	if(!m_bStickDebug)
+		return;
+
+	char buf[128];
+	wchar wbuf[128];
+	float out = GetPad(0)->LookAroundLeftRightFloat();
+	float outY = GetPad(0)->LookAroundUpDownFloat();
+	sprintf(buf, "raw %.4f  dz %.4f  x %.3f  y %.3f", m_fDebugRawLen, m_fDebugDeadzonedLen, out, outY);
+	AsciiToUnicode(buf, wbuf);
+
+	char rumbleBuf[128];
+	wchar rumbleWide[128];
+	CPadRumble::DebugLine(rumbleBuf);
+	AsciiToUnicode(rumbleBuf, rumbleWide);
+
+	CFont::SetBackgroundOff();
+	CFont::SetScale(SCREEN_SCALE_X(0.5f), SCREEN_SCALE_Y(0.8f));
+	CFont::SetCentreOff();
+	CFont::SetRightJustifyOff();
+	CFont::SetPropOn();
+	CFont::SetFontStyle(FONT_BANK);
+	CFont::SetColor(CRGBA(255, 255, 128, 255));
+	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(140.0f), wbuf);
+	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(155.0f), rumbleWide);
+}
+
+// what the camera code used to get at most, kept so the top speed does not change
+#define STICK_LOOK_RANGE (234.0f)
+
+float CPad::LookAroundLeftRightFloat(void)
+{
+	if ( GetLookBehindForPed() )
+		return 0.0f;
+
+	float x, y;
+	ShapeLookStick(x, y);
+
+	return x * STICK_LOOK_RANGE;
+}
+
 int16 CPad::LookAroundLeftRight(void)
 {
-	float axis = GetPad(0)->NewState.RightStickX;
+	return (int16)GetPad(0)->LookAroundLeftRightFloat();
+}
 
-	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
-							* (127.0f / 32.0f) ); // 3.96875f
+float CPad::LookAroundUpDownFloat(void)
+{
+	if ( GetLookBehindForPed() )
+		return 0.0f;
 
-	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 10 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -10 : 10) )
-							* (127.0f / 64.0f) ); // 1.984375f
+	float x, y;
+	ShapeLookStick(x, y);
 
-	return 0;
+	// the shaping is done on the stick as it is, the direction is turned round after it
+	// so the length, and with it the speed, is the same whichever way the axis points
+#ifdef FIX_BUGS
+	y = -y;
+#endif
+#ifdef INVERT_LOOK_FOR_PAD
+	if (CPad::bInvertLook4Pad)
+		y = -y;
+#endif
+
+	return y * STICK_LOOK_RANGE;
 }
 
 int16 CPad::LookAroundUpDown(void)
 {
-	int16 axis = GetPad(0)->NewState.RightStickY;
-#ifdef FIX_BUGS
-	axis = -axis;
+	return (int16)GetPad(0)->LookAroundUpDownFloat();
+}
+
+// The sights were aimed with the left stick and a curve of their own.  They take the
+// same shaped right stick the follow camera does now, so the dead zone, the curve and the
+// two sensitivities all carry over and aiming feels the same everywhere.  The d-pad still
+// aims, for the keyboard's look keys.
+float CPad::SniperModeLookLeftRightFloat(void)
+{
+	float stick = LookAroundLeftRightFloat();
+	if ( stick != 0.0f )
+		return stick;
+
+	float dpad = (float)(NewState.DPadRight - NewState.DPadLeft) / 2.0f;
+	return dpad / 128.0f * STICK_LOOK_RANGE;
+}
+
+float CPad::SniperModeLookUpDownFloat(void)
+{
+	float stick = LookAroundUpDownFloat();
+	if ( stick != 0.0f )
+		return stick;
+
+	float dpad;
+#ifdef INVERT_LOOK_FOR_PAD
+	if ( CPad::bInvertLook4Pad )
+		dpad = (float)(NewState.DPadDown - NewState.DPadUp) / 2.0f;
+	else
 #endif
-	if (CPad::bInvertLook4Pad)
-		axis = -axis;
+		dpad = (float)(NewState.DPadUp - NewState.DPadDown) / 2.0f;
 
-	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
-							* (127.0f / 32.0f) ); // 3.96875f
-
-	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 40 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -40 : 40) )
-							* (127.0f / 64.0f) ); // 1.984375f
-
-	return 0;
+	return dpad / 128.0f * STICK_LOOK_RANGE;
 }
 
 void CPad::ResetAverageWeapon(void)

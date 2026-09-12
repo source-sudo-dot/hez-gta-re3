@@ -1477,6 +1477,7 @@ Render2dStuff(void)
 		CHud::Draw();
 
 	CSpecialFX::Render2DFXs();
+	CPad::DrawStickDebug();
 	CUserDisplay::OnscnTimer.ProcessForDisplay();
 	CMessages::Display();
 	CDarkel::DrawMessages();

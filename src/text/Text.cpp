@@ -105,9 +105,55 @@ CText::Unload(void)
 	memset(szMissionTableName, 0, sizeof(szMissionTableName));
 }
 
+// An entry whose key is not in the .gxt draws as a missing marker.  Writing the names
+// this fork adds into the game's text files would have to be redone for every language
+// and every time they are replaced, so they are held here and looked up first.  FEZ_ is
+// not a prefix Vice City uses, so no real key is shadowed.
+static struct {
+	const char *key;
+	const char *text;
+} ExtraText[] = {
+	{ "FEZ_DZL", "LEFT DEAD ZONE" },
+	{ "FEZ_DZR", "RIGHT DEAD ZONE" },
+	{ "FEZ_SN", "STICK SENSITIVITY" },
+	{ "FEZ_AS", "AIM SENSITIVITY" },
+	{ "FEZ_CV", "STICK CURVE" },
+	{ "FEZ_STK", "GAMEPAD SETTINGS" },
+	{ "FEZ_WW", "WEAPON WHEEL" },
+	{ "FEZ_BT", "SLOW MOTION" },
+	{ "FEZ_RLD", "RELOAD" },
+	{ "FEZ_MAP", "OPEN MAP" },
+	{ "FEZ_DBL", "DRIVE-BY LEFT" },
+	{ "FEZ_DBR", "DRIVE-BY RIGHT" },
+};
+static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
+static bool ExtraTextBuilt = false;
+
+static wchar*
+GetExtraText(const char *key)
+{
+	if(!ExtraTextBuilt){
+		for(int i = 0; i < ARRAY_SIZE(ExtraText); i++){
+			int j;
+			for(j = 0; ExtraText[i].text[j] != '\0' && j < 39; j++)
+				ExtraTextBuf[i][j] = ExtraText[i].text[j];
+			ExtraTextBuf[i][j] = '\0';
+		}
+		ExtraTextBuilt = true;
+	}
+	for(int i = 0; i < ARRAY_SIZE(ExtraText); i++)
+		if(strcmp(key, ExtraText[i].key) == 0)
+			return ExtraTextBuf[i];
+	return nil;
+}
+
 wchar*
 CText::Get(const char *key)
 {
+	wchar *extra = GetExtraText(key);
+	if(extra)
+		return extra;
+
 	uint8 result = false;
 #if defined (FIX_BUGS) || defined(FIX_BUGS_64)
 	wchar *outstr = keyArray.Search(key, data.chars, &result);
