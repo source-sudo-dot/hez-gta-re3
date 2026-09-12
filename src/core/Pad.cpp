@@ -34,7 +34,6 @@
 #include "Weather.h"
 #include "Streaming.h"
 #include "PathFind.h"
-#include "CarCtrl.h"
 #include "Zones.h"
 #include "Wanted.h"
 #include "General.h"
@@ -173,9 +172,9 @@ void BulletproofPatriotCheat()
 	pos.z = CWorld::FindGroundZForCoord(pos.x, pos.y);
 	pos.z += patriot->GetDistanceFromCentreOfMassToBaseOfModel();
 
+	CWorld::ClearExcitingStuffFromArea(pos, 8.0f, false);
 	patriot->SetPosition(pos);
 	patriot->SetOrientation(0.0f, 0.0f, 0.0f);
-	CWorld::ClearExcitingStuffFromArea(pos, 8.0f, false);
 
 	patriot->bBulletProof = true;
 	patriot->bFireProof = true;
@@ -194,8 +193,10 @@ void BulletproofPatriotCheat()
 	patriot->AutoPilot.m_nCruiseSpeed = patriot->AutoPilot.m_fMaxTrafficSpeed = 9.0f;
 	patriot->AutoPilot.m_nCurrentLane = patriot->AutoPilot.m_nNextLane = 0;
 
+	// Not joined to the road system: JoinCarWithRoadSystem looks up the nearest node
+	// without a range and without checking whether it found one, and reads numLinks off
+	// m_pathNodes[-1] when it did not.  An abandoned car has no use for it anyway.
 	CWorld::Add(patriot);
-	CCarCtrl::JoinCarWithRoadSystem(patriot);
 
 	CHud::SetHelpMessage(TheText.Get("CHEAT1"), true);
 }
