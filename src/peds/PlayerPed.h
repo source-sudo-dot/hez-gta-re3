@@ -53,6 +53,13 @@ public:
 
 	// what the look stick is multiplied by this frame, 1 when there is nobody near
 	static float m_fAimAssistFactor;
+	// how fast the arm comes up when aim is held and goes down when it is let go,
+	// AimRaiseSpeed under [Display] in reVC.ini
+	static float m_fAimRaiseSpeed;
+	// AimAssist and AimAssistStrength under [Display] in reVC.ini
+	static bool bAimAssist;
+	static float m_fAimAssistStrength;
+	static bool bIsAimPosed;
 	static bool bDontAllowWeaponChange;
 #ifndef MASTER
 	static bool bDebugPlayerInfo;
@@ -106,6 +113,9 @@ public:
 	void FindNewAttackPoints(void);
 	void SetNearbyPedsToInteractWithPlayer(void);
 	void UpdateMeleeAttackers(void);
+	void ProcessManualReload(CPad*);
+	void ProcessAimReadyPose(CPad*);
+	void ProcessAimAssist(void);
 
 	static void SetupPlayerPed(int32);
 	static void DeactivatePlayerPed(int32);

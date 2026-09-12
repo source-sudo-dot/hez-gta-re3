@@ -300,8 +300,9 @@ CWeaponInfo::Shutdown(void)
 bool
 CWeaponInfo::UsesScopeAim(eWeaponType weaponType)
 {
+	// The M4, the Ruger and the M60 carry CANAIM in weapon.dat like the other guns and no
+	// 1ST_PERSON flag; their scope was forced by hand in CPlayerPed.  Leaving them out puts
+	// them on the ordinary over the shoulder path, the way they aim everywhere else.
 	return weaponType == WEAPONTYPE_ROCKETLAUNCHER || weaponType == WEAPONTYPE_SNIPERRIFLE ||
-	       weaponType == WEAPONTYPE_LASERSCOPE || weaponType == WEAPONTYPE_M4 ||
-	       weaponType == WEAPONTYPE_RUGER || weaponType == WEAPONTYPE_M60 ||
-	       weaponType == WEAPONTYPE_CAMERA;
+	       weaponType == WEAPONTYPE_LASERSCOPE || weaponType == WEAPONTYPE_CAMERA;
 }

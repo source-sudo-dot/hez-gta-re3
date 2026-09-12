@@ -48,7 +48,8 @@ int nPreviousMode = -1;
 #endif
 
 // how far the camera turns per mouse count, the same up and down as sideways
-float CCamera::m_fAimZoomDegrees = 5.0f;
+// the zoom settled on in play on the master branch, after asking for it stronger twice
+float CCamera::m_fAimZoomDegrees = 22.5f;
 
 #define m_fMultiHori -0.8f
 #define m_fMultiVert 0.8f

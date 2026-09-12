@@ -14,6 +14,7 @@
 #include "AnimBlendAssociation.h"
 #include "General.h"
 #include "Pools.h"
+#include "PedModelInfo.h"
 #include "Darkel.h"
 #include "CarCtrl.h"
 #include "MBlur.h"
@@ -28,6 +29,10 @@
 #define PAD_MOVE_TO_GAME_WORLD_MOVE 60.0f
 
 float CPlayerPed::m_fAimAssistFactor = 1.0f;
+float CPlayerPed::m_fAimRaiseSpeed = 2.0f;
+bool  CPlayerPed::bAimAssist = true;
+float CPlayerPed::m_fAimAssistStrength = 0.45f;
+bool  CPlayerPed::bIsAimPosed = false;
 bool CPlayerPed::bDontAllowWeaponChange;
 #ifndef MASTER
 bool CPlayerPed::bDebugPlayerInfo;
@@ -1267,10 +1272,7 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 
 	if (!m_pFire) {
 		eWeaponType weapon = GetWeapon()->m_eWeaponType;
-		if (weapon == WEAPONTYPE_ROCKETLAUNCHER || weapon == WEAPONTYPE_SNIPERRIFLE ||
-			weapon == WEAPONTYPE_LASERSCOPE || weapon == WEAPONTYPE_M4 ||
-			weapon == WEAPONTYPE_RUGER || weapon == WEAPONTYPE_M60 ||
-			weapon == WEAPONTYPE_CAMERA) {
+		if (CWeaponInfo::UsesScopeAim(weapon)) {
 
 			if (padUsed->TargetJustDown() || TheCamera.m_bJustJumpedOutOf1stPersonBecauseOfTarget) {
 				// The sights start from wherever the body happens to face, so a player turned
@@ -1303,7 +1305,17 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 		}
 	}
 
-	if (padUsed->GetWeapon() && m_nMoveState != PEDMOVE_SPRINT) {
+	// A shot from the hip plays the weapon animation from its very start and lets it run its
+	// tail out afterwards, and the ready pose covers neither, so the arm goes up and comes
+	// down at a pace of its own - and letting go of aim in the middle of a burst drops the
+	// player onto that path mid-shot.  Asking for aim keeps every shot on the one path.
+	// Fists, melee and thrown weapons never aim and are left alone.
+	bool mayFire = true;
+	if (!bInVehicle && !padUsed->GetTarget() &&
+		weaponInfo->IsFlagSet(WEAPONFLAG_CANAIM) && weaponInfo->m_eWeaponFire != WEAPON_FIRE_MELEE)
+		mayFire = false;
+
+	if (padUsed->GetWeapon() && m_nMoveState != PEDMOVE_SPRINT && mayFire) {
 		if (m_nSelectedWepSlot == m_currentWeapon) {
 			if (m_pPointGunAt) {
 				if (m_nPedState == PED_ATTACK) {
@@ -1712,6 +1724,12 @@ CPlayerPed::ProcessControl(void)
 	CPad *padUsed = GetPadFromPlayer(this);
 	m_pWanted->Update();
 	PruneReferences();
+
+	if (padUsed) {
+		ProcessManualReload(padUsed);
+		ProcessAimReadyPose(padUsed);
+	}
+	ProcessAimAssist();
 
 	if (GetWeapon()->m_eWeaponType == WEAPONTYPE_MINIGUN) {
 		CWeaponInfo *weaponInfo = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
@@ -2270,3 +2288,276 @@ CPlayerPed::Load(uint8*& buf)
 #undef CopyFromBuf
 #undef CopyToBuf
 #endif
+
+// The wind up before a shot is the firing animation having to run from nothing to the frame
+// weapon.dat calls the fire point, most of a third of a second.  The game already knows how
+// to avoid that and just never does it here: PointGunAt() winds the animation forward to its
+// loop start and holds it, so the arm is up before the trigger is pulled and only a frame or
+// two are left to play.  That only runs while locked on to somebody, and free aiming never
+// locks on.  This puts the same pose on while Target/Aim is held.  Firing carries on from
+// where the animation was left, because BlendAnimation keeps the time on one that is already
+// there, so the first shot comes at once.
+
+// The arm comes down on a fade, so the fade rate is how fast it drops.  The same setting that
+// raises the arm scales it, so one slider governs both halves of the movement.
+static void
+FadeAimPoseOut(CPed *ped, CWeaponInfo *info, float speed)
+{
+	for (int32 i = 0; i < 2; i++) {
+		AnimationId id = i == 0 ? CPed::GetPrimaryFireAnim(info) : CPed::GetCrouchFireAnim(info);
+		if (id == (AnimationId)0)
+			continue;
+		CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(ped->GetClump(), id);
+		if (assoc == nil)
+			continue;
+
+		// Stop it running as well as fading it.  Coming out of a shot the animation is past
+		// its loop and on its way through a tail that lowers the arm on its own, and letting
+		// that play is the whole delay.
+		assoc->flags &= ~ASSOC_RUNNING;
+		assoc->flags |= ASSOC_DELETEFADEDOUT;
+		assoc->blendDelta = -4.0f * speed;
+	}
+}
+
+void
+CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
+{
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	AnimationId fireAnim = GetPrimaryFireAnim(info);
+	CAnimBlendAssociation *assoc = RpAnimBlendClumpGetAssociation(GetClump(), fireAnim);
+
+	// The raise runs the animation fast, and the shot plays on that very association: the
+	// attack fires each time its time crosses the weapon's fire frame and only ever corrects
+	// a speed that has fallen below one.  So a shot let off before the arm was up came at the
+	// raise speed and kept coming at it.  Hand the speed back the moment the trigger is touched.
+	if (assoc != nil &&
+		(padUsed->GetWeapon() || m_nPedState == PED_ATTACK || m_nPedState == PED_AIM_GUN ||
+		 GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING))
+		assoc->speed = 1.0f;
+
+	// A trigger pulled halfway through the raise had the rest of it to walk at normal speed
+	// before the first shot, which made firing early slower than waiting for the arm.  Put the
+	// animation where the pose holds it, so an early press gets the same instant shot.
+	if (assoc != nil && bIsAimPosed && padUsed->GetWeapon() &&
+		m_nPedState != PED_ATTACK && assoc->currentTime < info->m_fAnimLoopStart)
+		assoc->SetCurrentTime(info->m_fAnimLoopStart);
+
+	// Whether the player is asking to aim, and nothing about what the weapon is doing: it
+	// stays in its firing state for as long as its rate of fire says, and treating that as
+	// not aiming took the pose off and dropped the arm between shots.  Ducking has crouch
+	// animations of its own and the scopes raise the weapon themselves.
+	bool aiming =
+		padUsed->GetTarget() &&
+		!bInVehicle &&
+		!bIsDucking &&
+		info->IsFlagSet(WEAPONFLAG_CANAIM) &&
+		info->m_eWeaponFire != WEAPON_FIRE_MELEE &&
+		info->m_AnimToPlay != ASSOCGRP_STD &&
+		!TheCamera.Using1stPersonWeaponMode();
+
+	if (!aiming) {
+		if (bIsAimPosed) {
+			// Aim let go in the middle of a shot.  Hold the pose until the trigger is let go as
+			// well and the shot that is owed has been taken, then drop it exactly the way letting
+			// go in the other order does, so both orders end the same way.
+			if (m_nPedState == PED_ATTACK &&
+				(padUsed->GetWeapon() || CTimer::GetTimeInMilliseconds() < m_shootTimer))
+				return;
+
+			bIsAimPosed = false;
+
+			// The end of a burst leaves the player pointing the gun at nothing, which is what
+			// keeps the weapon up between shots, and PointGunAt() puts the pose back on every
+			// frame while that lasts.  A real lock on target is left alone.
+			if (bIsPointingGunAt && m_pPointGunAt == nil)
+				ClearPointGunAt();
+
+			// Cutting the animation short leaves nothing to raise the finish callback that ends
+			// the attack, so the player stood in PED_ATTACK long after the arm was down and could
+			// not walk away from it.  End it here.
+			if (m_nPedState == PED_ATTACK) {
+				bIsAttacking = false;
+				ClearAttack();
+			}
+
+			FadeAimPoseOut(this, info, Max(m_fAimRaiseSpeed, 0.1f));
+		}
+		return;
+	}
+
+	// While a shot or a reload is actually playing, leave the animation to it.  Nothing is
+	// torn down, so the pose is simply picked up again when it is over.
+	if (m_nPedState == PED_ATTACK || m_nPedState == PED_AIM_GUN)
+		return;
+	if (GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING)
+		return;
+
+	if (assoc == nil) {
+		assoc = CAnimManager::BlendAnimation(GetClump(), info->m_AnimToPlay, fireAnim, 8.0f);
+		if (assoc == nil)
+			return;
+
+		assoc->SetCurrentTime(0.0f);
+		assoc->SetRun();
+		assoc->speed = Max(m_fAimRaiseSpeed, 0.1f);
+		bIsAimPosed = true;
+		return;
+	}
+
+	// The shot ends with ClearAttack() fading the animation out, and letting that finish would
+	// drop the arm and lift it again on the next frame from a fresh animation.  Aim is still
+	// held, so it is caught on the way out and blended straight back in.
+	if (assoc->blendDelta < 0.0f) {
+		assoc->flags &= ~ASSOC_DELETEFADEDOUT;
+		assoc->blendDelta = (1.0f - assoc->blendAmount) * 8.0f;
+	}
+
+	bIsAimPosed = true;
+
+	// held at the ready, exactly where PointGunAt would hold it
+	if (assoc->currentTime >= info->m_fAnimLoopStart) {
+		assoc->SetCurrentTime(info->m_fAnimLoopStart);
+		assoc->flags &= ~ASSOC_RUNNING;
+		assoc->speed = 1.0f;
+
+		if (info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM))
+			m_pedIK.m_flags |= CPedIK::AIMS_WITH_ARM;
+		else
+			m_pedIK.m_flags &= ~CPedIK::AIMS_WITH_ARM;
+	}
+}
+
+// how far off the sights someone still counts, measured on screen and so the same at any
+// distance
+#define AIM_ASSIST_CONE (DEGTORAD(7.0f))
+
+// Rotational slow down.  Nothing about where the shot lands changes; the stick simply asks for
+// less turn while the sights are near someone, which the player reads as his own hand
+// steadying rather than as the game taking over.  Worked out once a frame off last frame's
+// camera and handed to the stick through GetLookStickSensitivity, so it lands exactly where
+// the aiming sensitivity does.
+void
+CPlayerPed::ProcessAimAssist(void)
+{
+	m_fAimAssistFactor = 1.0f;
+
+	if (!bAimAssist || m_fAimAssistStrength <= 0.0f)
+		return;
+	// only for free aim; the game's own lock on already holds a target, and the two pulling at
+	// the same stick would fight
+	if (!CPad::GetPad(0)->GetTarget() || m_pPointGunAt != nil || bInVehicle)
+		return;
+
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	if (!info->IsFlagSet(WEAPONFLAG_CANAIM) && !info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM))
+		return;
+
+	CCam &cam = TheCamera.Cams[TheCamera.ActiveCam];
+	float tanX, tanY;
+	TheCamera.Find3rdPersonCamAimTangents(cam.FOV, tanX, tanY);
+	CVector aim = cam.Front + cam.Up * tanY + CrossProduct(cam.Front, cam.Up) * tanX;
+	aim.Normalise();
+
+	float bestCos = Cos(AIM_ASSIST_CONE);
+	for (int32 i = CPools::GetPedPool()->GetSize() - 1; i >= 0; i--) {
+		CPed *ped = CPools::GetPedPool()->GetSlot(i);
+		if (ped == nil || ped == this)
+			continue;
+		if (ped->DyingOrDead() || ped->bInVehicle || ped->m_leader == this)
+			continue;
+
+		RwV3d node;
+		ped->m_pedIK.GetComponentPosition(node, PED_MID);
+		CVector centre(node.x, node.y, node.z);
+
+		CVector toPed = centre - cam.Source;
+		float dist = toPed.Magnitude();
+		if (dist < 1.0f || dist > info->m_fRange)
+			continue;
+
+		// the widest cone found so far, so the nearest one to the sights wins
+		float dot = DotProduct(toPed, aim) / dist;
+		if (dot <= bestCos)
+			continue;
+		// peds do not block, or a crowd would shade itself out; glass and fences do not either,
+		// the shot goes through them
+		if (!CWorld::GetIsLineOfSightClear(cam.Source, centre, true, true, false, true, false, true))
+			continue;
+
+		bestCos = dot;
+	}
+
+	if (bestCos <= Cos(AIM_ASSIST_CONE))
+		return;
+
+	// full at the sights, nothing at the edge of the cone, so it eases in instead of switching on
+	float closeness = 1.0f - Acos(Clamp(bestCos, -1.0f, 1.0f)) / AIM_ASSIST_CONE;
+	m_fAimAssistFactor = 1.0f - Clamp(m_fAimAssistStrength, 0.0f, 1.0f) * closeness;
+}
+
+// The game only reloads once the clip runs dry, in CWeapon::Fire.  Topping it up early is the
+// same two lines: put the weapon in its reloading state and set the timer, and
+// CWeapon::Update() fills the clip when the timer runs out, exactly as it does for the
+// automatic one.  The fast reload cheat is honoured the same way too.
+void
+CPlayerPed::ProcessManualReload(CPad *padUsed)
+{
+	if (!padUsed->GetReloadJustDown())
+		return;
+
+	CWeapon *weapon = GetWeapon();
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(weapon->m_eWeaponType);
+
+	// nothing with a clip to fill
+	if (info->m_eWeaponFire == WEAPON_FIRE_MELEE || info->m_eWeaponFire == WEAPON_FIRE_PROJECTILE ||
+		info->m_eWeaponFire == WEAPON_FIRE_CAMERA)
+		return;
+	if (info->m_nAmountofAmmunition <= 1)
+		return;
+	// Already reloading is the only state that says no.  A weapon reads as firing for as long as
+	// its rate of fire lasts after a shot, and waiting that out dropped a reload asked for at the
+	// end of a burst.
+	if (weapon->m_eWeaponState == WEAPONSTATE_RELOADING)
+		return;
+	// clip already full, or nothing left to fill it with
+	if (weapon->m_nAmmoInClip >= info->m_nAmountofAmmunition || weapon->m_nAmmoTotal <= weapon->m_nAmmoInClip)
+		return;
+
+	weapon->m_eWeaponState = WEAPONSTATE_RELOADING;
+	weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload;
+	bool fastReload = CWorld::Players[CWorld::PlayerInFocus].m_bFastReload;
+	if (fastReload)
+		weapon->m_nTimer = CTimer::GetTimeInMilliseconds() + info->m_nReload / 4;
+
+	// Whatever the arm was doing gives way to the reload.  Pointing the gun at nothing is what
+	// holds the weapon up between shots and PointGunAt() puts that pose back on every frame, so
+	// the state goes first, and the firing animation is faded rather than left to blend against
+	// the reload.
+	if (bIsPointingGunAt && m_pPointGunAt == nil)
+		ClearPointGunAt();
+	bIsAimPosed = false;
+
+	CAnimBlendAssociation *fireAssoc = RpAnimBlendClumpGetAssociation(GetClump(), GetPrimaryFireAnim(info));
+	if (fireAssoc) {
+		fireAssoc->flags |= ASSOC_DELETEFADEDOUT;
+		fireAssoc->blendDelta = -8.0f;
+	}
+
+	// The animation is started from inside the attack, so a reload asked for outside one starts
+	// it the same way CPed::Attack does, crouched when ducking, and not at all under the fast
+	// reload cheat.
+	AnimationId reloadAnim = bIsDucking && GetCrouchReloadAnim(info) ? GetCrouchReloadAnim(info) : GetReloadAnim(info);
+	if (reloadAnim != (AnimationId)0) {
+		if (!fastReload && !RpAnimBlendClumpGetAssociation(GetClump(), reloadAnim)) {
+			CAnimBlendAssociation *reloadAssoc = CAnimManager::BlendAnimation(GetClump(), info->m_AnimToPlay, reloadAnim, 8.0f);
+			if (reloadAssoc)
+				reloadAssoc->SetFinishCallback(FinishedReloadCB, this);
+		}
+		ClearLookFlag();
+		ClearAimFlag();
+		bIsAttacking = false;
+		bIsPointingGunAt = false;
+		m_shootTimer = CTimer::GetTimeInMilliseconds();
+	}
+}

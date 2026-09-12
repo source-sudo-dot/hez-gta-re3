@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "Weapon.h"
+#include "Crosshair.h"
 #include "AnimBlendAssociation.h"
 #include "AudioManager.h"
 #include "BulletInfo.h"
@@ -1392,6 +1393,10 @@ CWeapon::DoBulletImpact(CEntity *shooter, CEntity *victim,
 			CPed *victimPed = (CPed *)victim;
 			if ( !victimPed->DyingOrDead() && victim != shooter )
 			{
+				// the part comes straight off the collision, which is what tells a head shot
+				if ( shooter == FindPlayerPed() )
+					CCrosshair::RegisterHit(point->pieceB == PEDPIECE_HEAD);
+
 				CVector pos = victimPed->GetPosition();
 
 				CVector2D posOffset(source->x-pos.x, source->y-pos.y);
@@ -1883,6 +1888,8 @@ CWeapon::FireShotgun(CEntity *shooter, CVector *fireSource)
 					if ( cantStandup )
 						victimPed->SetFall(1500, AnimationId(ANIM_STD_HIGHIMPACT_FRONT + localDir), false);
 
+					if ( shooter == FindPlayerPed() )
+						CCrosshair::RegisterHit(point.pieceB == PEDPIECE_HEAD);
 					victimPed->InflictDamage(shooter, m_eWeaponType, info->m_nDamage, (ePedPieceTypes)point.pieceB, localDir);
 
 					if ( victimPed->m_nPedType == PEDTYPE_COP )

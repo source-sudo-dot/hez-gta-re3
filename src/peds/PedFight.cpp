@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Pad.h"
 
 #include "main.h"
 #include "RpAnimBlend.h"
@@ -1027,7 +1028,12 @@ CPed::Attack(void)
 			weaponAnimAssoc->flags &= ~ASSOC_RUNNING;
 			SetPointGunAt(m_pPointGunAt);
 #ifdef FREE_CAM
-		} else if (IsPlayer() && ((CPlayerPed*)this)->m_bFreeAimActive && GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
+		// m_bFreeAimActive is only set while the free camera is on, and holding Target/Aim turns
+		// that off, so this branch stopped being reached and the weapon dropped at the end of
+		// every burst.  Holding aim counts as free aiming for it as well.
+		} else if (IsPlayer() && (((CPlayerPed*)this)->m_bFreeAimActive ||
+			CPad::GetPad(0)->GetTarget() && TheCamera.Cams[0].Using3rdPersonMouseCam())
+			&& GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
 			float limitedCam = CGeneral::LimitRadianAngle(-TheCamera.Orientation);
 			SetLookFlag(limitedCam, true, true);
 			SetAimFlag(limitedCam);

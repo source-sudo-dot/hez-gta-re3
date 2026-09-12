@@ -5,6 +5,7 @@
 #include "Clock.h"
 #include "Darkel.h"
 #include "Hud.h"
+#include "Crosshair.h"
 #include "Messages.h"
 #include "Frontend.h"
 #include "Font.h"
@@ -269,10 +270,14 @@ void CHud::Draw()
 			if (DrawCrossHairPC && TheCamera.Cams[TheCamera.ActiveCam].Using3rdPersonMouseCam()) {
 				float f3rdX = SCREEN_WIDTH * TheCamera.m_f3rdPersonCHairMultX;
 				float f3rdY = SCREEN_HEIGHT * TheCamera.m_f3rdPersonCHairMultY;
-#ifdef ASPECT_RATIO_SCALE
-				f3rdY -= SCREEN_SCALE_Y(2.0f);
-#endif
-				if (playerPed && (WeaponType == WEAPONTYPE_M4 || WeaponType == WEAPONTYPE_RUGER || WeaponType == WEAPONTYPE_M60)) {
+				// The sprite used to be nudged up two units by hand to sit over where the shot went.
+				// The aim ray is taken off the same view window the render uses now, so the shot
+				// leaves through the crosshair's exact pixel and the nudge would put it off again.
+				if (CCrosshair::bModern) {
+					CCrosshair::Draw(f3rdX, f3rdY,
+						playerPed && (WeaponType == WEAPONTYPE_M4 || WeaponType == WEAPONTYPE_RUGER || WeaponType == WEAPONTYPE_M60) ? 1.35f : 1.0f);
+				}
+				else if (playerPed && (WeaponType == WEAPONTYPE_M4 || WeaponType == WEAPONTYPE_RUGER || WeaponType == WEAPONTYPE_M60)) {
 					rect.left = f3rdX - SCREEN_SCALE_X(32.0f * 0.6f);
 					rect.top = f3rdY - SCREEN_SCALE_Y(32.0f  * 0.6f);
 					rect.right = f3rdX + SCREEN_SCALE_X(32.0f * 0.6f);

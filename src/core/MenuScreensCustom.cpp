@@ -26,6 +26,8 @@
 #include "ModelInfo.h"
 #include "Pad.h"
 #include "Timer.h"
+#include "Crosshair.h"
+#include "PlayerPed.h"
 #include "ControllerConfig.h"
 #include "DMAudio.h"
 #include "IniFile.h"
@@ -667,6 +669,7 @@ CMenuScreenCustom aScreens[] = {
 #endif
 		 MENUACTION_LOADRADIO,		"FEO_AUD", {nil, SAVESLOT_NONE, MENUPAGE_SOUND_SETTINGS}, 0, 0, MENUALIGN_CENTER,
 		 MENUACTION_CHANGEMENU,		"FEO_DIS", {nil, SAVESLOT_NONE, MENUPAGE_DISPLAY_SETTINGS}, 0, 0, MENUALIGN_CENTER,
+		 MENUACTION_CHANGEMENU,		"FEZ_GPL", {nil, SAVESLOT_NONE, MENUPAGE_GAMEPLAY_SETTINGS}, 0, 0, MENUALIGN_CENTER,
 #ifdef GRAPHICS_MENU_OPTIONS
 		 MENUACTION_CHANGEMENU,		"FET_GFX", {nil, SAVESLOT_NONE, MENUPAGE_GRAPHICS_SETTINGS}, 0, 0, MENUALIGN_CENTER,
 #endif
@@ -835,6 +838,17 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_CFO_SELECT,	"FEC_VIB", { new CCFOSelect((int8*)&FrontEndMenuManager.m_PrefsUseVibration, "Controller", "Vibration", off_on, 2, false, VibrationAfterChange) }, 0, 0, MENUALIGN_LEFT,
 #endif
 		MENUACTION_CFO_SLIDER,	"FEZ_MSS", { new CCFOSlider(&CMenuManager::m_fMapScrollSpeed, "Display", "MapScrollSpeed", 0.1f, 3.0f, nil, 58, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
+	},
+
+	// MENUPAGE_GAMEPLAY_SETTINGS
+	{ "FEZ_GPL", MENUPAGE_OPTIONS, new CCustomScreenLayout({40, 100, MENU_DEFAULT_LINE_HEIGHT, true, true}), nil,
+		MENUACTION_CFO_SELECT,	"FEZ_XH", { new CCFOSelect((int8*)&CCrosshair::bModern, "Display", "ModernCrosshair", off_on, 2, false) }, 40, 100, MENUALIGN_LEFT,
+		MENUACTION_CFO_SELECT,	"FEZ_HM", { new CCFOSelect((int8*)&CCrosshair::bHitMarkers, "Display", "HitMarkers", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_XHS", { new CCFOSlider(&CCrosshair::m_fSize, "Display", "CrosshairSize", 1.0f, 20.0f, nil, 38, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SELECT,	"FEZ_AA", { new CCFOSelect((int8*)&CPlayerPed::bAimAssist, "Display", "AimAssist", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_AAS", { new CCFOSlider(&CPlayerPed::m_fAimAssistStrength, "Display", "AimAssistStrength", 0.0f, 0.9f, nil, 45, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
 	},
 

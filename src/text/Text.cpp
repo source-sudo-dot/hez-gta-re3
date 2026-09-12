@@ -127,6 +127,13 @@ static struct {
 	{ "FEZ_DBR", "DRIVE-BY RIGHT" },
 	{ "FEZ_MSS", "MAP SCROLL SPEED" },
 	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
+	{ "FEZ_GPL", "GAMEPLAY" },
+	{ "FEZ_XH", "MODERN CROSSHAIR" },
+	{ "FEZ_HM", "HIT MARKERS" },
+	{ "FEZ_XHS", "CROSSHAIR SIZE" },
+	{ "FEZ_ARS", "WEAPON RAISE SPEED" },
+	{ "FEZ_AA", "AIM ASSIST" },
+	{ "FEZ_AAS", "ASSIST STRENGTH" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;
