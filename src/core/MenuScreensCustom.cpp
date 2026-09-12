@@ -25,6 +25,7 @@
 #include "Collision.h"
 #include "ModelInfo.h"
 #include "Pad.h"
+#include "Timer.h"
 #include "ControllerConfig.h"
 #include "DMAudio.h"
 #include "IniFile.h"
@@ -104,6 +105,20 @@
 
 const char *filterNames[] = { "FEM_NON", "FEM_SIM", "FEM_NRM", "FEM_MOB" };
 const char *off_on[] = { "FEM_OFF", "FEM_ON" };
+
+#ifndef GAMEPAD_MENU
+extern uint32 TimeToStopPadShaking;
+
+// the same short shake the gamepad page gives when vibration is switched on, so it can be
+// felt straight away whether the pad takes it
+void VibrationAfterChange(int8 before, int8 after)
+{
+	if (after) {
+		CPad::GetPad(0)->StartShake(350, 150);
+		TimeToStopPadShaking = CTimer::GetTimeInMillisecondsPauseMode() + 500;
+	}
+}
+#endif
 const char *motionBlurTexts[] = { "FEM_OFF", "FEM_FNT", "FEM_STR" };
 extern const char *frameLimitTexts[];
 extern int32 numFrameLimits;
@@ -813,6 +828,11 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f, nil, 56, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) }, 0, 0, MENUALIGN_LEFT,
+#ifndef GAMEPAD_MENU
+		// The vibration switch lives on the gamepad page, which needs XInput, and the OpenGL
+		// build does not use XInput - so that page and its switch are never compiled.
+		MENUACTION_CFO_SELECT,	"FEC_VIB", { new CCFOSelect((int8*)&FrontEndMenuManager.m_PrefsUseVibration, "Controller", "Vibration", off_on, 2, false, VibrationAfterChange) }, 0, 0, MENUALIGN_LEFT,
+#endif
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
 	},
 
