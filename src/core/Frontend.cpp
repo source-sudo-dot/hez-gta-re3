@@ -2612,6 +2612,11 @@ CMenuManager::DrawBackground(bool transitionCall)
 		}
 	}
 
+	// StickDebug=1: the same readout as in the game, so the rumble line can be read right
+	// where vibration is switched on
+	CPad::DrawStickDebug();
+	CFont::DrawFonts();
+
 	if (m_bShowMouse) {
 		CRect mouse(0.0f, 0.0f, MENU_X(35.0f), MENU_Y(35.0f));
 		CRect shad(MENU_X(10.0f), MENU_Y(3.0f), MENU_X(45.0f), MENU_Y(38.0f));
@@ -4720,10 +4725,18 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 
 				field_159 = true;
 			} else {
+				// Backspace clears the binding.  The wait has to end here as well, or the
+				// backspace that started it is still the pressed key a frame later and is
+				// bound in place of what was just cleared.
+				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_SETTING_CHANGE, 0);
 				for (int i = 0; i < 4; i++)
 					ControlsManager.ClearSettingsAssociatedWithAction((e_ControllerAction)m_CurrCntrlAction, (eControllerType)i);
 				m_bKeyIsOK = false;
 				m_bKeyChangeNotProcessed = false;
+				pControlEdit = nil;
+				m_bWaitingForNewKeyBind = false;
+				m_KeyPressedCode = -1;
+				m_bStartWaitingForKeyBind = false;
 			}
 		}
 	}
@@ -5122,16 +5135,14 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 		}
 	}
 
+	// The binding page used to refuse to be left while any action was unbound.  The actions
+	// this fork adds start out unbound and not everyone wants all of them, so leaving is
+	// always allowed.
 	if (goBack) {
-		if (m_NoEmptyBinding) {
-			DMAudio.PlayFrontEndSound(SOUND_FRONTEND_BACK, 0);
-			SwitchToNewScreen(-2);
-			if (hasNativeList(m_nCurrScreen)) {
-				m_nTotalListRow = 0;
-			}
-		} else {
-			DMAudio.PlayFrontEndSound(SOUND_FRONTEND_FAIL, 0);
-			m_ShowEmptyBindingError = true;
+		DMAudio.PlayFrontEndSound(SOUND_FRONTEND_BACK, 0);
+		SwitchToNewScreen(-2);
+		if (hasNativeList(m_nCurrScreen)) {
+			m_nTotalListRow = 0;
 		}
 	}
 

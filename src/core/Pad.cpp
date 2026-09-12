@@ -2100,10 +2100,12 @@ void CPad::StopPadsShaking(void)
 
 void CPad::StopShaking(int16 pad)
 {
-#ifdef GTA_PS2_STUFF
+	// A shake counts down in game time, which stands still while the menu is up, so this has
+	// to clear it on the PC too or a shake started from the menu never ends.
 	ShakeFreq = 0;
 	ShakeDur = 0;
 
+#ifdef GTA_PS2_STUFF
 #ifdef GTA_PS2
 	if ( Phase == 99 )
 	{
