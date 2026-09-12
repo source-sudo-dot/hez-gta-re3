@@ -34,7 +34,6 @@
 #include "Weather.h"
 #include "Streaming.h"
 #include "PathFind.h"
-#include "Zones.h"
 #include "Wanted.h"
 #include "General.h"
 
@@ -136,68 +135,6 @@ void TankCheat()
 			CWorld::Add(tank);
 		}
 	}
-}
-
-// Ray leaves a Patriot behind after his last job, and it is the same model as any
-// other with one thing done to it: the script makes it proof against bullets.  Miss
-// it and it is never offered again, so here is one on demand, proofed the same way
-// and no more than that.
-void BulletproofPatriotCheat()
-{
-	CStreaming::RequestModel(MI_PATRIOT, STREAMFLAGS_DONT_REMOVE);
-	CStreaming::LoadAllRequestedModels(false);
-	if (CStreaming::ms_aInfoForModel[MI_PATRIOT].m_loadState != STREAMSTATE_LOADED) {
-		CHud::SetHelpMessage(TheText.Get("CHEATNL"), true);
-		return;
-	}
-
-	CAutomobile *patriot = new CAutomobile(MI_PATRIOT, RANDOM_VEHICLE);
-	if (patriot == nil) {
-		CHud::SetHelpMessage(TheText.Get("CHEATNR"), true);
-		return;
-	}
-
-	// On the nearest piece of road if there is one within range, and otherwise simply
-	// in front of the player, so standing somewhere the traffic never goes is no reason
-	// for nothing at all to happen.
-	CVector pos;
-	int32 node = ThePaths.FindNodeClosestToCoors(FindPlayerCoors(), PATH_CAR, 100.0f);
-	if (node >= 0) {
-		pos = ThePaths.m_pathNodes[node].GetPosition();
-	} else {
-		pos = FindPlayerCoors();
-		if (FindPlayerPed() != nil)
-			pos += FindPlayerPed()->GetForward() * 6.0f;
-	}
-	pos.z = CWorld::FindGroundZForCoord(pos.x, pos.y);
-	pos.z += patriot->GetDistanceFromCentreOfMassToBaseOfModel();
-
-	CWorld::ClearExcitingStuffFromArea(pos, 8.0f, false);
-	patriot->SetPosition(pos);
-	patriot->SetOrientation(0.0f, 0.0f, 0.0f);
-
-	// Bullets and nothing else.  main.scm creates the original at 241, -997, 20 and
-	// calls SET_CAR_PROOFS on it with 1 0 0 0 0 the very next line, so fire, explosions,
-	// collisions and fists all go through it exactly as they go through any other car.
-	patriot->bBulletProof = true;
-
-	patriot->SetStatus(STATUS_ABANDONED);
-	patriot->m_nDoorLock = CARLOCK_UNLOCKED;
-	patriot->bEngineOn = false;
-	patriot->bHasBeenOwnedByPlayer = true;
-	patriot->m_nZoneLevel = CTheZones::GetLevelFromPosition(&pos);
-	patriot->AutoPilot.m_nCarMission = MISSION_NONE;
-	patriot->AutoPilot.m_nTempAction = TEMPACT_NONE;
-	patriot->AutoPilot.m_nDrivingStyle = DRIVINGSTYLE_STOP_FOR_CARS;
-	patriot->AutoPilot.m_nCruiseSpeed = patriot->AutoPilot.m_fMaxTrafficSpeed = 9.0f;
-	patriot->AutoPilot.m_nCurrentLane = patriot->AutoPilot.m_nNextLane = 0;
-
-	// Not joined to the road system: JoinCarWithRoadSystem looks up the nearest node
-	// without a range and without checking whether it found one, and reads numLinks off
-	// m_pathNodes[-1] when it did not.  An abandoned car has no use for it anyway.
-	CWorld::Add(patriot);
-
-	CHud::SetHelpMessage(TheText.Get("CHEAT1"), true);
 }
 
 void BlowUpCarsCheat()
@@ -1003,16 +940,6 @@ void CPad::AddToPCCheatString(char c)
 	// "GIVEUSATANK"
 	if ( !_CHEATCMP("KNATASUEVIG") )
 		TankCheat();
-
-	// "BULLETPROOF".  Glfw names the keys by where they sit on an american
-	// board, so on a german one the key marked Y arrives as Z and the other way round.
-	// A code with neither letter in it is the same to type on both.
-	if ( !_CHEATCMP("FOORPTELLUB") )
-		BulletproofPatriotCheat();
-
-	// "RAYSPATRIOT", for a board where Y is where glfw thinks it is
-	if ( !_CHEATCMP("TOIRTAPSYAR") )
-		BulletproofPatriotCheat();
 
 	// "BANGBANGBANG"
 	if ( !_CHEATCMP("GNABGNABGNAB") )
