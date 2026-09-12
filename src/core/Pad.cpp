@@ -1004,7 +1004,13 @@ void CPad::AddToPCCheatString(char c)
 	if ( !_CHEATCMP("KNATASUEVIG") )
 		TankCheat();
 
-	// "RAYSPATRIOT"
+	// "BULLETPROOF".  Glfw names the keys by where they sit on an american
+	// board, so on a german one the key marked Y arrives as Z and the other way round.
+	// A code with neither letter in it is the same to type on both.
+	if ( !_CHEATCMP("FOORPTELLUB") )
+		BulletproofPatriotCheat();
+
+	// "RAYSPATRIOT", for a board where Y is where glfw thinks it is
 	if ( !_CHEATCMP("TOIRTAPSYAR") )
 		BulletproofPatriotCheat();
 
