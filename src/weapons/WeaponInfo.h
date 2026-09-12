@@ -67,6 +67,8 @@ public:
 	static eWeaponFire FindWeaponFireType(char *name);
 	static eWeaponType FindWeaponType(char *name);
 	static void Shutdown(void);
+	// the weapons that raise a first person scope instead of aiming over the shoulder
+	static bool UsesScopeAim(eWeaponType weaponType);
 	static bool IsWeaponSlotAmmoMergeable(uint32 slot) { return slot == WEAPONSLOT_SHOTGUN || slot == WEAPONSLOT_SUBMACHINEGUN || slot == WEAPONSLOT_RIFLE; }
 	bool IsFlagSet(uint32 flag) const { return (m_Flags & flag) != 0; }
 };

@@ -8,6 +8,7 @@
 #include "Automobile.h"
 #include "Ped.h"
 #include "PlayerPed.h"
+#include "WeaponInfo.h"
 #include "Wanted.h"
 #include "Pad.h"
 #include "ControllerConfig.h"
@@ -241,7 +242,9 @@ CCamera::Init(void)
 	m_uiTransitionState = 0;
 	m_uiTimeTransitionStart = 0;
 	m_bLookingAtPlayer = true;
-	m_f3rdPersonCHairMultX = 0.53f;
+	// 0.53 put the crosshair a little right of centre for the over the shoulder camera;
+	// the hud and the aim both read this value, so 0.5 puts the shot in the middle
+	m_f3rdPersonCHairMultX = 0.5f;
 	m_f3rdPersonCHairMultY = 0.4f;
 	m_fAvoidTheGeometryProbsTimer = 0.0f;
 	m_nAvoidTheGeometryProbsDirn = 0;
@@ -566,6 +569,30 @@ CCamera::Process(void)
 		bExtra1stPrsBlur = false;
 	}
 
+	// Take a few degrees of field of view away while Target/Aim is held on foot and give
+	// them back when it is let go.  Cams[ActiveCam].FOV is moved with it because
+	// Find3rdPersonCamTargetVector() and the weapon code work out where the crosshair
+	// points from that value, so the shot would leave the crosshair without it.  The blend
+	// is per frame, so it takes the same time at any frame rate.  AimZoomDegrees in
+	// reVC.ini sets the amount, 0 turns it off.
+	static float aimFovOffset = 0.0f;
+	bool aimZoom =
+		m_fAimZoomDegrees > 0.0f &&
+		Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED &&
+		FindPlayerPed() != nil &&
+		FindPlayerVehicle() == nil &&
+		FindPlayerPed()->GetWeapon()->m_eWeaponType != WEAPONTYPE_UNARMED &&
+		CPad::GetPad(0)->GetTarget();
+
+	float aimFovTarget = aimZoom ? m_fAimZoomDegrees : 0.0f;
+	float aimFovBlend = Clamp(0.15f * CTimer::GetTimeStep(), 0.0f, 1.0f);
+	aimFovOffset += (aimFovTarget - aimFovOffset) * aimFovBlend;
+
+	if(aimFovOffset > 0.001f && Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED){
+		FOV -= aimFovOffset;
+		Cams[ActiveCam].FOV -= aimFovOffset;
+	}
+
 	CalculateDerivedValues();
 	CDraw::SetFOV(FOV);
 
@@ -673,6 +700,24 @@ CCamera::Process(void)
 void
 CCamera::UpdatePadInput(void)
 {
+#ifdef FREE_CAM
+	// The free camera steps aside while Target/Aim is held on foot, so the player is
+	// controlled the way he is with FreeCam off: he turns to face the camera and the stick
+	// moves him relative to it.  This has to be the one flag the whole game reads, or the
+	// camera, the player control and the weapon code end up on different paths and the
+	// player runs off at an angle the stick cannot correct.
+	// Only in the ordinary on foot camera.  The scoped weapons have first person cameras
+	// of their own, and CamControl() reads bFreeCam to decide whether a look around throws
+	// the player into first person: switching it off under them shut the scope.
+	bFreeCam = bFreeCamSetting;
+	if(bFreeCamSetting &&
+	   Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED &&
+	   FindPlayerPed() != nil && FindPlayerVehicle() == nil &&
+	   !CWeaponInfo::UsesScopeAim(FindPlayerPed()->GetWeapon()->m_eWeaponType) &&
+	   CPad::GetPad(0)->GetTarget())
+		bFreeCam = false;
+#endif
+
 	if(CTimer::GetIsPaused())
 		return;
 	if(CPad::GetPad(0)->CycleCameraModeUpJustDown())
@@ -3986,6 +4031,21 @@ CCamera::UpdateAimingCoors(CVector const &coors)
 	m_cvecAimingTargetCoors = coors;
 }
 
+// The crosshair sits at a fixed fraction of the screen and the shot has to leave along the
+// ray that lands on that exact pixel.  The old code turned the fraction straight into an
+// angle by scaling the field of view, but a perspective camera maps a screen fraction to the
+// tangent, not to the angle.  The two only agree near the middle of a wide view; take field
+// of view away, as aiming does, and the shot walks off the sight.  The render sets its view
+// window to tan(FOV/2)/(4:3) vertically and that times the window's aspect horizontally, so
+// those are the numbers to aim by.
+void
+CCamera::Find3rdPersonCamAimTangents(float fov, float &tanX, float &tanY)
+{
+	float tanV = Tan(DEGTORAD(fov) * 0.5f) / DEFAULT_ASPECT_RATIO;
+	tanY = (0.5f - m_f3rdPersonCHairMultY) * 2.0f * tanV;
+	tanX = (m_f3rdPersonCHairMultX - 0.5f) * 2.0f * tanV * CDraw::GetAspectRatio();
+}
+
 bool
 CCamera::Find3rdPersonCamTargetVector(float dist, CVector pos, CVector &source, CVector &target)
 {
@@ -3994,12 +4054,12 @@ CCamera::Find3rdPersonCamTargetVector(float dist, CVector pos, CVector &source, 
 		target = dist*Cams[ActiveCam].CamTargetEntity->GetForward() + source;
 		return false;
 	}else{
-		float angleX = DEGTORAD((m_f3rdPersonCHairMultX-0.5f) * 1.8f * 0.5f * Cams[ActiveCam].FOV * CDraw::GetAspectRatio());
-		float angleY = DEGTORAD((0.5f-m_f3rdPersonCHairMultY) * 1.8f * 0.5f * Cams[ActiveCam].FOV);
+		float tanX, tanY;
+		Find3rdPersonCamAimTangents(Cams[ActiveCam].FOV, tanX, tanY);
 		source = Cams[ActiveCam].Source;
 		target = Cams[ActiveCam].Front;
-		target += Cams[ActiveCam].Up * Tan(angleY);
-		target += CrossProduct(Cams[ActiveCam].Front, Cams[ActiveCam].Up) * Tan(angleX);
+		target += Cams[ActiveCam].Up * tanY;
+		target += CrossProduct(Cams[ActiveCam].Front, Cams[ActiveCam].Up) * tanX;
 		target.Normalise();
 		source += DotProduct(pos - source, target)*target;
 		target = dist*target + source;
@@ -4014,7 +4074,9 @@ CCamera::Find3rdPersonQuickAimPitch(void)
 
 	float rot = Asin(clampedFrontZ);
 
-	return -(DEGTORAD(((0.5f - m_f3rdPersonCHairMultY) * 1.8f * 0.5f * Cams[ActiveCam].FOV)) + rot);
+	float tanX, tanY;
+	Find3rdPersonCamAimTangents(Cams[ActiveCam].FOV, tanX, tanY);
+	return -(Atan(tanY) + rot);
 }
 
 bool

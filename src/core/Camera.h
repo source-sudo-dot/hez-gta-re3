@@ -469,6 +469,9 @@ public:
 	static float m_fMouseAccelVertical;// acceleration multiplier for 1st person controls
 	static float m_f3rdPersonCHairMultX;
 	static float m_f3rdPersonCHairMultY;
+	// degrees of field of view the on-foot camera loses while Target/Aim is held,
+	// AimZoomDegrees under [Display] in reVC.ini, 0 turns the zoom off
+	static float m_fAimZoomDegrees;
 
 
 	CCam Cams[3];
@@ -542,7 +545,18 @@ public:
 
 	static bool m_bUseMouse3rdPerson;
 #ifdef FREE_CAM
+	// bFreeCam is what the game acts on and is worked out once per logical frame in
+	// UpdatePadInput().  bFreeCamSetting is the FreeCam option in the menu and reVC.ini.
 	static bool bFreeCam;
+	static bool bFreeCamSetting;
+	// How hard the car camera pulls itself back in line with the car's pitch, 0 not at
+	// all and 1 as hard as it used to, and how long the right stick has to be still
+	// first.  CarCamFollowVert and CarCamFollowDelay under [Display] in reVC.ini.
+	static float m_fCarCamFollowVert;
+	static float m_fCarCamFollowDelay;
+	// How much weight the car camera carries, 1 as much as it used to and 0 none, in
+	// which case it turns as directly as the one on foot.  CarCamSmoothing.
+	static float m_fCarCamSmoothing;
 #endif
 
 	// High level and misc
@@ -628,6 +642,7 @@ public:
 	void ClearPlayerWeaponMode(void);
 	void UpdateAimingCoors(CVector const &coors);
 	bool Find3rdPersonCamTargetVector(float dist, CVector pos, CVector &source, CVector &target);
+	void Find3rdPersonCamAimTangents(float fov, float &tanX, float &tanY);
 	float Find3rdPersonQuickAimPitch(void);
 	bool Using1stPersonWeaponMode(void);
 

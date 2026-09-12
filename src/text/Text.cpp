@@ -126,6 +126,7 @@ static struct {
 	{ "FEZ_DBL", "DRIVE-BY LEFT" },
 	{ "FEZ_DBR", "DRIVE-BY RIGHT" },
 	{ "FEZ_MSS", "MAP SCROLL SPEED" },
+	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

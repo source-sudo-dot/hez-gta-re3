@@ -38,10 +38,18 @@ extern float fCloseNearClipLimit;
 
 #ifdef FREE_CAM
 bool CCamera::bFreeCam = false;
+bool CCamera::bFreeCamSetting = false;
+// The car camera does not pull itself back to level behind the car; it stays where it is
+// put.  These are here only so reVC.ini can still ask for the old behaviour.
+float CCamera::m_fCarCamFollowVert = 0.0f;
+float CCamera::m_fCarCamFollowDelay = 1.5f;
+float CCamera::m_fCarCamSmoothing = 0.0f;
 int nPreviousMode = -1;
 #endif
 
 // how far the camera turns per mouse count, the same up and down as sideways
+float CCamera::m_fAimZoomDegrees = 5.0f;
+
 #define m_fMultiHori -0.8f
 #define m_fMultiVert 0.8f
 
@@ -4811,6 +4819,9 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	static float dontCollideWithCars;
 	static bool alphaCorrected;
 	static float heightIncreaseMult;
+	// the pitch that was actually asked for, carried from frame to frame, see below
+	static float heldAlpha = 0.0f;
+	static bool heldAlphaValid = false;
 
 	if (!CamTargetEntity->IsVehicle())
 		return;
@@ -4958,6 +4969,7 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	// Called when we just entered the car, just started to look behind or returned back from looking left, right or behind
 	if (ResetStatics || TheCamera.m_bCamDirectlyBehind || TheCamera.m_bCamDirectlyInFront) {
 		ResetStatics = false;
+		heldAlphaValid = false;
 		Rotating = false;
 		m_bCollisionChecksOn = true;
 
@@ -5061,7 +5073,28 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 					}
 				}
 
+	// How much of the pull back to level to let through, and how long the right stick has to
+	// have been still first.  Any use of the stick puts the wait back to the start.
+	static float vertFollowHoldOff = 0.0f;
+	if (Abs(CPad::GetPad(0)->GetCarGunUpDown()) > 1 || Abs(CPad::GetPad(0)->GetCarGunLeftRight()) > 1)
+		vertFollowHoldOff = Max(0.0f, TheCamera.m_fCarCamFollowDelay) * 50.0f;
+	else
+		vertFollowHoldOff = Max(0.0f, vertFollowHoldOff - CTimer::GetTimeStep());
+
+	float vertFollowScale = vertFollowHoldOff > 0.0f ? 0.0f : Clamp(TheCamera.m_fCarCamFollowVert, 0.0f, 1.0f);
+
+	// The camera hangs off a point it leaves behind the car, and Front is the line from that
+	// point to the car.  Every frame the car drives on, and that travel is added to the line.
+	// On a road it is level travel, so the line flattens and the view is dragged back down,
+	// harder the faster the car goes.  heldAlpha carries the pitch that was actually asked for
+	// from frame to frame, and the two are blended, so at 0 the view stays where it is put and
+	// at 1 the line decides as it always did.
 	float targetAlpha = Asin(Clamp(Front.z, -1.0f, 1.0f)) - zoomModeAlphaOffset;
+	if (!heldAlphaValid) {
+		heldAlpha = targetAlpha;
+		heldAlphaValid = true;
+	}
+	targetAlpha = heldAlpha + (targetAlpha - heldAlpha) * vertFollowScale;
 	if (targetAlpha <= maxAlphaAllowed) {
 		if (targetAlpha < -CARCAM_SET[camSetArrPos][14])
 			targetAlpha = -CARCAM_SET[camSetArrPos][14];
@@ -5164,7 +5197,11 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	float betaSpeedFromStickX = xMovement * CARCAM_SET[camSetArrPos][12];
 
 	float newAngleSpeedMaxBlendAmount = CARCAM_SET[camSetArrPos][9];
-	float angleChangeStep = Pow(CARCAM_SET[camSetArrPos][8], CTimer::GetTimeStep());
+	// The stick sets a speed here and that speed is smoothed, so the camera builds up and runs
+	// down instead of going where it is pointed.  On foot the stick is added straight onto the
+	// angle, which is why that one feels sharp and this one does not.  At a smoothing of 0 the
+	// speed is taken as it comes and the two match.
+	float angleChangeStep = Pow(CARCAM_SET[camSetArrPos][8] * Clamp(TheCamera.m_fCarCamSmoothing, 0.0f, 1.0f), CTimer::GetTimeStep());
 	float targetBetaWithStickBlendAmount = betaSpeedFromStickX + (targetBeta - Beta) / Max(CTimer::GetTimeStep(), 1.0f);
 
 	if (targetBetaWithStickBlendAmount < -newAngleSpeedMaxBlendAmount)
@@ -5199,7 +5236,7 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	if ((camSetArrPos <= 1 || camSetArrPos == 7) && targetAlpha < Alpha && carPosChange >= newDistance) {
 		if (isCar && ((CAutomobile*)car)->m_nWheelsOnGround > 1 ||
 			isBike && ((CBike*)car)->m_nWheelsOnGround > 1)
-			alphaSpeedFromStickY += (targetAlpha - Alpha) * 0.075f;
+			alphaSpeedFromStickY += (targetAlpha - Alpha) * 0.075f * vertFollowScale;
 	}
 
 	AlphaSpeed = angleChangeStepLeft * alphaSpeedFromStickY + angleChangeStep * AlphaSpeed;
@@ -5226,6 +5263,8 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 			alphaWithSpeedAccounted = CTimer::GetTimeStep() * AlphaSpeed + targetAlpha;
 			Alpha += targetAlphaBlendAmount;
 		}
+
+		heldAlpha = alphaWithSpeedAccounted;
 
 	if (Alpha <= maxAlphaAllowed) {
 		float minAlphaAllowed = -CARCAM_SET[camSetArrPos][14];

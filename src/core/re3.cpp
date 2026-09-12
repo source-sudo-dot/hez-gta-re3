@@ -491,6 +491,11 @@ bool LoadINISettings()
 	ReadIniIfExists("VideoMode", "Depth", &FrontEndMenuManager.m_nPrefsDepth);
 	ReadIniIfExists("VideoMode", "Subsystem", &FrontEndMenuManager.m_nPrefsSubsystem);
 	ReadIniIfExists("VideoMode", "Borderless", &CMenuManager::m_bBorderless);
+#ifdef FREE_CAM
+	ReadIniIfExists("Display", "CarCamFollowVert", &CCamera::m_fCarCamFollowVert);
+	ReadIniIfExists("Display", "CarCamFollowDelay", &CCamera::m_fCarCamFollowDelay);
+	ReadIniIfExists("Display", "CarCamSmoothing", &CCamera::m_fCarCamSmoothing);
+#endif
 	// Windowed mode is loaded below in CUSTOM_FRONTEND_OPTIONS section
 #else
 	ReadIniIfExists("Graphics", "VideoMode", &FrontEndMenuManager.m_nDisplayVideoMode);
@@ -601,6 +606,11 @@ void SaveINISettings()
 	StoreIni("VideoMode", "Depth", FrontEndMenuManager.m_nPrefsDepth);
 	StoreIni("VideoMode", "Subsystem", FrontEndMenuManager.m_nPrefsSubsystem);
 	StoreIni("VideoMode", "Borderless", CMenuManager::m_bBorderless);
+#ifdef FREE_CAM
+	StoreIni("Display", "CarCamFollowVert", CCamera::m_fCarCamFollowVert);
+	StoreIni("Display", "CarCamFollowDelay", CCamera::m_fCarCamFollowDelay);
+	StoreIni("Display", "CarCamSmoothing", CCamera::m_fCarCamSmoothing);
+#endif
 	// Windowed mode is loaded below in CUSTOM_FRONTEND_OPTIONS section
 #else
 	StoreIni("Graphics", "VideoMode", FrontEndMenuManager.m_nDisplayVideoMode);
@@ -1165,7 +1175,7 @@ extern bool gbRenderWorld2;
 		extern int16 DebugCamMode;
 		DebugMenuAddVarBool8("Cam", "Use mouse Cam", &CCamera::m_bUseMouse3rdPerson, nil);
 #ifdef FREE_CAM
-		DebugMenuAddVarBool8("Cam", "Free Cam", &CCamera::bFreeCam, nil);
+		DebugMenuAddVarBool8("Cam", "Free Cam", &CCamera::bFreeCamSetting, nil);
 #endif
 		DebugMenuAddVarBool8("Cam", "Print Debug Code", &PrintDebugCode, nil);
 		DebugMenuAddVar("Cam", "Cam Mode", &DebugCamMode, nil, 1, 0, CCam::MODE_EDITOR, nil);

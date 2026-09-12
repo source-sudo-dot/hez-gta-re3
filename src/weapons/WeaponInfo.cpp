@@ -293,3 +293,15 @@ CWeaponInfo::Shutdown(void)
 	debug("Shutting down CWeaponInfo...\n");
 	debug("CWeaponInfo shut down\n");
 }
+
+// The weapons whose aim goes through a first person scope of their own.  The free camera
+// stays on for these while they are raised: aiming down a scope never wanted the over the
+// shoulder camera, and dropping the free cam under them shut the scope the frame it opened.
+bool
+CWeaponInfo::UsesScopeAim(eWeaponType weaponType)
+{
+	return weaponType == WEAPONTYPE_ROCKETLAUNCHER || weaponType == WEAPONTYPE_SNIPERRIFLE ||
+	       weaponType == WEAPONTYPE_LASERSCOPE || weaponType == WEAPONTYPE_M4 ||
+	       weaponType == WEAPONTYPE_RUGER || weaponType == WEAPONTYPE_M60 ||
+	       weaponType == WEAPONTYPE_CAMERA;
+}

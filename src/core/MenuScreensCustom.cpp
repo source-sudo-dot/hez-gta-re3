@@ -57,7 +57,7 @@
 #endif
 
 #ifdef FREE_CAM
-	#define FREE_CAM_TOGGLE MENUACTION_CFO_SELECT, "FEC_FRC", { new CCFOSelect((int8*)&TheCamera.bFreeCam, "Display", "FreeCam", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
+	#define FREE_CAM_TOGGLE MENUACTION_CFO_SELECT, "FEC_FRC", { new CCFOSelect((int8*)&TheCamera.bFreeCamSetting, "Display", "FreeCam", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
 #else
 	#define FREE_CAM_TOGGLE
 #endif
@@ -165,7 +165,7 @@ void RestoreDefDisplay(int8 action) {
 		FrontEndMenuManager.m_PrefsCutsceneBorders = true;
 	#endif
 	#ifdef FREE_CAM
-		TheCamera.bFreeCam = false;
+		TheCamera.bFreeCamSetting = false;
 	#endif
 	#ifdef PED_CAR_DENSITY_SLIDERS
 		CIniFile::LoadIniFile();
@@ -828,6 +828,7 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_SN", { new CCFOSlider(&CPad::m_fStickSensitivity, "Controller", "StickSensitivity", 0.2f, 3.0f, nil, 56, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_AS", { new CCFOSlider(&CPad::m_fStickAimSensitivity, "Controller", "StickAimSensitivity", 0.2f, 3.0f, nil, 56, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_CV", { new CCFOSlider(&CPad::m_fStickCurve, "Controller", "StickCurve", 1.0f, 3.0f, nil, 40, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_AZ", { new CCFOSlider(&CCamera::m_fAimZoomDegrees, "Display", "AimZoomDegrees", 0.0f, 35.0f, nil, 70, true) }, 0, 0, MENUALIGN_LEFT,
 #ifndef GAMEPAD_MENU
 		// The vibration switch lives on the gamepad page, which needs XInput, and the OpenGL
 		// build does not use XInput - so that page and its switch are never compiled.
