@@ -4728,7 +4728,7 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 				// Backspace clears the binding.  The wait has to end here as well, or the
 				// backspace that started it is still the pressed key a frame later and is
 				// bound in place of what was just cleared.
-				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_SETTING_CHANGE, 0);
+				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_ENTER_OR_ADJUST, 0);
 				for (int i = 0; i < 4; i++)
 					ControlsManager.ClearSettingsAssociatedWithAction((e_ControllerAction)m_CurrCntrlAction, (eControllerType)i);
 				m_bKeyIsOK = false;
