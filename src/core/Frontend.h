@@ -101,6 +101,10 @@
 #define BRIEFS_LINE_HEIGHT 20.0f
 #define BRIEFS_LINE_SPACING 10.0f
 
+// Squeezing the rows together to fit the actions we added only works up to a point and
+// then runs over the text under the box.  The rows keep the spacing the game was drawn
+// with and the rest is reached by scrolling; this many are what the box held originally.
+#define CONTSETUP_MAX_VISIBLE_ROWS(method) ((method) == CONTROL_CLASSIC ? 32 : 27)
 #define CONTSETUP_STANDARD_ROW_HEIGHT 10.7f
 #define CONTSETUP_CLASSIC_ROW_HEIGHT 9.0f
 #define CONTSETUP_BOUND_HIGHLIGHT_HEIGHT 10

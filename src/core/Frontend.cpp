@@ -64,7 +64,7 @@ const CRGBA SCROLLBAR_COLOR = LABEL_COLOR;
 
 #ifdef SCROLLABLE_PAGES
 #define MAX_VISIBLE_OPTION 12
-#define MAX_VISIBLE_OPTION_ON_SCREEN (hasNativeList(m_nCurrScreen) ? MAX_VISIBLE_LIST_ROW : MAX_VISIBLE_OPTION)
+#define MAX_VISIBLE_OPTION_ON_SCREEN (m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS ? CONTSETUP_MAX_VISIBLE_ROWS(m_ControlMethod) : hasNativeList(m_nCurrScreen) ? MAX_VISIBLE_LIST_ROW : MAX_VISIBLE_OPTION)
 #define SCREEN_HAS_AUTO_SCROLLBAR (m_nTotalListRow > MAX_VISIBLE_OPTION && !hasNativeList(m_nCurrScreen))
 
 int GetOptionCount(int screen)
@@ -1719,14 +1719,6 @@ CMenuManager::GetNumOptionsCntrlConfigScreens(void)
 	return number;
 }
 
-static float
-ContSetupRowHeight(float rowHeight, int numOptions, float yStart)
-{
-	if (numOptions > 1)
-		rowHeight = Min(rowHeight, ((DEFAULT_SCREEN_HEIGHT - CONTSETUP_LIST_BOTTOM) - yStart) / (numOptions - 1));
-	return rowHeight;
-}
-
 void
 CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8 column)
 {
@@ -1746,9 +1738,11 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 		default:
 			break;
 	}
-	rowHeight = ContSetupRowHeight(rowHeight, numOptions, yStart);
 
-	for (int optionIdx = 0; optionIdx < numOptions; nextY = MENU_Y(++optionIdx * rowHeight + yStart)) {
+	// Only the rows on screen are drawn, and from where the list has been scrolled to.
+	int firstRow = m_nCurrScreen == MENUPAGE_KEYBOARD_CONTROLS ? m_nFirstVisibleRowOnList : 0;
+	int lastRow = Min(numOptions, firstRow + CONTSETUP_MAX_VISIBLE_ROWS(m_ControlMethod));
+	for (int optionIdx = firstRow; optionIdx < lastRow; nextY = MENU_Y((++optionIdx - firstRow) * rowHeight + yStart)) {
 		int nextX = xStart;
 		int bindingsForThisOpt = 0;
 		int contSetOrder = SETORDER_1;
@@ -1987,7 +1981,7 @@ CMenuManager::DrawControllerBound(int32 yStart, int32 xStart, int32 unused, int8
 
 		// Highlight selected column(and make its text black)
 		if (m_nSelectedListRow == optionIdx) {
-			int bgY = m_nSelectedListRow * rowHeight + yStart + 1.0f;
+			int bgY = (m_nSelectedListRow - firstRow) * rowHeight + yStart + 1.0f;
 			if (m_nCurrExLayer == HOVEROPTION_LIST) {
 
 				if (column == CONTSETUP_PED_COLUMN && m_nSelectedContSetupColumn == CONTSETUP_PED_COLUMN) {
@@ -2285,19 +2279,19 @@ CMenuManager::DrawControllerSetupScreen()
 	else
 		yStart = CONTSETUP_LIST_TOP + 21;
 
-	rowHeight = ContSetupRowHeight(rowHeight, GetNumOptionsCntrlConfigScreens(), yStart);
-
 	float optionYBottom = yStart + rowHeight;
-	for (int i = 0; i < ARRAY_SIZE(actionTexts); ++i) {
+	int firstRow = m_nFirstVisibleRowOnList;
+	for (int i = firstRow; i < firstRow + CONTSETUP_MAX_VISIBLE_ROWS(m_ControlMethod) && i < ARRAY_SIZE(actionTexts); ++i) {
 		wchar *actionText = actionTexts[i];
 		if (!actionText)
 			break;
+		int row = i - firstRow;
 
 		if (!m_bWaitingForNewKeyBind) {
 			if (m_nMousePosX > MENU_X_LEFT_ALIGNED(CONTSETUP_LIST_LEFT - 10.0f) &&
 				m_nMousePosX < MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_3_X + CONTSETUP_BOUND_COLUMN_WIDTH)) {
 
-				if (m_nMousePosY > MENU_Y(i * rowHeight + yStart) && m_nMousePosY < MENU_Y(i * rowHeight + optionYBottom)) {
+				if (m_nMousePosY > MENU_Y(row * rowHeight + yStart) && m_nMousePosY < MENU_Y(row * rowHeight + optionYBottom)) {
 						m_nOptionMouseHovering = i;
 						if (m_nMouseOldPosX != m_nMousePosX || m_nMouseOldPosY != m_nMousePosY) {
 							m_nCurrExLayer = HOVEROPTION_LIST;
@@ -2342,7 +2336,7 @@ CMenuManager::DrawControllerSetupScreen()
 		else
 			CFont::SetScale(MENU_X(LISTITEM_X_SCALE), MENU_Y(LISTITEM_Y_SCALE));
 
-		CFont::PrintString(MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_1_X), MENU_Y(i * rowHeight + yStart), actionText);
+		CFont::PrintString(MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_1_X), MENU_Y(row * rowHeight + yStart), actionText);
 	}
 	DrawControllerBound(yStart, MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_2_X), rowHeight, CONTSETUP_PED_COLUMN);
 	DrawControllerBound(yStart, MENU_X_LEFT_ALIGNED(CONTSETUP_COLUMN_3_X), rowHeight, CONTSETUP_VEHICLE_COLUMN);
@@ -4150,6 +4144,15 @@ CMenuManager::ProcessList(bool &optionSelected, bool &goBack)
 		m_nTotalListRow = m_ControlMethod == CONTROL_CLASSIC ? 38 : 33;
 		if (m_nSelectedListRow > m_nTotalListRow)
 			m_nSelectedListRow = m_nTotalListRow - 1;
+		// The first row shown is shared with the skin list and survives switching between
+		// the two control methods, so keep it in range and the selected row on screen.
+		int visibleRows = CONTSETUP_MAX_VISIBLE_ROWS(m_ControlMethod);
+		if (m_nFirstVisibleRowOnList > m_nTotalListRow - visibleRows)
+			m_nFirstVisibleRowOnList = Max(0, m_nTotalListRow - visibleRows);
+		if (m_nSelectedListRow < m_nFirstVisibleRowOnList)
+			m_nFirstVisibleRowOnList = m_nSelectedListRow;
+		else if (m_nSelectedListRow >= m_nFirstVisibleRowOnList + visibleRows)
+			m_nFirstVisibleRowOnList = m_nSelectedListRow - visibleRows + 1;
 	}
 
 	if (CPad::GetPad(0)->GetEnterJustDown() || CPad::GetPad(0)->GetCrossJustDown()) {
