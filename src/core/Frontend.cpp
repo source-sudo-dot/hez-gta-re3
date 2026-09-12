@@ -109,6 +109,11 @@ CVector2D mapCrosshair;
 #ifdef CUTSCENE_BORDERS_SWITCH
 bool CMenuManager::m_PrefsCutsceneBorders = true;
 bool CMenuManager::m_bBorderless = false;
+bool CMenuManager::m_bStartUpMapRequested = false;
+bool CMenuManager::m_bMapOpenedDirectly = false;
+bool CMenuManager::m_bMapKeyHeldOver = false;
+bool CMenuManager::m_bMapCentreOnPlayer = false;
+float CMenuManager::m_fMapScrollSpeed = 1.0f;
 
 // index of m_PrefsFrameLimiter, 0 is no limit
 const int32 frameLimits[] = { 0, 30, 60, 75, 90, 120, 144, 165, 240 };
@@ -470,6 +475,9 @@ CMenuManager::SwitchToNewScreen(int8 screen)
 	
 	if (hasNativeList(m_nPrevScreen))
 		m_nTotalListRow = 0;
+
+	if (m_nCurrScreen == MENUPAGE_MAP)
+		m_bMapCentreOnPlayer = true;
 
 	if (m_nCurrScreen == MENUPAGE_CHOOSE_SAVE_SLOT)
 		m_nCurrOption = 8;
@@ -3602,7 +3610,41 @@ CMenuManager::Process(void)
 #endif
 	}
 
+	// The map on a button, opened straight on its page.  Pressing the key again puts it away,
+	// and leaving the page closes the menu rather than dropping the player into the pause
+	// menu he never asked for.
+	if (!m_bMenuActive)
+		m_bMapOpenedDirectly = false;
+	if (m_bMapOpenedDirectly) {
+		if (m_nCurrScreen == MENUPAGE_MAP && CPad::GetPad(0)->NewState.Map && !CPad::GetPad(0)->OldState.Map) {
+			m_bMapOpenedDirectly = false;
+			// shutting the menu down clears the pads, so a key still held would read as a
+			// fresh press on the next frame and open the map again at once
+			m_bMapKeyHeldOver = true;
+			RequestFrontEndShutDown();
+		} else if (m_nCurrScreen != MENUPAGE_MAP && m_nCurrScreen != MENUPAGE_NONE) {
+			m_bMapOpenedDirectly = false;
+			RequestFrontEndShutDown();
+		}
+	}
+	bool openMap = false;
+	if (m_bStartUpMapRequested) {
+		m_bStartUpMapRequested = false;
+		// through the ordinary way in, which loads the textures the map is drawn with
+		if (!m_bMenuActive && !m_bGameNotLoaded) {
+			m_bStartUpFrontEndRequested = true;
+			openMap = true;
+		}
+	}
+
 	SwitchMenuOnAndOff();
+
+	if (openMap && m_bMenuActive) {
+		m_bMapOpenedDirectly = true;
+		m_bMapCentreOnPlayer = true;
+		m_nCurrScreen = MENUPAGE_MAP;
+		m_nCurrOption = 0;
+	}
 }
 
 #ifdef MAP_ENHANCEMENTS
@@ -3618,6 +3660,23 @@ CMenuManager::Process(void)
 			break; \
 		\
 		m_fMapSize *= z2; \
+		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2); \
+		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2); \
+	} while(0)
+
+// ZOOM by any factor instead of one fixed step, for the triggers.  The size is kept inside
+// the same two limits, since a factor can step past them where a fixed step lands on them.
+#define ZOOM_BY(x, y, factor) \
+	do { \
+		float z2 = (factor); \
+		bool in = z2 > 1.0f; \
+		if(m_fMapSize >= MENU_Y(1000.0f) && in) \
+			break; \
+		if (m_fMapSize <= MENU_Y(MAP_MIN_SIZE) && !in) \
+			break; \
+		m_fMapCenterX += (x - m_fMapCenterX) * (1.0f - z2); \
+		m_fMapCenterY += (y - m_fMapCenterY) * (1.0f - z2); \
+		m_fMapSize = Clamp(m_fMapSize * z2, MENU_Y(MAP_MIN_SIZE), MENU_Y(1000.0f)); \
 		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2); \
 		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2); \
 	} while(0)
@@ -3681,17 +3740,29 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				}
 			}
 
-			if (CPad::GetPad(0)->GetMouseWheelDown() || CPad::GetPad(0)->GetPageDown() || CPad::GetPad(0)->GetRightShoulder2()) {
+			if (CPad::GetPad(0)->GetMouseWheelDown() || CPad::GetPad(0)->GetPageDown()) {
 				if (CPad::GetPad(0)->GetMouseWheelDown() && m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE))
 					ZOOM(mapCrosshair.x, mapCrosshair.y, false);
 				else
 					ZOOM(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, false);
 
-			} else if (CPad::GetPad(0)->GetMouseWheelUp() || CPad::GetPad(0)->GetPageUp() || CPad::GetPad(0)->GetRightShoulder1()) {
+			} else if (CPad::GetPad(0)->GetMouseWheelUp() || CPad::GetPad(0)->GetPageUp()) {
 				if (CPad::GetPad(0)->GetMouseWheelUp())
 					ZOOM(mapCrosshair.x, mapCrosshair.y, true);
 				else
 					ZOOM(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, true);
+			} else {
+				// The triggers zoom by how far they are pushed rather than in steps: R2 in, L2
+				// out, so a light pull creeps and a full one races.  It is an amount per second,
+				// so the same pull covers the same ground at any frame rate.
+				float pull = CPad::GetTriggerRight() - CPad::GetTriggerLeft();
+				if (Abs(pull) > 0.08f) {
+					float amount = (Abs(pull) - 0.08f) / 0.92f;
+					float seconds = CTimer::GetRenderFrameLength() / (float)LOGICAL_FRAME_RATE;
+					// six and a half times the size a second at a full pull
+					float factor = Pow(6.5625f, amount * seconds);
+					ZOOM_BY(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, pull > 0.0f ? factor : 1.0f / factor);
+				}
 			}
 			
 			static bool justResetPointer = false;
@@ -3706,6 +3777,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 
 			} else
 #undef ZOOM
+#undef ZOOM_BY
 #endif
 
 			{
@@ -3715,7 +3787,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadUp() || CPad::GetPad(0)->GetAnalogueUpDown() < 0) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if ((m_fMapSize - MENU_Y(MAP_MIN_SIZE)) + SCREEN_HEIGHT/2 > m_fMapCenterY)
-							m_fMapCenterY += MENU_Y(15.f);
+							m_fMapCenterY += MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f);
 						m_bShowMouse = false;
 					}				
 				}
@@ -3724,7 +3796,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadDown() || CPad::GetPad(0)->GetAnalogueUpDown() > 0) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)) < m_fMapCenterY)
-							m_fMapCenterY -= MENU_Y(15.f);
+							m_fMapCenterY -= MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f);
 						m_bShowMouse = false;
 					}				
 				}
@@ -3733,7 +3805,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadLeft() || CPad::GetPad(0)->GetAnalogueLeftRight() < 0) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2 > m_fMapCenterX)
-							m_fMapCenterX += MENU_X(15.f);
+							m_fMapCenterX += MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f);
 						m_bShowMouse = false;
 					}				
 				}
@@ -3752,7 +3824,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadRight() || CPad::GetPad(0)->GetAnalogueLeftRight() > 0) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)) < m_fMapCenterX)
-							m_fMapCenterX -= MENU_X(15.f);
+							m_fMapCenterX -= MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f);
 						m_bShowMouse = false;
 					}				
 				}
@@ -4557,6 +4629,17 @@ CMenuManager::UserInput(void)
 			else if (option == MENUACTION_DRAWDIST || option == MENUACTION_MOUSESENS)
 				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_ENTER_OR_ADJUST, 0);
 
+		}
+		// The back button put away every page but the pause menu, so only start or escape
+		// could return to the game.  The pause menu has no page before it, so back resumes,
+		// the same as its first entry does.
+		if (m_nCurrScreen == MENUPAGE_PAUSE_MENU && !m_bGameNotLoaded && CPad::GetPad(0)->GetBackJustDown()) {
+#ifdef LEGACY_MENU_OPTIONS
+			if (m_PrefsVsyncDisp != m_PrefsVsync)
+				m_PrefsVsync = m_PrefsVsyncDisp;
+#endif
+			m_bShowMouse = false;
+			RequestFrontEndShutDown();
 		}
 		if (CPad::GetPad(0)->GetBackJustDown() || CPad::GetPad(0)->GetEscapeJustDown()) {
 			if (m_nCurrScreen != MENUPAGE_START_MENU && m_nCurrScreen != MENUPAGE_PAUSE_MENU && m_nCurrScreen != MENUPAGE_CHOOSE_SAVE_SLOT
@@ -5909,6 +5992,20 @@ CMenuManager::PrintMap(void)
 {
 	m_bMenuMapActive = true;
 	CRadar::InitFrontEndMap();
+
+	// The map opened wherever it was left.  On the way into the page it is moved so the
+	// player sits in the middle, as far as the edges of the map allow.
+	if (m_bMapCentreOnPlayer) {
+		m_bMapCentreOnPlayer = false;
+		CVector2D radarSpacePlayer;
+		CVector2D screenSpacePlayer;
+		CRadar::TransformRealWorldPointToRadarSpace(radarSpacePlayer, CVector2D(FindPlayerCoors()));
+		CRadar::TransformRadarPointToScreenSpace(screenSpacePlayer, radarSpacePlayer);
+		m_fMapCenterX += SCREEN_WIDTH / 2 - screenSpacePlayer.x;
+		m_fMapCenterY += SCREEN_HEIGHT / 2 - screenSpacePlayer.y;
+		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2);
+		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2);
+	}
 
 	// Because m_fMapSize is half of the map length(hence * 2), and map consists of 3x3 tiles(hence / 3).
 	float halfTile = m_fMapSize * 2.f / 3.f / 2.f;

@@ -1392,15 +1392,15 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 			LookLeftRight = m_fMultiHori*MouseX;
 			LookUpDown = m_fMultiVert*MouseY;
 		}else{
-			LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRight();
-			LookUpDown = CPad::GetPad(0)->LookAroundUpDown();
+			LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRightFloat();
+			LookUpDown = CPad::GetPad(0)->LookAroundUpDownFloat();
 		}
 		if(UseMouse){
 			BetaOffset = LookLeftRight * TheCamera.m_fMouseAccelHorzntl * FOV/80.0f;
 			AlphaOffset = LookUpDown * TheCamera.m_fMouseAccelVertical * FOV/80.0f;
 		}else{
-			BetaOffset = LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * CTimer::GetTimeStep();
-			AlphaOffset = LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * CTimer::GetTimeStep();
+			BetaOffset = LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * (CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f));
+			AlphaOffset = LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * (CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f));
 		}
 	}
 
@@ -2253,17 +2253,20 @@ CCam::Process_Rocket(const CVector &CameraTarget, float, float, float)
 		LookLeftRight = m_fMultiHori*MouseX;
 		LookUpDown = m_fMultiVert*MouseY;
 	}else{
-		LookLeftRight = -CPad::GetPad(0)->SniperModeLookLeftRight();
-		LookUpDown = CPad::GetPad(0)->SniperModeLookUpDown();
+		LookLeftRight = -CPad::GetPad(0)->SniperModeLookLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->SniperModeLookUpDownFloat();
 	}
 	if(UseMouse){
 		Beta += TheCamera.m_fMouseAccelHorzntl * LookLeftRight * FOV/80.0f;
 		Alpha += TheCamera.m_fMouseAccelVertical * LookUpDown * FOV/80.0f;
 	}else{
-		float xdir = LookLeftRight < 0.0f ? -1.0f : 1.0f;
-		float ydir = LookUpDown < 0.0f ? -1.0f : 1.0f;
-		Beta += SQR(LookLeftRight/100.0f)*xdir*0.8f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
-		Alpha += SQR(LookUpDown/150.0f)*ydir*1.0f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
+		// The stick is already shaped by the time it gets here, so squaring it again the
+		// way this used to would bend it twice.  It is applied the way the follow camera
+		// applies it, which puts the sights on the same sensitivity, and the time scale is
+		// divided back out so slow motion does not slow the aim.
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		Beta += LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * lookStep;
+		Alpha += LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * lookStep;
 	}
 	while(Beta >= PI) Beta -= 2*PI;
 	while(Beta < -PI) Beta += 2*PI;
@@ -2355,22 +2358,26 @@ CCam::Process_M16_1stPerson(const CVector &CameraTarget, float, float, float)
 		LookLeftRight = m_fMultiHori*MouseX;
 		LookUpDown = m_fMultiVert*MouseY;
 	}else{
-		LookLeftRight = -CPad::GetPad(0)->SniperModeLookLeftRight();
-		LookUpDown = CPad::GetPad(0)->SniperModeLookUpDown();
+		LookLeftRight = -CPad::GetPad(0)->SniperModeLookLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->SniperModeLookUpDownFloat();
 	}
 	if(UseMouse){
 		Beta += TheCamera.m_fMouseAccelHorzntl * LookLeftRight * FOV/80.0f;
 		Alpha += TheCamera.m_fMouseAccelVertical * LookUpDown * FOV/80.0f;
 	}else if(Mode == MODE_HELICANNON_1STPERSON){
-		LookLeftRight /= 128.0f;
-		LookUpDown /= 128.0f;
-		Beta += LookLeftRight*Abs(LookLeftRight)*0.56f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
-		Alpha += LookUpDown*Abs(LookUpDown)*0.48f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
+		// the cannon squared the whole number range itself; it takes the shaped stick like
+		// the sights do, at the same share of their speed it always had
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		Beta += LookLeftRight * fStickSens * (0.7f/14.0f) * FOV/80.0f * lookStep;
+		Alpha += LookUpDown * fStickSens * (0.42f/14.0f) * FOV/80.0f * lookStep;
 	}else{
-		float xdir = LookLeftRight < 0.0f ? -1.0f : 1.0f;
-		float ydir = LookUpDown < 0.0f ? -1.0f : 1.0f;
-		Beta += SQR(LookLeftRight/100.0f)*xdir*0.8f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
-		Alpha += SQR(LookUpDown/150.0f)*ydir*1.0f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
+		// The stick is already shaped by the time it gets here, so squaring it again the
+		// way this used to would bend it twice.  It is applied the way the follow camera
+		// applies it, which puts the sights on the same sensitivity, and the time scale is
+		// divided back out so slow motion does not slow the aim.
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		Beta += LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * lookStep;
+		Alpha += LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * lookStep;
 	}
 	if (!isAttached) {
 		while(Beta >= TWOPI) Beta -= TWOPI;
@@ -2564,12 +2571,15 @@ CCam::Process_1stPerson(const CVector &CameraTarget, float TargetOrientation, fl
 		}
 
 		float LookLeftRight, LookUpDown;
-		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRight();
-		LookUpDown = CPad::GetPad(0)->LookAroundUpDown();
-		float xdir = LookLeftRight < 0.0f ? -1.0f : 1.0f;
-		float ydir = LookUpDown < 0.0f ? -1.0f : 1.0f;
-		Beta += SQR(LookLeftRight/100.0f)*xdir*0.8f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
-		Alpha += SQR(LookUpDown/150.0f)*ydir*1.0f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
+		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->LookAroundUpDownFloat();
+		// The stick is already shaped by the time it gets here, so squaring it again the
+		// way this used to would bend it twice.  It is applied the way the follow camera
+		// applies it, which puts the sights on the same sensitivity, and the time scale is
+		// divided back out so slow motion does not slow the aim.
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		Beta += LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * lookStep;
+		Alpha += LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * lookStep;
 		while(Beta >= PI) Beta -= 2*PI;
 		while(Beta < -PI) Beta += 2*PI;
 		if(Alpha > DEGTORAD(60.0f)) Alpha = DEGTORAD(60.0f);
@@ -2766,17 +2776,20 @@ CCam::Process_1rstPersonPedOnPC(const CVector&, float TargetOrientation, float, 
 			LookLeftRight = m_fMultiHori*MouseX;
 			LookUpDown = m_fMultiVert*MouseY;
 		}else{
-			LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRight();
-			LookUpDown = CPad::GetPad(0)->LookAroundUpDown();
+			LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRightFloat();
+			LookUpDown = CPad::GetPad(0)->LookAroundUpDownFloat();
 		}
 		if(UseMouse){
 			Beta += TheCamera.m_fMouseAccelHorzntl * LookLeftRight * FOV/80.0f;
 			Alpha += TheCamera.m_fMouseAccelVertical * LookUpDown * FOV/80.0f;
 		}else{
-			float xdir = LookLeftRight < 0.0f ? -1.0f : 1.0f;
-			float ydir = LookUpDown < 0.0f ? -1.0f : 1.0f;
-			Beta += SQR(LookLeftRight/100.0f)*xdir*0.8f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
-			Alpha += SQR(LookUpDown/150.0f)*ydir*1.0f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
+			// The stick is already shaped by the time it gets here, so squaring it again the
+			// way this used to would bend it twice.  It is applied the way the follow camera
+			// applies it, which puts the sights on the same sensitivity, and the time scale is
+			// divided back out so slow motion does not slow the aim.
+			float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+			Beta += LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * lookStep;
+			Alpha += LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * lookStep;
 		}
 		while(Beta >= PI) Beta -= 2*PI;
 		while(Beta < -PI) Beta += 2*PI;
@@ -2905,17 +2918,20 @@ CCam::Process_Sniper(const CVector &CameraTarget, float TargetOrientation, float
 		LookLeftRight = m_fMultiHori*MouseX;
 		LookUpDown = m_fMultiVert*MouseY;
 	}else{
-		LookLeftRight = -CPad::GetPad(0)->SniperModeLookLeftRight();
-		LookUpDown = CPad::GetPad(0)->SniperModeLookUpDown();
+		LookLeftRight = -CPad::GetPad(0)->SniperModeLookLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->SniperModeLookUpDownFloat();
 	}
 	if(UseMouse){
 		Beta += TheCamera.m_fMouseAccelHorzntl * LookLeftRight * FOV/80.0f;
 		Alpha += TheCamera.m_fMouseAccelVertical * LookUpDown * FOV/80.0f;
 	}else{
-		float xdir = LookLeftRight < 0.0f ? -1.0f : 1.0f;
-		float ydir = LookUpDown < 0.0f ? -1.0f : 1.0f;
-		Beta += SQR(LookLeftRight/100.0f)*xdir*0.8f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
-		Alpha += SQR(LookUpDown/150.0f)*ydir*1.0f/14.0f * FOV/80.0f * CTimer::GetTimeStep();
+		// The stick is already shaped by the time it gets here, so squaring it again the
+		// way this used to would bend it twice.  It is applied the way the follow camera
+		// applies it, which puts the sights on the same sensitivity, and the time scale is
+		// divided back out so slow motion does not slow the aim.
+		float lookStep = CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f);
+		Beta += LookLeftRight * fStickSens * (1.0f/14.0f) * FOV/80.0f * lookStep;
+		Alpha += LookUpDown * fStickSens * (0.6f/14.0f) * FOV/80.0f * lookStep;
 	}
 	while(Beta >= PI) Beta -= 2*PI;
 	while(Beta < -PI) Beta += 2*PI;
@@ -4645,16 +4661,16 @@ CCam::Process_FollowPed_Rotation(const CVector &CameraTarget, float TargetOrient
 	}else
 */
 	{
-		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRight();
-		LookUpDown = CPad::GetPad(0)->LookAroundUpDown();
+		LookLeftRight = -CPad::GetPad(0)->LookAroundLeftRightFloat();
+		LookUpDown = CPad::GetPad(0)->LookAroundUpDownFloat();
 	}
 	float AlphaOffset, BetaOffset;
 	if(UseMouse){
 		BetaOffset = LookLeftRight * TheCamera.m_fMouseAccelHorzntl * FOV/80.0f;
 		AlphaOffset = LookUpDown * TheCamera.m_fMouseAccelVertical * FOV/80.0f;
 	}else{
-		BetaOffset = LookLeftRight * fStickSens * (1.0f/20.0f) * FOV/80.0f * CTimer::GetTimeStep();
-		AlphaOffset = LookUpDown * fStickSens * (0.6f/20.0f) * FOV/80.0f * CTimer::GetTimeStep();
+		BetaOffset = LookLeftRight * fStickSens * (1.0f/20.0f) * FOV/80.0f * (CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f));
+		AlphaOffset = LookUpDown * fStickSens * (0.6f/20.0f) * FOV/80.0f * (CTimer::GetTimeStep() / Max(CTimer::GetTimeScale(), 0.01f));
 	}
 
 	// Stop centering once stick has been touched

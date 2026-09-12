@@ -767,6 +767,18 @@ public:
 	};
 	bool GetIsMenuActive() {return !!m_bMenuActive;}
 
+	// the map on a button: opened straight on its page and closed again when it is left
+	static bool m_bStartUpMapRequested;
+	static bool m_bMapOpenedDirectly;
+	// set when the map key closed the map, cleared once it is let go, so the same press
+	// cannot open it straight back up
+	static bool m_bMapKeyHeldOver;
+	// set on the way into the map page, cleared once PrintMap has centred on the player
+	static bool m_bMapCentreOnPlayer;
+	// MAP SCROLL SPEED on the gamepad settings page
+	static float m_fMapScrollSpeed;
+	static void RequestMap(void) { m_bStartUpMapRequested = true; }
+
 #ifdef CUTSCENE_BORDERS_SWITCH
 	static bool m_PrefsCutsceneBorders;
 	// borderless fullscreen, Borderless=1 under [VideoMode] in reVC.ini

@@ -855,6 +855,15 @@ void CGame::Process(void)
 #endif
 	CCutsceneMgr::Update();
 
+	// The map on a button.  Once the key has closed the map it is ignored until it is let go,
+	// or the press that closed it would open it straight back up.
+	if (!FrontEndMenuManager.m_bMenuActive) {
+		if (!CPad::GetPad(0)->NewState.Map)
+			CMenuManager::m_bMapKeyHeldOver = false;
+		else if (CPad::GetPad(0)->GetMapJustDown() && !CMenuManager::m_bMapKeyHeldOver)
+			CMenuManager::RequestMap();
+	}
+
 	if (!CCutsceneMgr::IsCutsceneProcessing() && !CTimer::GetIsCodePaused() && !FrontEndMenuManager.m_bMenuActive)
 		FrontEndMenuManager.Process();
 

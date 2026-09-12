@@ -833,6 +833,7 @@ CMenuScreenCustom aScreens[] = {
 		// build does not use XInput - so that page and its switch are never compiled.
 		MENUACTION_CFO_SELECT,	"FEC_VIB", { new CCFOSelect((int8*)&FrontEndMenuManager.m_PrefsUseVibration, "Controller", "Vibration", off_on, 2, false, VibrationAfterChange) }, 0, 0, MENUALIGN_LEFT,
 #endif
+		MENUACTION_CFO_SLIDER,	"FEZ_MSS", { new CCFOSlider(&CMenuManager::m_fMapScrollSpeed, "Display", "MapScrollSpeed", 0.1f, 3.0f, nil, 58, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
 	},
 

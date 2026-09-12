@@ -843,12 +843,12 @@ void CRadar::DrawRadarSprite(uint16 sprite, float x, float y, uint8 alpha)
 	}
 }
 
-void CRadar::DrawRotatingRadarSprite(CSprite2d* sprite, float x, float y, float angle, int32 alpha)
+void CRadar::DrawRotatingRadarSprite(CSprite2d* sprite, float x, float y, float angle, int32 alpha, float size)
 {
 	CVector curPosn[4];
-	const float sizeX = SCREEN_SCALE_X(8.0f);
+	const float sizeX = SCREEN_SCALE_X(size);
 	const float correctedAngle = angle - PI / 4.f;
-	const float sizeY = SCREEN_SCALE_Y(8.0f);
+	const float sizeY = SCREEN_SCALE_Y(size);
 
 	for (uint32 i = 0; i < 4; i++) {
 		const float cornerAngle = i * HALFPI + correctedAngle;
@@ -1443,46 +1443,10 @@ CRadar::InitFrontEndMap()
 void
 CRadar::DrawYouAreHereSprite(float x, float y)
 {
-	static uint32 lastChange = 0;
-	static bool show = true;
-
-	if (show) {
-		if (CTimer::GetTimeInMillisecondsPauseMode() - lastChange > 500) {
-			lastChange = CTimer::GetTimeInMillisecondsPauseMode();
-			show = !show;
-		}
-	} else {
-		if (CTimer::GetTimeInMillisecondsPauseMode() - lastChange > 200) {
-			lastChange = CTimer::GetTimeInMillisecondsPauseMode();
-			show = !show;
-		}
-	}
-
-	if (show) {
-		const float left = x - SCREEN_SCALE_X(8.0f);
-		const float top = y - SCREEN_SCALE_Y(40.0f);
-		const float right = x + SCREEN_SCALE_X(40.0);
-		const float bottom = y + SCREEN_SCALE_Y(8.0f);
-		MapHereSprite.Draw(CRect(left + SCREEN_SCALE_X(2.f), top + SCREEN_SCALE_Y(2.f), right + SCREEN_SCALE_X(2.f), bottom + SCREEN_SCALE_Y(2.f)),
-			CRGBA(0, 0, 0, 255));
-
-		MapHereSprite.Draw(CRect(left, top, right, bottom), CRGBA(255, 255, 255, 255));
-
-		CFont::SetWrapx(right + SCREEN_SCALE_X(28.0f));
-		CFont::SetRightJustifyWrap(right);
-		CFont::SetBackGroundOnlyTextOff();
-		CFont::SetColor(CRGBA(255, 150, 225, 255));
-		CFont::SetDropShadowPosition(2);
-		CFont::SetDropColor(CRGBA(0, 0, 0, 255));
-		CFont::SetCentreOff();
-		CFont::SetRightJustifyOff();
-		CFont::SetFontStyle(FONT_LOCALE(FONT_HEADING));
-		CFont::SetScale(SCREEN_SCALE_X(0.65f), SCREEN_SCALE_Y(0.95f));
-		CFont::PrintString(right, top, TheText.Get("MAP_YAH"));
-		CFont::SetDropShadowPosition(0);
-		CFont::DrawFonts();
-	}
-	MapLegendList[MapLegendCounter++] = RADAR_SPRITE_MAP_HERE;
+	// The player was a pin that blinked, which says where he is but not which way he faces.
+	// An arrow says both.  The map is drawn north up, so the heading needs no camera term -
+	// the radar's own formula with the camera looking north.
+	DrawRotatingRadarSprite(&CentreSprite, x, y, FindPlayerHeading() - PI, 255, 11.0f);
 }
 
 #ifdef MAP_ENHANCEMENTS
