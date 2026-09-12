@@ -3640,6 +3640,9 @@ CMenuManager::Process(void)
 	SwitchMenuOnAndOff();
 
 	if (openMap && m_bMenuActive) {
+		// the menu comes up with the mouse pointer on, and the map crosshair follows the pointer
+		// while it is, off to wherever it was last left
+		m_bShowMouse = false;
 		m_bMapOpenedDirectly = true;
 		m_bMapCentreOnPlayer = true;
 		m_nCurrScreen = MENUPAGE_MAP;
@@ -4570,7 +4573,9 @@ CMenuManager::UserInput(void)
 				optionSelected = true;
 			}
 		} else {
-			if (CPad::GetPad(0)->GetEnterJustDown() || CPad::GetPad(0)->GetCrossJustDown()) {
+			// The map's only entry is back, so cross picked it and closed the map, when cross is
+			// what sets a waypoint there.  On the map only enter picks the entry.
+			if (CPad::GetPad(0)->GetEnterJustDown() || CPad::GetPad(0)->GetCrossJustDown() && m_nCurrScreen != MENUPAGE_MAP) {
 				m_bShowMouse = false;
 				optionSelected = true;
 			}
@@ -6017,6 +6022,14 @@ CMenuManager::PrintMap(void)
 	// player sits in the middle, as far as the edges of the map allow.
 	if (m_bMapCentreOnPlayer) {
 		m_bMapCentreOnPlayer = false;
+#ifdef MAP_ENHANCEMENTS
+		// the crosshair only came to the middle while the page was still fading in, so it was
+		// missing whenever the page was entered some other way
+		if (!m_bShowMouse) {
+			mapCrosshair.x = SCREEN_WIDTH / 2;
+			mapCrosshair.y = SCREEN_HEIGHT / 2;
+		}
+#endif
 		CVector2D radarSpacePlayer;
 		CVector2D screenSpacePlayer;
 		CRadar::TransformRealWorldPointToRadarSpace(radarSpacePlayer, CVector2D(FindPlayerCoors()));
