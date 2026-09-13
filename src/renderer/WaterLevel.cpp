@@ -921,14 +921,20 @@ CWaterLevel::RenderWater()
 	
 	if ( !CTimer::GetIsPaused() )
 	{
-		TEXTURE_ADDU       += windAddUV;
-		TEXTURE_ADDV       += windAddUV;
+		// These are moved on every time the water is drawn, which was once a frame at thirty a
+		// second.  The frame is drawn as often as the screen allows now, so at 144 the water ran
+		// nearly five times as fast.  The step is scaled by the time the drawn frame took against
+		// a thirtieth of a second, the way the master branch does for its water.
+		float step = CTimer::GetTimeStepFix();
+
+		TEXTURE_ADDU       += windAddUV * step;
+		TEXTURE_ADDV       += windAddUV * step;
 		
-		_TEXTURE_MASK_ADDU += Sin(fAngle) 		 * 0.0005f + 1.1f * windAddUV;
-		_TEXTURE_MASK_ADDV -= Cos(fAngle * 1.3f) * 0.0005f + 1.2f * windAddUV;
+		_TEXTURE_MASK_ADDU += (Sin(fAngle) 		 * 0.0005f + 1.1f * windAddUV) * step;
+		_TEXTURE_MASK_ADDV -= (Cos(fAngle * 1.3f) * 0.0005f + 1.2f * windAddUV) * step;
 		
-		_TEXTURE_WAKE_ADDU -= Sin(fAngle) 		 * 0.0003f + windAddUV;
-		_TEXTURE_WAKE_ADDV += Cos(fAngle * 0.7f) * 0.0003f + windAddUV;
+		_TEXTURE_WAKE_ADDU -= (Sin(fAngle) 		 * 0.0003f + windAddUV) * step;
+		_TEXTURE_WAKE_ADDV += (Cos(fAngle * 0.7f) * 0.0003f + windAddUV) * step;
 	}
 	
 	if ( _TEXTURE_MASK_ADDU >= 1.0f )
