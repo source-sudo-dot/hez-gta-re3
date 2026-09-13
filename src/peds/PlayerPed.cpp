@@ -33,6 +33,11 @@ float CPlayerPed::m_fAimRaiseSpeed = 2.0f;
 bool  CPlayerPed::bAimAssist = true;
 float CPlayerPed::m_fAimAssistStrength = 0.45f;
 bool  CPlayerPed::bIsAimPosed = false;
+
+// Whether the stick is pushed far enough this frame that the player means to run, which is
+// where the walk and run animations cross over.  Set by both on foot controls just before
+// SetRealMoveAnim() reads it.
+static bool bPadAsksToRun = false;
 bool CPlayerPed::bDontAllowWeaponChange;
 #ifndef MASTER
 bool CPlayerPed::bDebugPlayerInfo;
@@ -404,7 +409,11 @@ CPlayerPed::SetRealMoveAnim(void)
 				if (curWalkStartAssoc) {
 					curWalkStartAssoc->blendAmount = 1.0f;
 					curWalkStartAssoc->blendDelta = 0.0f;
-				} else {
+				} else if (!bPadAsksToRun) {
+					// Walk and run only start once the walk start has played out, and Vice City's is a
+					// full step long, so pushing the stick all the way from standing still walked for
+					// most of a second before the run came.  It is kept for setting off gently and left
+					// out when the stick asks to run.
 					curWalkStartAssoc = CAnimManager::AddAnimation(GetClump(), m_animGroup, ANIM_STD_STARTWALK);
 				}
 				if (curWalkAssoc)
@@ -885,6 +894,7 @@ CPlayerPed::PlayerControl1stPersonRunAround(CPad *padUsed)
 	float upDown = padUsed->GetPedWalkUpDown();
 	float padMove = CVector2D(leftRight, upDown).Magnitude();
 	float padMoveInGameUnit = padMove / PAD_MOVE_TO_GAME_WORLD_MOVE;
+	bPadAsksToRun = padMoveInGameUnit >= 1.0f;
 	if (padMoveInGameUnit > 0.0f) {
 		m_fRotationDest = CGeneral::LimitRadianAngle(TheCamera.Orientation);
 		m_fMoveSpeed = Min(padMoveInGameUnit, 0.07f * CTimer::GetTimeStep() + m_fMoveSpeed);
@@ -1532,6 +1542,8 @@ CPlayerPed::PlayerControlZelda(CPad *padUsed)
 		smoothSprayWithoutMove = false;
 	}
 #endif
+
+	bPadAsksToRun = padMoveInGameUnit >= 1.0f;
 
 	if (padMoveInGameUnit > 0.0f || smoothSprayWithoutMove) {
 		float padHeading = CGeneral::GetRadianAngleBetweenPoints(0.0f, 0.0f, -leftRight, upDown);
@@ -2382,6 +2394,10 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 			}
 
 			FadeAimPoseOut(this, info, Max(m_fAimRaiseSpeed, 0.1f));
+			// and stop telling the arm where to aim, or it stays up on its own; a lock on target
+			// aims the arm itself and is left alone
+			if (m_pPointGunAt == nil)
+				ClearAimFlag();
 		}
 		return;
 	}
@@ -2414,6 +2430,15 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	}
 
 	bIsAimPosed = true;
+
+	// Vice City only brings the arm part of the way up with the animation - the handguns sit at
+	// half height on the ready frame - and lifts it the rest of the way with IK, towards the
+	// direction it is told to aim in.  Without the free camera it only ever tells it that once
+	// an attack starts, so the held pose stopped at half height.  These are the two lines the
+	// game itself uses for the mouse camera when an attack starts, every frame the pose is held
+	// so the pitch follows the camera.
+	SetAimFlag(m_fRotationCur);
+	m_fFPSMoveHeading = TheCamera.Find3rdPersonQuickAimPitch();
 
 	// held at the ready, exactly where PointGunAt would hold it
 	if (assoc->currentTime >= info->m_fAnimLoopStart) {
