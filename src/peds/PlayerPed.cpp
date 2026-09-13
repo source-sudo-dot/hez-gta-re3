@@ -41,6 +41,9 @@ bool  CPlayerPed::bIsAimPosed = false;
 // SetRealMoveAnim() reads it.
 static bool bPadAsksToRun = false;
 
+// which on foot control ran last, for the StickDebug log: 1 sniper, 2 first person run around, 3 fighter, 4 zelda
+int gControlPath = 0;
+
 // one line for the StickDebug overlay about the player's aim and movement, filled each frame
 char gPlayerDebugLine[160];
 bool CPlayerPed::bDontAllowWeaponChange;
@@ -1707,7 +1710,6 @@ CPlayerPed::FindNewAttackPoints(void)
 // forty five frames from the moment the stick is pushed hard from rest, and forty five from the
 // moment Target/Aim goes down.  A soft blend or an arm that settles over a few frames cannot be
 // read off a still image, so it is written down instead.  Nothing here changes how the game plays.
-int gControlPath = 0;	// 1 sniper, 2 first person run around, 3 fighter, 4 zelda
 extern float gIKDebugUaYaw;
 extern float gIKDebugUaPitch;
 extern float gIKDebugClavYaw;
