@@ -696,6 +696,7 @@ CPlayerPed::IsThisPedAnAimingPriority(CPed *suspect)
 void
 CPlayerPed::PlayerControlSniper(CPad *padUsed)
 {
+	gControlPath = 1;
 	ProcessWeaponSwitch(padUsed);
 	TheCamera.PlayerExhaustion = (1.0f - (m_fCurrentStamina - -150.0f) / 300.0f) * 0.9f + 0.1f;
 
@@ -870,6 +871,7 @@ CPlayerPed::PlayerControlM16(CPad *padUsed)
 void
 CPlayerPed::PlayerControlFighter(CPad *padUsed)
 {
+	gControlPath = 3;
 	float leftRight = padUsed->GetPedWalkLeftRight();
 	float upDown = padUsed->GetPedWalkUpDown();
 	float padMove = CVector2D(leftRight, upDown).Magnitude();
@@ -895,6 +897,7 @@ CPlayerPed::PlayerControlFighter(CPad *padUsed)
 void
 CPlayerPed::PlayerControl1stPersonRunAround(CPad *padUsed)
 {
+	gControlPath = 2;
 	float leftRight = padUsed->GetPedWalkLeftRight();
 	float upDown = padUsed->GetPedWalkUpDown();
 	float padMove = CVector2D(leftRight, upDown).Magnitude();
@@ -1522,6 +1525,7 @@ CPlayerPed::MovementDisabledBecauseOfTargeting(void)
 void
 CPlayerPed::PlayerControlZelda(CPad *padUsed)
 {
+	gControlPath = 4;
 	float smoothSprayRate = DoWeaponSmoothSpray();
 	float camOrientation = TheCamera.Orientation;
 	float leftRight = padUsed->GetPedWalkLeftRight();
@@ -1698,6 +1702,85 @@ CPlayerPed::FindNewAttackPoints(void)
 	}
 }
 
+
+// StickDebug=1 writes what the player does frame by frame to reVC_debug.log in the game folder:
+// forty five frames from the moment the stick is pushed hard from rest, and forty five from the
+// moment Target/Aim goes down.  A soft blend or an arm that settles over a few frames cannot be
+// read off a still image, so it is written down instead.  Nothing here changes how the game plays.
+int gControlPath = 0;	// 1 sniper, 2 first person run around, 3 fighter, 4 zelda
+extern float gIKDebugUaYaw;
+extern float gIKDebugUaPitch;
+extern float gIKDebugClavYaw;
+extern int gIKDebugUaStatus;
+
+static void
+WritePlayerDebugLog(CPlayerPed *ped, CPad *pad)
+{
+	static int32 moveFrames = 0;
+	static int32 aimFrames = 0;
+	static bool stickWasAtRest = true;
+	static CVector lastPos;
+
+	if (pad == nil)
+		return;
+
+	float sx = pad->GetPedWalkLeftRight();
+	float sy = pad->GetPedWalkUpDown();
+	float stickLen = Sqrt(SQR(sx) + SQR(sy));
+
+	const char *startReason = nil;
+	if (moveFrames == 0 && aimFrames == 0) {
+		if (stickWasAtRest && stickLen >= 100.0f && ped->m_fMoveSpeed == 0.0f) {
+			moveFrames = 45;
+			startReason = "MOVE";
+		} else if (pad->TargetJustDown()) {
+			aimFrames = 45;
+			startReason = "AIM";
+		}
+	}
+	stickWasAtRest = stickLen < 20.0f;
+
+	if (moveFrames == 0 && aimFrames == 0)
+		return;
+
+	FILE *f = fopen("reVC_debug.log", "a");
+	if (f == nil)
+		return;
+
+	CVector pos = ped->GetPosition();
+	if (startReason) {
+		fprintf(f, "\n=== %s start, time %u ms, weapon %d ===\n", startReason, CTimer::GetTimeInMilliseconds(),
+			(int)ped->GetWeapon()->m_eWeaponType);
+		lastPos = pos;
+	}
+
+	float moved2d = (pos - lastPos).Magnitude2D();
+	lastPos = pos;
+
+	fprintf(f, "t %u ts %.3f path %d freecam %d mouse3rd %d state %d move %d spd %.3f stick %.0f,%.0f "
+		"posdelta %.4f animdelta %.4f,%.4f moved %.4f,%.4f rot %.3f dest %.3f camori %.3f look %.3f "
+		"ik %d ua %.3f,%.3f la %.3f torso %.3f,%.3f uareq %.3f,%.3f clav %.3f uastat %d aimpitch %.3f "
+		"aiming %d pointing %d looking %d | ",
+		CTimer::GetTimeInMilliseconds(), CTimer::GetTimeStep(), gControlPath, (int)CCamera::bFreeCam,
+		(int)TheCamera.Cams[0].Using3rdPersonMouseCam(), (int)ped->m_nPedState, (int)ped->m_nMoveState, ped->m_fMoveSpeed,
+		sx, sy, moved2d, ped->m_vecAnimMoveDelta.x, ped->m_vecAnimMoveDelta.y, ped->m_moved.x, ped->m_moved.y,
+		ped->m_fRotationCur, ped->m_fRotationDest, TheCamera.Orientation, ped->m_fLookDirection,
+		ped->m_pedIK.m_flags, ped->m_pedIK.m_upperArmOrient.yaw, ped->m_pedIK.m_upperArmOrient.pitch,
+		ped->m_pedIK.m_lowerArmOrient.yaw, ped->m_pedIK.m_torsoOrient.yaw, ped->m_pedIK.m_torsoOrient.pitch,
+		gIKDebugUaYaw, gIKDebugUaPitch, gIKDebugClavYaw, gIKDebugUaStatus, ped->m_fFPSMoveHeading,
+		(int)ped->bIsAimingGun, (int)ped->bIsPointingGunAt, (int)ped->bIsLooking);
+
+	for (CAnimBlendAssociation *a = RpAnimBlendClumpGetFirstAssociation(ped->GetClump()); a; a = RpAnimBlendGetNextAssociation(a))
+		fprintf(f, "a%d:b%.2f/d%.1f/t%.3f/s%.2f/f%x ", (int)a->animId, a->blendAmount, a->blendDelta, a->currentTime, a->speed, (int)a->flags);
+	fprintf(f, "\n");
+	fclose(f);
+
+	if (moveFrames > 0)
+		moveFrames--;
+	if (aimFrames > 0)
+		aimFrames--;
+}
+
 void
 CPlayerPed::ProcessControl(void)
 {
@@ -1757,6 +1840,7 @@ CPlayerPed::ProcessControl(void)
 			(int)m_nPedState, (int)m_nMoveState, m_fMoveSpeed, padUsed ? (int)padUsed->GetPedWalkUpDown() : 0,
 			RpAnimBlendClumpGetAssociation(GetClump(), ANIM_STD_STARTWALK) != nil, (int)bIsAimingGun, (int)bIsAimPosed,
 			(int)bIsPointingGunAt, m_fFPSMoveHeading);
+		WritePlayerDebugLog(this, padUsed);
 	}
 
 	if (GetWeapon()->m_eWeaponType == WEAPONTYPE_MINIGUN) {

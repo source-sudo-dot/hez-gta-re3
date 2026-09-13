@@ -2,6 +2,12 @@
 
 #include "Bones.h"
 #include "Camera.h"
+
+// for the StickDebug log in CPlayerPed: what the upper arm was last asked for and whether it got there
+float gIKDebugUaYaw = 0.0f;
+float gIKDebugUaPitch = 0.0f;
+float gIKDebugClavYaw = 0.0f;
+int gIKDebugUaStatus = -1;
 #include "PedIK.h"
 #include "Ped.h"
 #include "General.h"
@@ -246,6 +252,12 @@ CPedIK::PointGunInDirectionUsingArm(float targetYaw, float targetPitch)
 	uaYaw = CGeneral::LimitRadianAngle(targetYaw - yaw - DEGTORAD(15.0f));
 	uaPitch = CGeneral::LimitRadianAngle(targetPitch - pitch + DEGTORAD(10.0f));
 	LimbMoveStatus uaStatus = MoveLimb(m_upperArmOrient, uaYaw, uaPitch, ms_upperArmInfo);
+	if (m_ped->IsPlayer()) {
+		gIKDebugUaYaw = uaYaw;
+		gIKDebugUaPitch = uaPitch;
+		gIKDebugClavYaw = yaw;
+		gIKDebugUaStatus = uaStatus;
+	}
 	if (uaStatus == ANGLES_SET_EXACTLY) {
 		m_flags |= GUN_POINTED_SUCCESSFULLY;
 		result = true;
