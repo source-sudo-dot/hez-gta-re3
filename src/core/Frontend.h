@@ -177,6 +177,8 @@ enum eSaveSlot
 	SAVESLOT_6,
 	SAVESLOT_7,
 	SAVESLOT_8,
+	SAVESLOT_9,
+	SAVESLOT_10,	// the autosave, load only
 	SAVESLOT_LABEL = 36
 };
 
@@ -779,6 +781,7 @@ public:
 	// MAP SCROLL SPEED on the gamepad settings page
 	static float m_fMapScrollSpeed;
 	static void RequestMap(void) { m_bStartUpMapRequested = true; }
+	void PrintCompletionOnMap(void);
 
 #ifdef CUTSCENE_BORDERS_SWITCH
 	static bool m_PrefsCutsceneBorders;

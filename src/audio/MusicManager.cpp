@@ -26,6 +26,8 @@ static_assert(false, "R*'s radio implementation is quite buggy, RADIO_SCROLL_TO_
 #endif
 
 cMusicManager MusicManager;
+// how long the station button has to be held before it means the radio off instead
+#define RADIO_HOLD_MS (250)
 int32 gNumRetunePresses;
 int32 gRetuneCounter;
 bool8 g_bAnnouncementReadPosAlready;
@@ -552,9 +554,48 @@ cMusicManager::ServiceGameMode()
 				}
 			}
 #endif
+			// The button steps through the stations when it is tapped.  Held, it turns the radio
+			// off instead, and held again brings back the station it was on - so the step waits for
+			// the button to be let go rather than firing on the way down.  Both go through the
+			// game's own retune, so the static and the on and off sounds come with them.
+			static uint32 radioHeldSince = 0;
+			static bool8 radioHoldUsed = FALSE;
+			static int32 radioBeforeOff = 0;
 			if (CPad::GetPad(0)->ChangeStationJustDown())
 			{
-				if (!UsesPoliceRadio(vehicle) && !UsesTaxiRadio(vehicle)) {
+				radioHeldSince = CTimer::GetTimeInMillisecondsPauseMode();
+				radioHoldUsed = FALSE;
+			}
+			else if (CPad::GetPad(0)->ChangeStationHeld())
+			{
+				if (!radioHoldUsed && radioHeldSince != 0 &&
+					CTimer::GetTimeInMillisecondsPauseMode() - radioHeldSince >= RADIO_HOLD_MS) {
+					radioHoldUsed = TRUE;
+					if (!UsesPoliceRadio(vehicle) && !UsesTaxiRadio(vehicle)) {
+						int32 current = gNumRetunePresses + vehicle->m_nRadioStation;
+						while (current < 0) current += NUM_RADIOS + 1;
+						while (current >= NUM_RADIOS + 1) current -= NUM_RADIOS + 1;
+						int32 target;
+						if (current == RADIO_OFF) {
+							target = radioBeforeOff;
+						} else {
+							radioBeforeOff = current;
+							target = RADIO_OFF;
+						}
+						int32 presses = target - vehicle->m_nRadioStation;
+						while (presses < 0) presses += NUM_RADIOS + 1;
+						gNumRetunePresses = presses;
+						gRetuneCounter = 20;
+						RadioStaticCounter = 0;
+					}
+				}
+			}
+			else if (radioHeldSince != 0)
+			{
+				bool8 stepIt = !radioHoldUsed;
+				radioHeldSince = 0;
+				radioHoldUsed = FALSE;
+				if (stepIt && !UsesPoliceRadio(vehicle) && !UsesTaxiRadio(vehicle)) {
 					gNumRetunePresses++;
 					gRetuneCounter = 20;
 					RadioStaticCounter = 0;

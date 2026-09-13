@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "Script.h"
+#include "AutoSave.h"
 #include "ScriptCommands.h"
 
 #include "Boat.h"
@@ -2336,6 +2337,7 @@ int8 CRunningScript::ProcessCommands700To799(int32 command)
 		++CStats::MissionsPassed;
 		CStats::CheckPointReachedSuccessfully();
 		CTheScripts::LastMissionPassedTime = CTimer::GetTimeInMilliseconds();
+		CAutoSave::Request();
 		CGameLogic::RemoveShortCutDropOffPointForMission();
 		return 0;
 	}

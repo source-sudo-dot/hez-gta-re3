@@ -30,6 +30,7 @@
 #include "Renderer.h"
 #include "CdStream.h"
 #include "Radar.h"
+#include "Completion.h"
 #include "Stats.h"
 #include "Messages.h"
 #include "FileLoader.h"
@@ -1129,18 +1130,27 @@ CMenuManager::DrawStandardMenus(bool activeScreen)
 
 			if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action != MENUACTION_LABEL && aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName[0] != '\0') {
 
-				if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_1 && aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot <= SAVESLOT_8) {
+				if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_1 && aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot <= SAVESLOT_10) {
 					CFont::SetRightJustifyOff();
 
+					// Which save a row stood for was taken from where the row sat, so a row anywhere
+					// but in the numbered run read the wrong one.  It is taken from the slot the row
+					// names now, which is what lets the autosave row sit under the eight.
+					int slotIndex = aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot - SAVESLOT_1;
 					leftText = nil;
-					if (Slots[i] == SLOT_OK) {
-						leftText = GetNameOfSavedGame(i);
-						rightText = GetSavedGameDateAndTime(i);
+					if (Slots[slotIndex] == SLOT_OK) {
+						leftText = GetNameOfSavedGame(slotIndex);
+						rightText = GetSavedGameDateAndTime(slotIndex);
 					}
 
 					if (!leftText || leftText[0] == '\0') {
-						sprintf(gString, "FEM_SL%d", i + 1);
-						leftText = TheText.Get(gString);
+						// the autosave row carries a name of its own, the numbered ones build theirs
+						if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot == SAVESLOT_10) {
+							leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
+						} else {
+							sprintf(gString, "FEM_SL%d", slotIndex + 1);
+							leftText = TheText.Get(gString);
+						}
 					}
 				} else {
 					leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
@@ -4979,7 +4989,7 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 			{
 				int saveSlot = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_SaveSlot;
 
-				if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_8) {
+				if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10) {
 					m_nCurrSaveSlot = saveSlot - SAVESLOT_1;
 					if (Slots[m_nCurrSaveSlot] != SLOT_EMPTY && Slots[m_nCurrSaveSlot] != SLOT_CORRUPTED) {
 						if (m_nCurrScreen == MENUPAGE_CHOOSE_LOAD_SLOT) {
@@ -5234,10 +5244,10 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 		if (!goBack) {
 #ifdef FIX_BUGS
 			int saveSlot = aScreens[currScreen].m_aEntries[currOption].m_SaveSlot;
-			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_8 && Slots[currOption] != SLOT_OK)
+			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10 && Slots[saveSlot - SAVESLOT_1] != SLOT_OK)
 #else
 			int saveSlot = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_SaveSlot;
-			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_8 && Slots[m_nCurrOption] != SLOT_OK)
+			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10 && Slots[saveSlot - SAVESLOT_1] != SLOT_OK)
 #endif
 				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_FAIL, 0);
 			else
@@ -6162,7 +6172,58 @@ CMenuManager::PrintMap(void)
 
 	CFont::SetWrapx(MENU_X_RIGHT_ALIGNED(MENU_X_MARGIN));
 	CFont::SetRightJustifyWrap(MENU_X_LEFT_ALIGNED(MENU_X_MARGIN));
-	DisplayHelperText("FEH_MPH");
+	// the line of key hints under the map is gone, as it was on the master branch
+	PrintCompletionOnMap();
+}
+
+// Small, in the corner of the map, to be read at a glance rather than studied.
+void
+CMenuManager::PrintCompletionOnMap(void)
+{
+	CCompletion::tGoal goals[CCompletion::MAX_GOALS];
+	int32 count = CCompletion::Collect(goals);
+	char buf[64];
+	wchar wide[64];
+
+	CFont::SetBackgroundOff();
+	CFont::SetPropOn();
+	CFont::SetCentreOff();
+	CFont::SetRightJustifyOn();
+	CFont::SetFontStyle(FONT_LOCALE(FONT_STANDARD));
+	CFont::SetDropShadowPosition(1);
+	CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
+	CFont::SetScale(MENU_X(0.35f), MENU_Y(0.6f));
+
+	// counted up from the bottom edge so the list never runs off it
+	float lineHeight = MENU_Y(12.0f);
+	float y = SCREEN_SCALE_FROM_BOTTOM(40.0f) - count * lineHeight;
+
+	for (int32 i = 0; i < count; i++) {
+		bool done = goals[i].total > 0 && goals[i].done >= goals[i].total;
+
+		if (done)
+			CFont::SetColor(CRGBA(90, 230, 90, FadeIn(255)));
+		else
+			CFont::SetColor(CRGBA(255, 255, 255, FadeIn(230)));
+
+		if (goals[i].total > 0)
+			sprintf(buf, "%d/%d", goals[i].done, goals[i].total);
+		else
+			sprintf(buf, "%d", goals[i].done);
+		AsciiToUnicode(buf, wide);
+		CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
+		CFont::PrintString(MENU_X_RIGHT_ALIGNED(80.0f), y, TheText.Get(goals[i].key));
+		y += lineHeight;
+	}
+
+	sprintf(buf, "%d%%", CCompletion::Percent());
+	AsciiToUnicode(buf, wide);
+	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
+	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
+	CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
+
+	CFont::SetDropShadowPosition(0);
+	CFont::SetRightJustifyOff();
 }
 
 void

@@ -3138,7 +3138,13 @@ CAutomobile::ProcessControlInputs(uint8 pad)
 	m_fSteerInput = Clamp(m_fSteerInput, -1.0f, 1.0f);
 
 	// Accelerate/Brake
-	float acceleration = (CPad::GetPad(pad)->GetAccelerate() - CPad::GetPad(pad)->GetBrake())/255.0f;
+	// The two used to be subtracted from one another, so holding both cancelled out and the vehicle
+	// neither drove nor slowed - which from the seat reads as the brake being ignored while the
+	// throttle carries on.  The brake wins instead, and a negative figure still means brake or
+	// reverse.  The burnout from standing still reads both buttons on its own and is unchanged.
+	float accelerateInput = CPad::GetPad(pad)->GetAccelerate()/255.0f;
+	float brakeInput = CPad::GetPad(pad)->GetBrake()/255.0f;
+	float acceleration = brakeInput > 0.0f ? -brakeInput : accelerateInput;
 	if(GetModelIndex() == MI_DODO && acceleration < 0.0f)
 		acceleration *= 0.3f;
 	if(Abs(speed) < 0.01f){

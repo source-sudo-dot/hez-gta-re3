@@ -28,6 +28,7 @@
 #include "Timer.h"
 #include "Crosshair.h"
 #include "BulletTime.h"
+#include "AutoSave.h"
 #include "PlayerPed.h"
 #include "ControllerConfig.h"
 #include "DMAudio.h"
@@ -527,6 +528,7 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_CHECKSAVE,	"FEM_SL6", {nil, SAVESLOT_6,		0}, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CHECKSAVE,	"FEM_SL7", {nil, SAVESLOT_7,		0}, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CHECKSAVE,	"FEM_SL8", {nil, SAVESLOT_8,		0}, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CHECKSAVE,	"FEZ_ASL", {nil, SAVESLOT_10,		0}, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE,	0}, 320, 345, MENUALIGN_CENTER,
 	},
 
@@ -853,6 +855,7 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_CFO_SELECT,	"FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SELECT,	"FEZ_ASV", { new CCFOSelect((int8*)&CAutoSave::bEnabled, "Display", "AutoSave", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
 	},
 

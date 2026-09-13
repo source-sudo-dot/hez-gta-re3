@@ -136,6 +136,18 @@ static struct {
 	{ "FEZ_AAS", "ASSIST STRENGTH" },
 	{ "FEZ_BTS", "SLOW MO SECONDS" },
 	{ "FEZ_BTR", "SLOW MO RECHARGE" },
+	{ "FEZ_ASV", "AUTOSAVE" },
+	{ "FEZ_ASD", "AUTOSAVED" },
+	{ "FEZ_ASL", "AUTOSAVE" },
+	{ "FEZ_CMS", "MISSIONS" },
+	{ "FEZ_CHP", "HIDDEN PACKAGES" },
+	{ "FEZ_CRP", "RAMPAGES" },
+	{ "FEZ_CUJ", "UNIQUE JUMPS" },
+	{ "FEZ_CPR", "PROPERTIES" },
+	{ "FEZ_CPM", "PARAMEDIC" },
+	{ "FEZ_CFF", "FIREFIGHTER" },
+	{ "FEZ_CVG", "VIGILANTE" },
+	{ "FEZ_CTX", "TAXI FARES" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

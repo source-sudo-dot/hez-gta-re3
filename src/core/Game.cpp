@@ -38,6 +38,7 @@
 #include "Hud.h"
 #include "WeaponWheel.h"
 #include "BulletTime.h"
+#include "AutoSave.h"
 #include "IniFile.h"
 #include "Lights.h"
 #include "MBlur.h"
@@ -889,6 +890,7 @@ void CGame::Process(void)
 	// or it could never be closed again.
 	CWeaponWheel::Process();
 	CBulletTime::Process();
+	CAutoSave::Process();
 
 	if (!CTimer::GetIsPaused())
 	{
