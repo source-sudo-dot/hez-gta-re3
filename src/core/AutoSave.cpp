@@ -22,7 +22,8 @@ bool   CAutoSave::m_bPending = false;
 uint32 CAutoSave::m_nEarliest = 0;
 
 // A mission reports itself passed a good few lines before it has finished with the
-// world, so the state is given a moment to settle before it is written.
+// world, so the state is given a moment to settle before it is written.  A hidden
+// package asks for a save the same way.
 #define SETTLE_MS (2500)
 
 void
@@ -63,6 +64,21 @@ CAutoSave::Process(void)
 		return;
 	if (info->m_WBState != WBSTATE_PLAYING)
 		return;
+
+	// Only with the player on his feet and under control.  A save does keep a player who
+	// is sitting in a car, and the car with him, but loading never puts him back behind the
+	// wheel: CPed::Load reads his position and nothing about a vehicle, CVehicle::Load reads
+	// no driver, and nothing after either seats him again - so he would stand where the seat
+	// was, inside the car.  IsPedInControl is false for driving, riding, getting in and out,
+	// jumping and falling alike.  The request waits until he is out.
+	if (info->m_pPed->bInVehicle || !info->m_pPed->IsPedInControl())
+		return;
+
+#ifdef MISSION_REPLAY
+	// the game's own save between missions keeps out of a mission retry, and so does this
+	if (AllowMissionReplay != MISSION_RETRY_STAGE_NORMAL)
+		return;
+#endif
 
 	m_bPending = false;
 
