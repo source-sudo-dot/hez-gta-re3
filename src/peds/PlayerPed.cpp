@@ -19,6 +19,13 @@
 #include "SaveBuf.h"
 
 #define PAD_MOVE_TO_GAME_WORLD_MOVE 60.0f
+// how much the on foot move speed may climb per time step, 0.07 in the original
+#define PLAYER_MOVE_ACCELERATION (0.35f)
+
+// Whether the stick is pushed far enough this frame that the player means to run, which is
+// where the walk and run animations cross over.  Set by both on foot controls just before
+// SetRealMoveAnim() reads it.
+static bool bPadAsksToRun = false;
 
 #ifdef VC_PED_PORTS
 bool CPlayerPed::bDontAllowWeaponChange;
@@ -348,7 +355,10 @@ CPlayerPed::SetRealMoveAnim(void)
 				if (curWalkStartAssoc) {
 					curWalkStartAssoc->blendAmount = 1.0f;
 					curWalkStartAssoc->blendDelta = 0.0f;
-				} else {
+				} else if (!bPadAsksToRun) {
+					// Walk and run only start once the walk start has played out, so pushing the stick
+					// all the way from standing still stuck to the ground for a moment before the run
+					// came.  It is kept for setting off gently and left out when the stick asks to run.
 					curWalkStartAssoc = CAnimManager::AddAnimation(GetClump(), m_animGroup, ANIM_STD_STARTWALK);
 				}
 				if (curWalkAssoc)
@@ -380,7 +390,10 @@ CPlayerPed::SetRealMoveAnim(void)
 				curRunAssoc = CAnimManager::AddAnimation(GetClump(), m_animGroup, ANIM_STD_RUN);
 				curRunAssoc->blendAmount = 0.0f;
 			}
-			if (curWalkStartAssoc && !(curWalkStartAssoc->IsRunning())) {
+			// The stick is still on its way out on the first frame of a push, so the walk start is
+			// begun more often than not even when it goes all the way.  Once the stick asks to run
+			// the walk start is cut short and the walk and run take over on the same frame.
+			if (curWalkStartAssoc && (!(curWalkStartAssoc->IsRunning()) || bPadAsksToRun)) {
 				delete curWalkStartAssoc;
 				curWalkStartAssoc = nil;
 				curWalkAssoc->SetRun();
@@ -1011,9 +1024,10 @@ CPlayerPed::PlayerControl1stPersonRunAround(CPad *padUsed)
 	float upDown = padUsed->GetPedWalkUpDown();
 	float padMove = CVector2D(leftRight, upDown).Magnitude();
 	float padMoveInGameUnit = padMove / PAD_MOVE_TO_GAME_WORLD_MOVE;
+	bPadAsksToRun = padMoveInGameUnit >= 1.0f;
 	if (padMoveInGameUnit > 0.0f) {
 		m_fRotationDest = CGeneral::LimitRadianAngle(TheCamera.Orientation);
-		m_fMoveSpeed = Min(padMoveInGameUnit, 0.07f * CTimer::GetTimeStep() + m_fMoveSpeed);
+		m_fMoveSpeed = Min(padMoveInGameUnit, PLAYER_MOVE_ACCELERATION * CTimer::GetTimeStep() + m_fMoveSpeed);
 	} else {
 		m_fMoveSpeed = 0.0f;
 	}
@@ -1540,6 +1554,8 @@ CPlayerPed::PlayerControlZelda(CPad *padUsed)
 	}
 #endif
 
+	bPadAsksToRun = padMoveInGameUnit >= 1.0f;
+
 	if (padMoveInGameUnit > 0.0f || smoothSprayWithoutMove) {
 		float padHeading = CGeneral::GetRadianAngleBetweenPoints(0.0f, 0.0f, -leftRight, upDown);
 		float neededTurn = CGeneral::LimitRadianAngle(padHeading - camOrientation);
@@ -1553,7 +1569,11 @@ CPlayerPed::PlayerControlZelda(CPad *padUsed)
 			m_fRotationDest = neededTurn;
 		}
 
-		float maxAcc = 0.07f * CTimer::GetTimeStep();
+		// The speed climbed from nothing by 0.07 a step, and walking only becomes running at 1,
+		// so a stick pushed all the way from standing still walked for a moment first.  Five
+		// times the climb reaches a run in about a tenth of a second and keeps a short ramp, so
+		// the animations still blend over rather than jump.
+		float maxAcc = PLAYER_MOVE_ACCELERATION * CTimer::GetTimeStep();
 		m_fMoveSpeed = Min(padMoveInGameUnit, m_fMoveSpeed + maxAcc);
 
 	} else {
@@ -1618,6 +1638,9 @@ CPlayerPed::ProcessControl(void)
 		return;
 
 	CPad *padUsed = CPad::GetPad(0);
+	// set again by the on foot controls this frame; anything else that moves the player must not
+	// see last frame's
+	bPadAsksToRun = false;
 	m_pWanted->Update();
 	CEntity::PruneReferences();
 
