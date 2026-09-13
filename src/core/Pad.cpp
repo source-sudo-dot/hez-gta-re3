@@ -3488,6 +3488,11 @@ CPad::DrawStickDebug(void)
 	CFont::SetColor(CRGBA(255, 255, 128, 255));
 	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(140.0f), wbuf);
 	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(155.0f), rumbleWide);
+
+	extern char gPlayerDebugLine[160];
+	wchar playerWide[160];
+	AsciiToUnicode(gPlayerDebugLine, playerWide);
+	CFont::PrintString(SCREEN_SCALE_X(40.0f), SCREEN_SCALE_Y(170.0f), playerWide);
 }
 
 // what the camera code used to get at most, kept so the top speed does not change

@@ -38,6 +38,9 @@ bool  CPlayerPed::bIsAimPosed = false;
 // where the walk and run animations cross over.  Set by both on foot controls just before
 // SetRealMoveAnim() reads it.
 static bool bPadAsksToRun = false;
+
+// one line for the StickDebug overlay about the player's aim and movement, filled each frame
+char gPlayerDebugLine[160];
 bool CPlayerPed::bDontAllowWeaponChange;
 #ifndef MASTER
 bool CPlayerPed::bDebugPlayerInfo;
@@ -1743,6 +1746,13 @@ CPlayerPed::ProcessControl(void)
 	}
 	ProcessAimAssist();
 
+	if (CPad::m_bStickDebug) {
+		sprintf(gPlayerDebugLine, "state %d move %d spd %.2f stick %d start %d aim %d posed %d point %d pitch %.2f",
+			(int)m_nPedState, (int)m_nMoveState, m_fMoveSpeed, padUsed ? (int)padUsed->GetPedWalkUpDown() : 0,
+			RpAnimBlendClumpGetAssociation(GetClump(), ANIM_STD_STARTWALK) != nil, (int)bIsAimingGun, (int)bIsAimPosed,
+			(int)bIsPointingGunAt, m_fFPSMoveHeading);
+	}
+
 	if (GetWeapon()->m_eWeaponType == WEAPONTYPE_MINIGUN) {
 		CWeaponInfo *weaponInfo = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
 		CAnimBlendAssociation *fireAnim = RpAnimBlendClumpGetAssociation(GetClump(), GetPrimaryFireAnim(weaponInfo));
@@ -2404,8 +2414,16 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 
 	// While a shot or a reload is actually playing, leave the animation to it.  Nothing is
 	// torn down, so the pose is simply picked up again when it is over.
-	if (m_nPedState == PED_ATTACK || m_nPedState == PED_AIM_GUN)
+	if (m_nPedState == PED_ATTACK || m_nPedState == PED_AIM_GUN) {
+		// The arm is aimed by IK towards the direction and pitch it was last told, and those
+		// were only set as a shot or the pointing began, so it stayed at that pitch however the
+		// camera moved after.  Told again every frame while nobody is locked on.
+		if (m_pPointGunAt == nil) {
+			SetAimFlag(m_fRotationCur);
+			m_fFPSMoveHeading = TheCamera.Find3rdPersonQuickAimPitch();
+		}
 		return;
+	}
 	if (GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING)
 		return;
 
@@ -2439,6 +2457,16 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 	// so the pitch follows the camera.
 	SetAimFlag(m_fRotationCur);
 	m_fFPSMoveHeading = TheCamera.Find3rdPersonQuickAimPitch();
+
+	// The handguns are raised the rest of the way only while the ped is pointing the gun: that
+	// state is where PointGunAt holds the animation and the IK lifts the arm.  The free camera
+	// gets there for them by pointing the gun at nothing, which is what this does as well.
+	if (info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM) && !bIsPointingGunAt) {
+		SetLookFlag(m_fRotationCur, true, true);
+		SetLookTimer(INT32_MAX);
+		SetPointGunAt(nil);
+		return;
+	}
 
 	// held at the ready, exactly where PointGunAt would hold it
 	if (assoc->currentTime >= info->m_fAnimLoopStart) {
