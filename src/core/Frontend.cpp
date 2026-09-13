@@ -31,6 +31,7 @@
 #include "CdStream.h"
 #include "Radar.h"
 #include "Completion.h"
+#include "Pickups.h"
 #include "Stats.h"
 #include "Messages.h"
 #include "FileLoader.h"
@@ -105,6 +106,8 @@ int GetOptionCount(int screen)
 
 #ifdef MAP_ENHANCEMENTS
 CVector2D mapCrosshair;
+// the hidden packages still to be found, drawn on the map while this is on; square switches it
+static bool bMapShowPackages = false;
 #endif
 
 #ifdef CUTSCENE_BORDERS_SWITCH
@@ -3673,8 +3676,8 @@ CMenuManager::Process(void)
 			break; \
 		\
 		m_fMapSize *= z2; \
-		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2); \
-		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2); \
+		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - m_fMapSize, m_fMapSize + SCREEN_WIDTH/2); \
+		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - m_fMapSize, m_fMapSize + SCREEN_HEIGHT/2); \
 	} while(0)
 
 // ZOOM by any factor instead of one fixed step, for the triggers.  The size is kept inside
@@ -3690,8 +3693,8 @@ CMenuManager::Process(void)
 		m_fMapCenterX += (x - m_fMapCenterX) * (1.0f - z2); \
 		m_fMapCenterY += (y - m_fMapCenterY) * (1.0f - z2); \
 		m_fMapSize = Clamp(m_fMapSize * z2, MENU_Y(MAP_MIN_SIZE), MENU_Y(1000.0f)); \
-		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2); \
-		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2); \
+		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - m_fMapSize, m_fMapSize + SCREEN_WIDTH/2); \
+		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - m_fMapSize, m_fMapSize + SCREEN_HEIGHT/2); \
 	} while(0)
 
 #endif
@@ -3729,14 +3732,20 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 							m_fMapCenterX += (SCREEN_WIDTH/2 - m_fMapCenterX) / ((m_fMapSize - MENU_X(MAP_MIN_SIZE)) * 1/15.f);
 
 						m_fMapSize = Max(MENU_Y(MAP_MIN_SIZE), m_fMapSize - MENU_Y(15.f));
-						m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2);
-						m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2);
+						m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - m_fMapSize, m_fMapSize + SCREEN_WIDTH/2);
+						m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - m_fMapSize, m_fMapSize + SCREEN_HEIGHT/2);
 					} else {
 						m_fMapSize = MENU_Y(MAP_MIN_SIZE);
 					}
 				}
 			}
 #else
+			// the hidden packages still out there, on and off
+			if (CPad::GetPad(0)->GetSquareJustDown()) {
+				bMapShowPackages = !bMapShowPackages;
+				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_ENTER_OR_ADJUST, 0);
+			}
+
 			// Adding marker
 			if (m_nMenuFadeAlpha == 255) {
 				if (CPad::GetPad(0)->GetRightMouseJustDown() || CPad::GetPad(0)->GetCrossJustDown()) {
@@ -3783,8 +3792,8 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				if (!justResetPointer) {
 					m_fMapCenterX += m_nMousePosX - m_nMouseOldPosX;
 					m_fMapCenterY += m_nMousePosY - m_nMouseOldPosY;
-					m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2);
-					m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2);
+					m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - m_fMapSize, m_fMapSize + SCREEN_WIDTH/2);
+					m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - m_fMapSize, m_fMapSize + SCREEN_HEIGHT/2);
 				}
 				justResetPointer = false;
 
@@ -3799,7 +3808,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosY < m_nMouseOldPosY || CPad::GetPad(0)->GetUp() ||
 					CPad::GetPad(0)->GetDPadUp()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
-						if ((m_fMapSize - MENU_Y(MAP_MIN_SIZE)) + SCREEN_HEIGHT/2 > m_fMapCenterY)
+						if (m_fMapSize + SCREEN_HEIGHT/2 > m_fMapCenterY)
 							m_fMapCenterY += MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
@@ -3808,7 +3817,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosY > m_nMouseOldPosY || CPad::GetPad(0)->GetDown() ||
 					CPad::GetPad(0)->GetDPadDown()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
-						if (SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)) < m_fMapCenterY)
+						if (SCREEN_HEIGHT/2 - m_fMapSize < m_fMapCenterY)
 							m_fMapCenterY -= MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
@@ -3817,7 +3826,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosX < m_nMouseOldPosX || CPad::GetPad(0)->GetLeft() ||
 					CPad::GetPad(0)->GetDPadLeft()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
-						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2 > m_fMapCenterX)
+						if (m_fMapSize + SCREEN_WIDTH/2 > m_fMapCenterX)
 							m_fMapCenterX += MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
@@ -3831,16 +3840,19 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					float stickX = CPad::GetPad(0)->NewState.LeftStickX / 128.0f;
 					float stickY = CPad::GetPad(0)->NewState.LeftStickY / 128.0f;
 					if (stickX != 0.0f || stickY != 0.0f) {
+						// The map's edge may come as far as the middle of the screen, which is what lets a
+						// map zoomed all the way out still be moved, and what leaves room to centre the
+						// player on the way in.  The clamp used to stop the edge at the screen's own edge,
+						// which at the smallest size left no room to move at all.
 						// the fixed step came at most about once every sixtieth of a second, and
 						// the render frame length is counted in thirtieths.  The step is also scaled
 						// by the zoom: moved by a fixed amount on screen, a map zoomed in six times
 						// crossed the city six times slower.  The d-pad steps are scaled the same.
 						float step = 15.0f * 2.0f * CTimer::GetRenderFrameLength() * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
-						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE))
-							m_fMapCenterX -= MENU_X(Clamp(stickX, -1.0f, 1.0f) * step);
+						m_fMapCenterX -= MENU_X(Clamp(stickX, -1.0f, 1.0f) * step);
 						m_fMapCenterY -= MENU_Y(Clamp(stickY, -1.0f, 1.0f) * step);
-						m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2);
-						m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2);
+						m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - m_fMapSize, m_fMapSize + SCREEN_WIDTH/2);
+						m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - m_fMapSize, m_fMapSize + SCREEN_HEIGHT/2);
 						m_bShowMouse = false;
 					}
 				}
@@ -3858,7 +3870,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				if (CPad::GetPad(0)->GetLeftMouse() && m_nMousePosX > m_nMouseOldPosX || CPad::GetPad(0)->GetRight() ||
 					CPad::GetPad(0)->GetDPadRight()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
-						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)) < m_fMapCenterX)
+						if (SCREEN_WIDTH/2 - m_fMapSize < m_fMapCenterX)
 							m_fMapCenterX -= MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
@@ -3886,18 +3898,6 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 				m_bShowMouse = true;
 			}
 
-			static bool pressedL = false;
-
-			if (!CPad::GetPad(0)->GetChar('L') && !CPad::GetPad(0)->GetChar('l')) {
-				pressedL = false;
-			}
-
-			if (!pressedL) {
-				if (CPad::GetPad(0)->GetChar('L') || CPad::GetPad(0)->GetChar('l')) {
-					m_PrefsShowLegends = !m_PrefsShowLegends;
-					pressedL = true;
-				}
-			}
 			break;
 		}
 		case MENUPAGE_SOUND_SETTINGS:
@@ -6034,6 +6034,8 @@ CMenuManager::PrintMap(void)
 	// player sits in the middle, as far as the edges of the map allow.
 	if (m_bMapCentreOnPlayer) {
 		m_bMapCentreOnPlayer = false;
+		// hidden to begin with every time the map is opened
+		bMapShowPackages = false;
 #ifdef MAP_ENHANCEMENTS
 		// the crosshair only came to the middle while the page was still fading in, so it was
 		// missing whenever the page was entered some other way
@@ -6048,8 +6050,8 @@ CMenuManager::PrintMap(void)
 		CRadar::TransformRadarPointToScreenSpace(screenSpacePlayer, radarSpacePlayer);
 		m_fMapCenterX += SCREEN_WIDTH / 2 - screenSpacePlayer.x;
 		m_fMapCenterY += SCREEN_HEIGHT / 2 - screenSpacePlayer.y;
-		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)), m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2);
-		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)), m_fMapSize - MENU_Y(MAP_MIN_SIZE) + SCREEN_HEIGHT/2);
+		m_fMapCenterX = Clamp(m_fMapCenterX, SCREEN_WIDTH/2 - m_fMapSize, m_fMapSize + SCREEN_WIDTH/2);
+		m_fMapCenterY = Clamp(m_fMapCenterY, SCREEN_HEIGHT/2 - m_fMapSize, m_fMapSize + SCREEN_HEIGHT/2);
 	}
 
 	// Because m_fMapSize is half of the map length(hence * 2), and map consists of 3x3 tiles(hence / 3).
@@ -6103,51 +6105,23 @@ CMenuManager::PrintMap(void)
 	}
 
 	CRadar::DrawBlips();
-	if (m_PrefsShowLegends) {
-		CFont::SetWrapx(MENU_X_RIGHT_ALIGNED(40.0f));
-		CFont::SetRightJustifyWrap(MENU_X_LEFT_ALIGNED(84.0f));
-		CFont::SetBackGroundOnlyTextOff();
-		CFont::SetColor(CRGBA(LABEL_COLOR.r, LABEL_COLOR.g, LABEL_COLOR.b, FadeIn(255)));
-		CFont::SetDropShadowPosition(2);
-		CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
-		CFont::SetCentreOn();
-		CFont::SetFontStyle(FONT_LOCALE(FONT_HEADING));
-		CFont::SetScale(SCREEN_SCALE_X(0.65f), SCREEN_SCALE_Y(0.95f));
 
-		int secondColumnStart = (CRadar::MapLegendCounter - 1) / 2;
-		int boxBottom = MENU_Y(100.0f);
-
-		// + 3, because we want 19*3 px padding
-		for (int i = 0; i < secondColumnStart + 3; i++) {
-			boxBottom += MENU_Y(19.f);
-		}
-
-		CSprite2d::DrawRect(CRect(MENU_X_LEFT_ALIGNED(95.0f), MENU_Y(100.0f), MENU_X_LEFT_ALIGNED(555.f), boxBottom),
-			CRGBA(0, 0, 0, FadeIn(190)));
-
-		CFont::PrintString(MENU_X_LEFT_ALIGNED(320.0f), MENU_Y(102.0f), TheText.Get("FE_MLG"));
-		CFont::SetRightJustifyOff();
-		CFont::SetFontStyle(FONT_LOCALE(FONT_STANDARD));
-		if (m_PrefsLanguage == LANGUAGE_AMERICAN)
-			CFont::SetScale(SCREEN_SCALE_X(0.55f), SCREEN_SCALE_Y(0.55f));
-		else
-			CFont::SetScale(SCREEN_SCALE_X(0.45f), SCREEN_SCALE_Y(0.55f));
-
-		CFont::SetColor(CRGBA(225, 225, 225, FadeIn(255)));
-		CFont::SetDropShadowPosition(0);
-
-		int y = MENU_Y(127.0f);
-		int x = MENU_X_LEFT_ALIGNED(160.0f);
-
-		for (int16 i = 0; i < CRadar::MapLegendCounter; i++) {
-			CRadar::DrawLegend(x, y, CRadar::MapLegendList[i]);
-
-			if (i == secondColumnStart) {
-				x = MENU_X_LEFT_ALIGNED(350.0f);
-				y = MENU_Y(127.0f);
-			} else {
-				y += MENU_Y(19.0f);
-			}
+	// A package still out there is a pickup the script made; collecting one takes its type away,
+	// so only those left to find are drawn.
+	if (bMapShowPackages) {
+		float half = MENU_Y(2.5f);
+		float edge = Max(MENU_Y(1.0f), 1.0f);
+		for (int32 i = 0; i < NUMPICKUPS; i++) {
+			CPickup &pickup = CPickups::aPickUps[i];
+			if (pickup.m_eType != PICKUP_COLLECTABLE1 || pickup.m_bRemoved)
+				continue;
+			CVector2D radarPos, screenPos;
+			CRadar::TransformRealWorldPointToRadarSpace(radarPos, CVector2D(pickup.m_vecPos));
+			CRadar::TransformRadarPointToScreenSpace(screenPos, radarPos);
+			CSprite2d::DrawRect(CRect(screenPos.x - half - edge, screenPos.y - half - edge, screenPos.x + half + edge, screenPos.y + half + edge),
+				CRGBA(0, 0, 0, FadeIn(255)));
+			CSprite2d::DrawRect(CRect(screenPos.x - half, screenPos.y - half, screenPos.x + half, screenPos.y + half),
+				CRGBA(80, 210, 255, FadeIn(255)));
 		}
 	}
 
@@ -6194,7 +6168,8 @@ CMenuManager::PrintCompletionOnMap(void)
 	CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
 	CFont::SetScale(MENU_X(0.35f), MENU_Y(0.6f));
 
-	// counted up from the bottom edge so the list never runs off it
+	// Counted up from the bottom edge so the list never runs off it, and set against the screen's
+	// own right edge: the menu's right alignment is the edge of a 4:3 box in the middle.
 	float lineHeight = MENU_Y(12.0f);
 	float y = SCREEN_SCALE_FROM_BOTTOM(40.0f) - count * lineHeight;
 
@@ -6211,8 +6186,8 @@ CMenuManager::PrintCompletionOnMap(void)
 		else
 			sprintf(buf, "%d", goals[i].done);
 		AsciiToUnicode(buf, wide);
-		CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
-		CFont::PrintString(MENU_X_RIGHT_ALIGNED(80.0f), y, TheText.Get(goals[i].key));
+		CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(12.0f), y, wide);
+		CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(62.0f), y, TheText.Get(goals[i].key));
 		y += lineHeight;
 	}
 
@@ -6220,7 +6195,7 @@ CMenuManager::PrintCompletionOnMap(void)
 	AsciiToUnicode(buf, wide);
 	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
 	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
-	CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
+	CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(12.0f), y, wide);
 
 	CFont::SetDropShadowPosition(0);
 	CFont::SetRightJustifyOff();
