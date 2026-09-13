@@ -456,7 +456,12 @@ CPlayerPed::SetRealMoveAnim(void)
 				curRunAssoc = CAnimManager::AddAnimation(GetClump(), m_animGroup, ANIM_STD_RUN);
 				curRunAssoc->blendAmount = 0.0f;
 			}
-			if (curWalkStartAssoc && !(curWalkStartAssoc->IsRunning())) {
+			// The stick is still on its way out on the first frame of a push, so the walk start is
+			// begun more often than not even when it goes all the way.  Measured in play it then
+			// played its full quarter second at a tenth of the running speed, and a frame of none
+			// after it.  Once the stick asks to run the walk start is cut short and the walk and run
+			// take over on the same frame.
+			if (curWalkStartAssoc && (!(curWalkStartAssoc->IsRunning()) || bPadAsksToRun)) {
 				delete curWalkStartAssoc;
 				curWalkStartAssoc = nil;
 				curWalkAssoc->SetRun();
@@ -1828,6 +1833,9 @@ CPlayerPed::ProcessControl(void)
 		return;
 
 	CPad *padUsed = GetPadFromPlayer(this);
+	// set again by the on foot controls this frame; anything else that moves the player must not
+	// see last frame's
+	bPadAsksToRun = false;
 	m_pWanted->Update();
 	PruneReferences();
 

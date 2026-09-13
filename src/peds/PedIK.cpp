@@ -249,7 +249,13 @@ CPedIK::PointGunInDirectionUsingArm(float targetYaw, float targetPitch)
 	pitch = Atan2(matrix->up.z, Sqrt(1.0f - SQR(matrix->up.z)));
 
 	float uaYaw, uaPitch;
-	uaYaw = CGeneral::LimitRadianAngle(targetYaw - yaw - DEGTORAD(15.0f));
+	// Vice City turns the upper arm a fixed 15 degrees out from where it is told to aim.  On the
+	// player that put the handgun off to the right of the crosshair by exactly that much -
+	// measured in play: asked for -0.385, which is the shoulder's 0.123 and the 0.262 of these
+	// 15 degrees.  The GTA III code this was carried over from has no such offset, and there the
+	// arm lines up with the sights.  Other peds keep it.
+	float armYawOffset = m_ped->IsPlayer() ? 0.0f : DEGTORAD(15.0f);
+	uaYaw = CGeneral::LimitRadianAngle(targetYaw - yaw - armYawOffset);
 	uaPitch = CGeneral::LimitRadianAngle(targetPitch - pitch + DEGTORAD(10.0f));
 	LimbMoveStatus uaStatus = MoveLimb(m_upperArmOrient, uaYaw, uaPitch, ms_upperArmInfo);
 	if (m_ped->IsPlayer()) {
