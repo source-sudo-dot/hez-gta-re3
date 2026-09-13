@@ -2,6 +2,7 @@
 #include "Completion.h"
 
 #include "Game.h"
+#include "Lists.h"
 #include "PlayerInfo.h"
 #include "Stats.h"
 #include "World.h"

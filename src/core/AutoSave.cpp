@@ -8,6 +8,7 @@
 #include "GenericGameStorage.h"
 #include "Hud.h"
 #include "PCSave.h"
+#include "Lists.h"
 #include "PlayerInfo.h"
 #include "PlayerPed.h"
 #include "Script.h"
