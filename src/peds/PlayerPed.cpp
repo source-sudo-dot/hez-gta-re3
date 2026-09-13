@@ -27,6 +27,8 @@
 #include "SaveBuf.h"
 
 #define PAD_MOVE_TO_GAME_WORLD_MOVE 60.0f
+// how much the on foot move speed may climb per time step, 0.07 in the original
+#define PLAYER_MOVE_ACCELERATION (0.35f)
 
 float CPlayerPed::m_fAimAssistFactor = 1.0f;
 float CPlayerPed::m_fAimRaiseSpeed = 2.0f;
@@ -900,7 +902,7 @@ CPlayerPed::PlayerControl1stPersonRunAround(CPad *padUsed)
 	bPadAsksToRun = padMoveInGameUnit >= 1.0f;
 	if (padMoveInGameUnit > 0.0f) {
 		m_fRotationDest = CGeneral::LimitRadianAngle(TheCamera.Orientation);
-		m_fMoveSpeed = Min(padMoveInGameUnit, 0.07f * CTimer::GetTimeStep() + m_fMoveSpeed);
+		m_fMoveSpeed = Min(padMoveInGameUnit, PLAYER_MOVE_ACCELERATION * CTimer::GetTimeStep() + m_fMoveSpeed);
 	} else {
 		m_fMoveSpeed = 0.0f;
 	}
@@ -1557,7 +1559,11 @@ CPlayerPed::PlayerControlZelda(CPad *padUsed)
 			m_fRotationDest = neededTurn;
 		}
 
-		float maxAcc = 0.07f * CTimer::GetTimeStep();
+		// The speed climbed from nothing by 0.07 a step, and walking only becomes running at 1,
+		// so a stick pushed all the way from standing still walked for a good half second first.
+		// Five times the climb reaches a run in about a tenth of a second and keeps a short ramp,
+		// so the animations still blend over rather than jump.
+		float maxAcc = PLAYER_MOVE_ACCELERATION * CTimer::GetTimeStep();
 		m_fMoveSpeed = Min(padMoveInGameUnit, m_fMoveSpeed + maxAcc);
 
 	} else {
@@ -2419,7 +2425,7 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 		// were only set as a shot or the pointing began, so it stayed at that pitch however the
 		// camera moved after.  Told again every frame while nobody is locked on.
 		if (m_pPointGunAt == nil) {
-			SetAimFlag(m_fRotationCur);
+			SetAimFlag(CGeneral::LimitRadianAngle(-TheCamera.Orientation));
 			m_fFPSMoveHeading = TheCamera.Find3rdPersonQuickAimPitch();
 		}
 		return;
@@ -2449,20 +2455,23 @@ CPlayerPed::ProcessAimReadyPose(CPad *padUsed)
 
 	bIsAimPosed = true;
 
+	// The direction is the camera's rather than the body's, as in Vice City's own free camera:
+	// the body turns towards the camera over a few frames and the arm pointed where it had got
+	// to, a little off the crosshair.
 	// Vice City only brings the arm part of the way up with the animation - the handguns sit at
 	// half height on the ready frame - and lifts it the rest of the way with IK, towards the
 	// direction it is told to aim in.  Without the free camera it only ever tells it that once
 	// an attack starts, so the held pose stopped at half height.  These are the two lines the
 	// game itself uses for the mouse camera when an attack starts, every frame the pose is held
 	// so the pitch follows the camera.
-	SetAimFlag(m_fRotationCur);
+	SetAimFlag(CGeneral::LimitRadianAngle(-TheCamera.Orientation));
 	m_fFPSMoveHeading = TheCamera.Find3rdPersonQuickAimPitch();
 
 	// The handguns are raised the rest of the way only while the ped is pointing the gun: that
 	// state is where PointGunAt holds the animation and the IK lifts the arm.  The free camera
 	// gets there for them by pointing the gun at nothing, which is what this does as well.
 	if (info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM) && !bIsPointingGunAt) {
-		SetLookFlag(m_fRotationCur, true, true);
+		SetLookFlag(CGeneral::LimitRadianAngle(-TheCamera.Orientation), true, true);
 		SetLookTimer(INT32_MAX);
 		SetPointGunAt(nil);
 		return;
