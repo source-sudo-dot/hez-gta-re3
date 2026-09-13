@@ -134,6 +134,8 @@ static struct {
 	{ "FEZ_ARS", "WEAPON RAISE SPEED" },
 	{ "FEZ_AA", "AIM ASSIST" },
 	{ "FEZ_AAS", "ASSIST STRENGTH" },
+	{ "FEZ_BTS", "SLOW MO SECONDS" },
+	{ "FEZ_BTR", "SLOW MO RECHARGE" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

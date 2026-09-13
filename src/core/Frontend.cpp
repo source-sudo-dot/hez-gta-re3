@@ -3790,7 +3790,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadUp()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if ((m_fMapSize - MENU_Y(MAP_MIN_SIZE)) + SCREEN_HEIGHT/2 > m_fMapCenterY)
-							m_fMapCenterY += MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f);
+							m_fMapCenterY += MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
 				}
@@ -3799,7 +3799,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadDown()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (SCREEN_HEIGHT/2 - (m_fMapSize - MENU_Y(MAP_MIN_SIZE)) < m_fMapCenterY)
-							m_fMapCenterY -= MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f);
+							m_fMapCenterY -= MENU_Y(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
 				}
@@ -3808,7 +3808,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadLeft()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && m_fMapSize - MENU_X(MAP_MIN_SIZE) + SCREEN_WIDTH/2 > m_fMapCenterX)
-							m_fMapCenterX += MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f);
+							m_fMapCenterX += MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
 				}
@@ -3822,8 +3822,10 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					float stickY = CPad::GetPad(0)->NewState.LeftStickY / 128.0f;
 					if (stickX != 0.0f || stickY != 0.0f) {
 						// the fixed step came at most about once every sixtieth of a second, and
-						// the render frame length is counted in thirtieths
-						float step = 15.0f * 2.0f * CTimer::GetRenderFrameLength() * Max(m_fMapScrollSpeed, 0.05f);
+						// the render frame length is counted in thirtieths.  The step is also scaled
+						// by the zoom: moved by a fixed amount on screen, a map zoomed in six times
+						// crossed the city six times slower.  The d-pad steps are scaled the same.
+						float step = 15.0f * 2.0f * CTimer::GetRenderFrameLength() * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE))
 							m_fMapCenterX -= MENU_X(Clamp(stickX, -1.0f, 1.0f) * step);
 						m_fMapCenterY -= MENU_Y(Clamp(stickY, -1.0f, 1.0f) * step);
@@ -3847,7 +3849,7 @@ CMenuManager::AdditionalOptionInput(bool &goBack)
 					CPad::GetPad(0)->GetDPadRight()) {
 					if (CTimer::GetTimeInMillisecondsPauseMode() - lastMapTick > 10) {
 						if (m_fMapSize > MENU_X(MAP_SIZE_TO_ALLOW_X_MOVE) && SCREEN_WIDTH/2 - (m_fMapSize - MENU_X(MAP_MIN_SIZE)) < m_fMapCenterX)
-							m_fMapCenterX -= MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f);
+							m_fMapCenterX -= MENU_X(15.f) * Max(m_fMapScrollSpeed, 0.05f) * (m_fMapSize / MENU_Y(MAP_MIN_SIZE));
 						m_bShowMouse = false;
 					}				
 				}

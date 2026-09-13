@@ -27,6 +27,7 @@
 #include "Pad.h"
 #include "Timer.h"
 #include "Crosshair.h"
+#include "BulletTime.h"
 #include "PlayerPed.h"
 #include "ControllerConfig.h"
 #include "DMAudio.h"
@@ -849,6 +850,9 @@ CMenuScreenCustom aScreens[] = {
 		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SELECT,	"FEZ_AA", { new CCFOSelect((int8*)&CPlayerPed::bAimAssist, "Display", "AimAssist", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_CFO_SLIDER,	"FEZ_AAS", { new CCFOSlider(&CPlayerPed::m_fAimAssistStrength, "Display", "AimAssistStrength", 0.0f, 0.9f, nil, 45, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SELECT,	"FEZ_BT", { new CCFOSelect((int8*)&CBulletTime::bEnabled, "Display", "BulletTime", off_on, 2, false) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_BTS", { new CCFOSlider(&CBulletTime::m_fDuration, "Display", "BulletTimeSeconds", 1.0f, 10.0f, nil, 36, true) }, 0, 0, MENUALIGN_LEFT,
+		MENUACTION_CFO_SLIDER,	"FEZ_BTR", { new CCFOSlider(&CBulletTime::m_fRecharge, "Display", "BulletTimeRecharge", 1.0f, 20.0f, nil, 38, true) }, 0, 0, MENUALIGN_LEFT,
 		MENUACTION_GOBACK,		"FEDS_TB", {nil, SAVESLOT_NONE, MENUPAGE_NONE}, 0, 0, MENUALIGN_LEFT,
 	},
 

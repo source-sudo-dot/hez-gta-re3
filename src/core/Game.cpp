@@ -36,6 +36,8 @@
 #include "HandlingMgr.h"
 #include "Heli.h"
 #include "Hud.h"
+#include "WeaponWheel.h"
+#include "BulletTime.h"
 #include "IniFile.h"
 #include "Lights.h"
 #include "MBlur.h"
@@ -652,6 +654,8 @@ bool CGame::ShutDown(void)
 void CGame::ReInitGameObjectVariables(void)
 {
 	CGameLogic::InitAtStartOfGame();
+	CWeaponWheel::Init();
+	CBulletTime::Init();
 #ifdef PS2_MENU
 	if ( !TheMemoryCard.m_bWantToLoad )
 #endif
@@ -880,6 +884,12 @@ void CGame::Process(void)
 	CStreaming::Update();
 	uint32 processTime = CTimer::GetCurrentTimeInCycles() / CTimer::GetCyclesPerMillisecond() - startTime;
 	CWindModifiers::Number = 0;
+
+	// The weapon wheel stops the game while it is up, so it is processed before the paused check,
+	// or it could never be closed again.
+	CWeaponWheel::Process();
+	CBulletTime::Process();
+
 	if (!CTimer::GetIsPaused())
 	{
 #ifndef MASTER

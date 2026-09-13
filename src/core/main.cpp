@@ -39,6 +39,7 @@
 #include "Font.h"
 #include "Pad.h"
 #include "Hud.h"
+#include "WeaponWheel.h"
 #include "User.h"
 #include "Messages.h"
 #include "Darkel.h"
@@ -1477,6 +1478,7 @@ Render2dStuff(void)
 		CHud::Draw();
 
 	CSpecialFX::Render2DFXs();
+	CWeaponWheel::Draw();
 	CPad::DrawStickDebug();
 	CUserDisplay::OnscnTimer.ProcessForDisplay();
 	CMessages::Display();
