@@ -19,6 +19,7 @@
 #include "SaveBuf.h"
 #include "Streaming.h"
 #include "SpecialFX.h"
+#include "Pickups.h"
 
 float CRadar::m_radarRange;
 sRadarTrace CRadar::ms_RadarTrace[NUMRADARBLIPS];
@@ -761,6 +762,25 @@ void CRadar::DrawBlips()
 		}
 #ifdef MENU_MAP
 		if (CMenuManager::bMenuMapActive) {
+			// The hidden packages still waiting to be picked up.  All hundred are put
+			// into the pickup list together when the game starts, a package far from the
+			// player only loses its model and keeps its place in the list, and picking one
+			// up sets its type to PICKUP_NONE - so whatever is still COLLECTABLE1 is exactly
+			// what is left.  Drawn before the player so his arrow stays on top.
+			float half = SCREEN_SCALE_Y(3.0f);
+			float edge = SCREEN_SCALE_Y(1.0f);
+			for (int32 i = 0; i < NUMPICKUPS; i++) {
+				if (CPickups::aPickUps[i].m_eType != PICKUP_COLLECTABLE1)
+					continue;
+				CVector2D pin, pout;
+				TransformRealWorldPointToRadarSpace(pin, CVector2D(CPickups::aPickUps[i].m_vecPos));
+				TransformRadarPointToScreenSpace(pout, pin);
+				CSprite2d::DrawRect(CRect(pout.x - half - edge, pout.y - half - edge, pout.x + half + edge, pout.y + half + edge),
+					CRGBA(0, 0, 0, 255));
+				CSprite2d::DrawRect(CRect(pout.x - half, pout.y - half, pout.x + half, pout.y + half),
+					CRGBA(120, 230, 90, 255));
+			}
+
 			CVector2D in, out;
 			TransformRealWorldPointToRadarSpace(in, FindPlayerCentreOfWorld_NoSniperShift());
 			LimitRadarPoint(in);
