@@ -1401,16 +1401,14 @@ void CRunningScript::DoDeatharrestCheck()
 }
 
 // Ammu-Nation and the race list are menus the script runs itself: they put up a hint for good,
-// buy or start on cross and wait on triangle to leave.  Back is circle in every other menu, so
-// while one of those hints is up circle leaves as well.  It is the button itself that is read,
-// since the pad state's circle is whatever fire is bound to.
+// step through the list on the d-pad or the stick, buy or start on cross and wait on triangle to
+// leave.  In the game those pad states are whatever sprint, enter and the rest are bound to, not
+// the buttons, so while one of those hints is up the buttons themselves are read as well: cross
+// buys, the d-pad steps and circle leaves, as they would in any other menu.
 static bool
-CircleLeavesScriptMenu(void)
+ScriptMenuHintUp(void)
 {
 	if (!CHud::m_HelpMessageDisplayForever || !CHud::IsHelpMessageBeingDisplayed())
-		return false;
-	// button 1 is circle, see MapIdToButtonId
-	if (!ControlsManager.m_aButtonStates[0])
 		return false;
 
 	static const char *menuHints[] = { "GUN_H1", "RACEHLP" };
@@ -1423,6 +1421,13 @@ CircleLeavesScriptMenu(void)
 			return true;
 	}
 	return false;
+}
+
+// a pad button by its binding number (see MapIdToButtonId), held while a script menu hint is up
+static bool
+ScriptMenuButton(int32 id)
+{
+	return ControlsManager.m_aButtonStates[id - 1] && ScriptMenuHintUp();
 }
 
 int16 CRunningScript::GetPadState(uint16 pad, uint16 button)
@@ -1439,13 +1444,13 @@ int16 CRunningScript::GetPadState(uint16 pad, uint16 button)
 	case 7: return pPad->NewState.RightShoulder2;
 	case 8: return pPad->NewState.DPadUp;
 	case 9: return pPad->NewState.DPadDown;
-	case 10: return pPad->NewState.DPadLeft;
-	case 11: return pPad->NewState.DPadRight;
+	case 10: return pad == 0 && ScriptMenuButton(16) ? 255 : pPad->NewState.DPadLeft;
+	case 11: return pad == 0 && ScriptMenuButton(14) ? 255 : pPad->NewState.DPadRight;
 	case 12: return pPad->NewState.Start;
 	case 13: return pPad->NewState.Select;
 	case 14: return pPad->NewState.Square;
-	case 15: return pad == 0 && CircleLeavesScriptMenu() ? 255 : pPad->NewState.Triangle;
-	case 16: return pPad->NewState.Cross;
+	case 15: return pad == 0 && ScriptMenuButton(1) ? 255 : pPad->NewState.Triangle;	// circle
+	case 16: return pad == 0 && ScriptMenuButton(2) ? 255 : pPad->NewState.Cross;	// cross
 	case 17: return pPad->NewState.Circle;
 	case 18: return pPad->NewState.LeftShock;
 	case 19: return pPad->NewState.RightShock;
