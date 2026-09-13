@@ -2543,6 +2543,15 @@ CMenuManager::DrawBackground(bool transitionCall)
 	CSprite2d::Draw2DPolygon(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_STRETCH_X(menuBg.bottomRight_x), SCREEN_STRETCH_Y(menuBg.bottomRight_y),
 		SCREEN_WIDTH, 0.0f, SCREEN_STRETCH_X(menuBg.topRight_x), SCREEN_STRETCH_Y(menuBg.topRight_y), CRGBA(0, 0, 0, 255));
 
+	// The progress figures reach past the map onto the black border.  Printed along with the map
+	// they lay under it: the font buffer is put on the screen the moment it fills, and a list this
+	// long fills it, so all but its last lines were drawn before the border was.
+	if (m_nCurrScreen == MENUPAGE_MAP) {
+		CFont::SetWrapx(MENU_X_RIGHT_ALIGNED(MENU_X_MARGIN));
+		CFont::SetRightJustifyWrap(MENU_X_LEFT_ALIGNED(MENU_X_MARGIN));
+		PrintCompletionOnMap();
+	}
+
 	static uint32 LastFade = 0;
 
 	if (m_nMenuFadeAlpha < 255) {
@@ -5259,7 +5268,10 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 	// this fork adds start out unbound and not everyone wants all of them, so leaving is
 	// always allowed.
 	if (goBack) {
-		DMAudio.PlayFrontEndSound(SOUND_FRONTEND_BACK, 0);
+		// The map opened on its own key is not a page being left but the game coming back, and
+		// it goes away without a sound on that key too.
+		if (!(m_bMapOpenedDirectly && m_nCurrScreen == MENUPAGE_MAP))
+			DMAudio.PlayFrontEndSound(SOUND_FRONTEND_BACK, 0);
 		SwitchToNewScreen(-2);
 		if (hasNativeList(m_nCurrScreen)) {
 			m_nTotalListRow = 0;
@@ -6143,11 +6155,8 @@ CMenuManager::PrintMap(void)
 
 #endif
 	m_bMenuMapActive = false;
-
-	CFont::SetWrapx(MENU_X_RIGHT_ALIGNED(MENU_X_MARGIN));
-	CFont::SetRightJustifyWrap(MENU_X_LEFT_ALIGNED(MENU_X_MARGIN));
-	// the line of key hints under the map is gone, as it was on the master branch
-	PrintCompletionOnMap();
+	// the line of key hints under the map is gone, as it was on the master branch; the progress
+	// figures are put down in DrawBackground, after the border
 }
 
 // Small, in the corner of the map, to be read at a glance rather than studied.

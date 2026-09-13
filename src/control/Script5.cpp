@@ -16,6 +16,9 @@
 #include "Shadows.h"
 #include "SpecialFX.h"
 #include "World.h"
+#include "ControllerConfig.h"
+#include "Hud.h"
+#include "Text.h"
 #include "main.h"
 #include "SaveBuf.h"
 
@@ -1397,6 +1400,31 @@ void CRunningScript::DoDeatharrestCheck()
 	m_nWakeTime = 0;
 }
 
+// Ammu-Nation and the race list are menus the script runs itself: they put up a hint for good,
+// buy or start on cross and wait on triangle to leave.  Back is circle in every other menu, so
+// while one of those hints is up circle leaves as well.  It is the button itself that is read,
+// since the pad state's circle is whatever fire is bound to.
+static bool
+CircleLeavesScriptMenu(void)
+{
+	if (!CHud::m_HelpMessageDisplayForever || !CHud::IsHelpMessageBeingDisplayed())
+		return false;
+	// button 1 is circle, see MapIdToButtonId
+	if (!ControlsManager.m_aButtonStates[0])
+		return false;
+
+	static const char *menuHints[] = { "GUN_H1", "RACEHLP" };
+	wchar hint[HELP_MSG_LENGTH];
+	for (int32 i = 0; i < ARRAY_SIZE(menuHints); i++) {
+		// the hint shown has its key names put in, so the one compared against has to as well
+		CMessages::WideStringCopy(hint, TheText.Get(menuHints[i]), HELP_MSG_LENGTH);
+		CMessages::InsertPlayerControlKeysInString(hint);
+		if (CMessages::WideStringCompare(hint, CHud::m_HelpMessage, HELP_MSG_LENGTH))
+			return true;
+	}
+	return false;
+}
+
 int16 CRunningScript::GetPadState(uint16 pad, uint16 button)
 {
 	CPad* pPad = CPad::GetPad(pad);
@@ -1416,7 +1444,7 @@ int16 CRunningScript::GetPadState(uint16 pad, uint16 button)
 	case 12: return pPad->NewState.Start;
 	case 13: return pPad->NewState.Select;
 	case 14: return pPad->NewState.Square;
-	case 15: return pPad->NewState.Triangle;
+	case 15: return pad == 0 && CircleLeavesScriptMenu() ? 255 : pPad->NewState.Triangle;
 	case 16: return pPad->NewState.Cross;
 	case 17: return pPad->NewState.Circle;
 	case 18: return pPad->NewState.LeftShock;
