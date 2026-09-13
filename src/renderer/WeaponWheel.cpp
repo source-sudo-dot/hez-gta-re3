@@ -40,8 +40,8 @@ bool  CWeaponWheel::m_bWaitingToOpen = false;
 #define WHEEL_RADIUS (100.0f)
 #define WHEEL_ICON_SIZE (52.0f)
 // The button is given this long before the ring opens.  Let go inside it and nothing opens at
-// all - the weapon simply goes away or comes back.  Fifty milliseconds, as asked for in play.
-#define WHEEL_HOLD_MS (50)
+// all - the weapon simply goes away or comes back.
+#define WHEEL_HOLD_MS (200)
 
 void
 CWeaponWheel::Init(void)
@@ -324,7 +324,10 @@ CWeaponWheel::Draw(void)
 			CFont::SetPropOn();
 			CFont::SetFontStyle(FONT_BANK);
 			CFont::SetScale(SCREEN_SCALE_X(0.5f), SCREEN_SCALE_Y(0.8f));
-			CFont::SetColor(CRGBA(225, 225, 225, (int32)(255.0f * open)));
+			// The ring's dimmed backdrop and its other icons start from 150, the number from full,
+			// and white on a dark screen stays legible long after the rest has gone.  Taken down
+			// with the cube of the opening, it is still full with the ring open and gone with it.
+			CFont::SetColor(CRGBA(225, 225, 225, (int32)(255.0f * open * open * open)));
 			CFont::PrintString(centreX, centreY - SCREEN_SCALE_Y(8.0f), wbuf);
 		}
 	}
