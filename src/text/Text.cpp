@@ -148,6 +148,7 @@ static struct {
 	{ "FEZ_CFF", "FIREFIGHTER" },
 	{ "FEZ_CVG", "VIGILANTE" },
 	{ "FEZ_CTX", "TAXI FARES" },
+	{ "FEZ_CPZ", "PIZZA BOY" },
 };
 static wchar ExtraTextBuf[ARRAY_SIZE(ExtraText)][40];
 static bool ExtraTextBuilt = false;

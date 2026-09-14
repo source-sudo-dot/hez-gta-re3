@@ -9,7 +9,7 @@
 class CCompletion
 {
 public:
-	enum { MAX_GOALS = 9 };
+	enum { MAX_GOALS = 12 };
 
 	struct tGoal
 	{
