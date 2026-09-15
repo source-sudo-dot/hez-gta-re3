@@ -2291,9 +2291,33 @@ CCamera::SetCamPositionForFixedMode(const CVector &Source, const CVector &UpOffS
 }
 
 
+#ifdef FREE_CAM
+bool gbCamCarryOrientation = false;
+float gfCamCarryBeta = 0.0f;
+float gfCamCarryAlpha = 0.0f;
+#endif
+
 void
 CCamera::StartTransition(int16 newMode)
 {
+#ifdef FREE_CAM
+	// Getting in turned the camera to face the way the car points, and getting out swung it round
+	// to behind the door, both from wherever the player had it.  With the free camera the player
+	// points it, so it keeps looking the way it was and only the distance changes.
+	bool isVehicleCam = newMode == CCam::MODE_CAM_ON_A_STRING || newMode == CCam::MODE_BEHINDBOAT;
+	bool wasVehicleCam = Cams[ActiveCam].Mode == CCam::MODE_CAM_ON_A_STRING || Cams[ActiveCam].Mode == CCam::MODE_BEHINDBOAT;
+	bool carryOrientation = CCamera::bFreeCam && !m_bJustCameOutOfGarage && !m_bTargetJustCameOffTrain &&
+		(Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED && isVehicleCam ||
+		 wasVehicleCam && newMode == CCam::MODE_FOLLOWPED);
+	gbCamCarryOrientation = carryOrientation;
+	if (carryOrientation) {
+		// the true angles are measured from the target out to the camera, so the pitch is up when
+		// the camera is above; the cameras keep it the other way round
+		gfCamCarryBeta = Cams[ActiveCam].m_fTrueBeta;
+		gfCamCarryAlpha = -Cams[ActiveCam].m_fTrueAlpha;
+	}
+#endif
+
 	bool switchFromFixedSyphon = false;
 	bool switchSyphonMode = false;
 	bool switchPedMode = false;
@@ -2494,6 +2518,12 @@ CCamera::StartTransition(int16 newMode)
 		Cams[ActiveCam].AlphaSpeed = 0.0f;
 		break;
 	}
+
+#ifdef FREE_CAM
+	// the angle worked out above for getting in or out is what swung the camera round
+	if (carryOrientation)
+		m_bUseTransitionBeta = false;
+#endif
 
 	Cams[ActiveCam].Init();
 	Cams[ActiveCam].Mode = newMode;

@@ -1373,6 +1373,16 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 		m_bCollisionChecksOn = true;
 		CPad::GetPad(0)->ClearMouseHistory();
 		ResetStatics = false;
+#ifdef FREE_CAM
+		// out of a vehicle: carry on looking the way the car camera did, see StartTransition
+		if(gbCamCarryOrientation){
+			Beta = gfCamCarryBeta;
+			Alpha = gfCamCarryAlpha;
+			BetaSpeed = 0.0f;
+			AlphaSpeed = 0.0f;
+			gbCamCarryOrientation = false;
+		}
+#endif
 	}
 
 	bool OnTrain = FindPlayerVehicle() && FindPlayerVehicle()->IsTrain();
@@ -4630,6 +4640,13 @@ CCam::Process_FollowPed_Rotation(const CVector &CameraTarget, float TargetOrient
 		// so keep Beta, reset alpha and calculate vectors
 		Beta = CGeneral::GetATanOfXY(Dist.x, Dist.y);
 		Alpha = 0.0f;
+		// out of a vehicle: carry on looking the way the car camera did, see StartTransition.
+		// Here the angles point from the target out to the camera, so the pitch turns over.
+		if(gbCamCarryOrientation){
+			Beta = gfCamCarryBeta;
+			Alpha = -gfCamCarryAlpha;
+			gbCamCarryOrientation = false;
+		}
 
 		Dist = MaxDist*CVector(Cos(Alpha) * Cos(Beta), Cos(Alpha) * Sin(Beta), Sin(Alpha));
 		Source = TargetCoors + Dist;
@@ -4969,12 +4986,19 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 
 	// Called when we just entered the car, just started to look behind or returned back from looking left, right or behind
 	if (ResetStatics || TheCamera.m_bCamDirectlyBehind || TheCamera.m_bCamDirectlyInFront) {
+		// just got in: carry on looking the way the on foot camera did, see StartTransition
+		bool carried = ResetStatics && gbCamCarryOrientation && !TheCamera.m_bCamDirectlyInFront;
+		if (ResetStatics)
+			gbCamCarryOrientation = false;
 		ResetStatics = false;
 		heldAlphaValid = false;
 		Rotating = false;
 		m_bCollisionChecksOn = true;
 
-		if (!TheCamera.m_bJustCameOutOfGarage) {
+		if (carried) {
+			Beta = gfCamCarryBeta;
+			Alpha = gfCamCarryAlpha;
+		} else if (!TheCamera.m_bJustCameOutOfGarage) {
 			Alpha = 0.0f;
 			Beta = car->GetForward().Heading() - HALFPI;
 			if (TheCamera.m_bCamDirectlyInFront) {
@@ -4995,7 +5019,7 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 		m_aTargetHistoryPosTwo = TargetCoors - newDistance * Front;
 
 		m_nCurrentHistoryPoints = 0;
-		if (!TheCamera.m_bJustCameOutOfGarage)
+		if (!TheCamera.m_bJustCameOutOfGarage && !carried)
 			Alpha = -zoomModeAlphaOffset;
 	}
 

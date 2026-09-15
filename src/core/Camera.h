@@ -661,6 +661,16 @@ VALIDATE_SIZE(CCamera, 0xE9D8);
 
 extern CCamera TheCamera;
 
+#ifdef FREE_CAM
+// Getting in or out with the free camera on hands the way the camera is looking from the camera
+// that was running to the one that takes over, so only its distance changes.  Set in
+// CCamera::StartTransition, taken once by the next camera as it resets.  Alpha is the pitch the
+// cameras use, positive looking up.
+extern bool gbCamCarryOrientation;
+extern float gfCamCarryBeta;
+extern float gfCamCarryAlpha;
+#endif
+
 void CamShakeNoPos(CCamera*, float);
 void MakeAngleLessThan180(float &Angle);
 void WellBufferMe(float Target, float *CurrentValue, float *CurrentSpeed, float MaxSpeed, float Acceleration, bool IsAngle);
