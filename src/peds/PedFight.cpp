@@ -1030,9 +1030,13 @@ CPed::Attack(void)
 #ifdef FREE_CAM
 		// m_bFreeAimActive is only set while the free camera is on, and holding Target/Aim turns
 		// that off, so this branch stopped being reached and the weapon dropped at the end of
-		// every burst.  Holding aim counts as free aiming for it as well.
+		// every burst.  Holding aim counts as free aiming for it as well, but only for the weapons
+		// the aim pose looks after: it is what takes the pointing at nothing away again when aim
+		// is let go.  The minigun and the flamethrower cannot aim, so nothing ever did, and the
+		// player stood pointing them at nothing and could not move.
 		} else if (IsPlayer() && (((CPlayerPed*)this)->m_bFreeAimActive ||
-			CPad::GetPad(0)->GetTarget() && TheCamera.Cams[0].Using3rdPersonMouseCam())
+			CPad::GetPad(0)->GetTarget() && TheCamera.Cams[0].Using3rdPersonMouseCam() &&
+			ourWeapon->IsFlagSet(WEAPONFLAG_CANAIM) && ourWeapon->m_eWeaponFire != WEAPON_FIRE_MELEE)
 			&& GetWeapon()->m_eWeaponState != WEAPONSTATE_RELOADING) {
 			float limitedCam = CGeneral::LimitRadianAngle(-TheCamera.Orientation);
 			SetLookFlag(limitedCam, true, true);
