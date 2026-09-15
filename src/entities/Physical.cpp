@@ -156,6 +156,55 @@ CPhysical::Remove(void)
 	}
 }
 
+#include "Frontend.h"
+#include "Lists.h"
+#include "PlayerInfo.h"
+#include "PlayerPed.h"
+#include "WeaponWheel.h"
+
+// An entity came to be sorted into the world from somewhere outside it, during a fight with the
+// police and, as far as the player could tell, with the weapon wheel up.  What it was and how it
+// was moving is written to reVC_debug.log the moment it happens, before the assert stops the game.
+static void
+LogEntityOutsideWorld(CPhysical *ent, const CRect &bounds)
+{
+	FILE *f = fopen("reVC_debug.log", "a");
+	if (f == nil)
+		return;
+
+	CPed *player = FindPlayerPed();
+	fprintf(f, "\n=== entity outside the world ===\n");
+	fprintf(f, "time %u pausemode %u step %.5f stepnc %.5f scale %.3f paused %d codepause %d menu %d wheel %d adrenaline %d\n",
+		CTimer::GetTimeInMilliseconds(), CTimer::GetTimeInMillisecondsPauseMode(), CTimer::GetTimeStep(),
+		CTimer::GetTimeStepNonClipped(), CTimer::GetTimeScale(), (int)CTimer::GetIsPaused(), (int)CTimer::GetIsCodePaused(),
+		(int)FrontEndMenuManager.m_bMenuActive, (int)CWeaponWheel::bOpen,
+		player ? (int)((CPlayerPed*)player)->m_bAdrenalineActive : -1);
+	fprintf(f, "type %d status %d model %d isplayer %d isplayervehicle %d\n",
+		(int)ent->GetType(), (int)ent->GetStatus(), (int)ent->GetModelIndex(),
+		(int)(ent == player), (int)(ent == FindPlayerVehicle()));
+	fprintf(f, "bounds l %f r %f t %f b %f\n", bounds.left, bounds.right, bounds.top, bounds.bottom);
+	fprintf(f, "pos %f %f %f\n", ent->GetPosition().x, ent->GetPosition().y, ent->GetPosition().z);
+	fprintf(f, "movespeed %f %f %f turnspeed %f %f %f movefriction %f %f %f\n",
+		ent->m_vecMoveSpeed.x, ent->m_vecMoveSpeed.y, ent->m_vecMoveSpeed.z,
+		ent->m_vecTurnSpeed.x, ent->m_vecTurnSpeed.y, ent->m_vecTurnSpeed.z,
+		ent->m_vecMoveFriction.x, ent->m_vecMoveFriction.y, ent->m_vecMoveFriction.z);
+	fprintf(f, "mass %f turnmass %f infmass %d nocollision %d\n", ent->m_fMass, ent->m_fTurnMass,
+		(int)ent->bInfiniteMass, (int)!ent->bUsesCollision);
+	if (ent->IsPed()) {
+		CPed *ped = (CPed*)ent;
+		fprintf(f, "ped type %d state %d laststate %d movestate %d objective %d lastwepdam %d health %f\n",
+			(int)ped->m_nPedType, (int)ped->m_nPedState, (int)ped->m_nLastPedState, (int)ped->m_nMoveState,
+			(int)ped->m_objective, (int)ped->m_lastWepDam, ped->m_fHealth);
+		fprintf(f, "animmovedelta %f %f moved %f %f rotcur %f rotdest %f invehicle %d\n",
+			ped->m_vecAnimMoveDelta.x, ped->m_vecAnimMoveDelta.y, ped->m_moved.x, ped->m_moved.y,
+			ped->m_fRotationCur, ped->m_fRotationDest, (int)ped->bInVehicle);
+	}
+	if (player)
+		fprintf(f, "player pos %f %f %f state %d weapon %d\n", player->GetPosition().x, player->GetPosition().y,
+			player->GetPosition().z, (int)player->m_nPedState, (int)player->GetWeapon()->m_eWeaponType);
+	fclose(f);
+}
+
 void
 CPhysical::RemoveAndAdd(void)
 {
@@ -171,6 +220,8 @@ CPhysical::RemoveAndAdd(void)
 	ystart = CWorld::GetSectorIndexY(bounds.top);
 	yend   = CWorld::GetSectorIndexY(bounds.bottom);
 	ymid   = CWorld::GetSectorIndexY((bounds.top + bounds.bottom)/2.0f);
+	if (xstart < 0 || xend >= NUMSECTORS_X || ystart < 0 || yend >= NUMSECTORS_Y)
+		LogEntityOutsideWorld(this, bounds);
 	assert(xstart >= 0);
 	assert(xend < NUMSECTORS_X);
 	assert(ystart >= 0);
