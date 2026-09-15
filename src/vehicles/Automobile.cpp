@@ -4,7 +4,6 @@
 #include "General.h"
 #include "RwHelper.h"
 #include "Pad.h"
-#include "ControllerConfig.h"
 #include "ModelIndices.h"
 #include "VisibilityPlugins.h"
 #include "DMAudio.h"
@@ -3600,15 +3599,14 @@ CAutomobile::HydraulicControl(void)
 		float suspChange[4];
 		float maxDelta = 0.0f;
 		// On a pad the hydraulics took the right stick, which is the camera, so the camera could
-		// not be moved in this car.  They are on the d-pad instead, the way the stick worked: up
-		// lifts the front, left lifts the left side.  The keys stay as they were.
-		int16 hydraulicUpDown = CPad::GetPad(0)->GetCarGunUpDown();
-		int16 hydraulicLeftRight = CPad::GetPad(0)->GetCarGunLeftRight();
-		if(CPad::IsAffectedByController){
-			// the buttons by binding number, see MapIdToButtonId: 13 up, 14 right, 15 down, 16 left
-			bool *buttons = ControlsManager.m_aButtonStates;
-			hydraulicUpDown = CPad::GetPad(0)->ArePlayerControlsDisabled() ? 0 : (buttons[14] ? 128 : 0) - (buttons[12] ? 128 : 0);
-			hydraulicLeftRight = CPad::GetPad(0)->ArePlayerControlsDisabled() ? 0 : (buttons[13] ? 128 : 0) - (buttons[15] ? 128 : 0);
+		// not be moved in this car.  Every other button on the pad already does something in a
+		// car, so on a pad the wheels are left alone and the stick is the camera's.  The keys
+		// work them as they always did.
+		int16 hydraulicUpDown = 0;
+		int16 hydraulicLeftRight = 0;
+		if(!CPad::IsAffectedByController){
+			hydraulicUpDown = CPad::GetPad(0)->GetCarGunUpDown();
+			hydraulicLeftRight = CPad::GetPad(0)->GetCarGunLeftRight();
 		}
 		float rear = hydraulicUpDown/128.0f;
 		float front = -rear;

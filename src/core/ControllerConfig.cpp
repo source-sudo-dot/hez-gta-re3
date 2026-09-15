@@ -713,19 +713,12 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown(int32 button, 
 		default: break;
 		}
 
-		// In a car with hydraulics the d-pad works them (see CAutomobile::HydraulicControl), so
-		// whatever driving action is bound to it would go off with every lift of a wheel.
-		bool dpadWorksHydraulics = playerDriving && type == JOYSTICK && button >= 13 && button <= 16 &&
-			FindPlayerVehicle()->GetModelIndex() == MI_VOODOO;
-
 		if (pad != NULL)
 		{
 			if (playerDriving)
 			{
-				if (!dpadWorksHydraulics) {
-					AffectControllerStateOn_ButtonDown_Driving(button, type, *state);
-					AffectControllerStateOn_ButtonDown_VehicleAndThirdPersonOnly(button, type, *state);
-				}
+				AffectControllerStateOn_ButtonDown_Driving(button, type, *state);
+				AffectControllerStateOn_ButtonDown_VehicleAndThirdPersonOnly(button, type, *state);
 			}
 			else
 			{
