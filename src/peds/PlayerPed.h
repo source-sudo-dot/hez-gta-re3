@@ -58,6 +58,8 @@ public:
 	static float m_fAimRaiseSpeed;
 	// AimAssist and AimAssistStrength under [Display] in reVC.ini
 	static bool bAimAssist;
+	// MoveWhileAiming under [Display] in reVC.ini
+	static bool bMoveWhileAiming;
 	static float m_fAimAssistStrength;
 	static bool bIsAimPosed;
 	static bool bDontAllowWeaponChange;
@@ -110,6 +112,8 @@ public:
 	bool CanIKReachThisTarget(CVector, CWeapon*, bool);
 	void RotatePlayerToTrackTarget(void);
 	bool MovementDisabledBecauseOfTargeting(void);
+	bool MovesWhileAiming(void);
+	void ProcessUpperBodyWeaponAnims(void);
 	void FindNewAttackPoints(void);
 	void SetNearbyPedsToInteractWithPlayer(void);
 	void UpdateMeleeAttackers(void);

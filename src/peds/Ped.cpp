@@ -3906,7 +3906,9 @@ bool
 CPed::CanStrafeOrMouseControl(void)
 {
 #ifdef FREE_CAM
-	if (CCamera::bFreeCam)
+	// the free camera turns the player round to where he walks, except while he walks with a
+	// gun raised, see CPlayerPed::MovesWhileAiming
+	if (CCamera::bFreeCam && !(IsPlayer() && ((CPlayerPed*)this)->MovesWhileAiming()))
 		return false;
 #endif
 	return m_nPedState == PED_NONE || m_nPedState == PED_IDLE || m_nPedState == PED_FLEE_POS || m_nPedState == PED_FLEE_ENTITY ||

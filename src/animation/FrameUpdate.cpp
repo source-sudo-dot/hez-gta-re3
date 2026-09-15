@@ -5,6 +5,30 @@
 #include "AnimBlendClumpData.h"
 #include "AnimBlendAssociation.h"
 #include "RpAnimBlend.h"
+#include "Bones.h"
+
+// An animation marked ASSOC_UPPERBODY leaves the hips and the legs to the others.  The player's
+// weapon animations are marked while he walks with a two handed gun raised: they hold the whole
+// body, legs and all, and would stand him still, so the walk plays below the hips and the gun is
+// held above them exactly as the weapon animation holds it, both hands on it.
+static inline bool
+NodeSkipped(AnimBlendFrameData *frame, CAnimBlendNode *node)
+{
+	if(!(node->association->flags & ASSOC_UPPERBODY))
+		return false;
+	switch(frame->nodeID){
+	case BONE_root:
+	case BONE_pelvis:
+	case BONE_l_thigh:
+	case BONE_l_calf:
+	case BONE_l_foot:
+	case BONE_r_thigh:
+	case BONE_r_calf:
+	case BONE_r_foot:
+		return true;
+	}
+	return false;
+}
 
 CAnimBlendClumpData *gpAnimBlendClump;
 
@@ -41,11 +65,11 @@ FrameUpdateCallBackNonSkinned(AnimBlendFrameData *frame, void *arg)
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->association->IsPartial())
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 				totalBlendAmount += (*node)->association->blendAmount;
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence){
+		if((*node)->sequence && !NodeSkipped(frame, *node)){
 			(*node)->Update(vec, q, 1.0f-totalBlendAmount);
 			if((*node)->sequence->HasTranslation())
 				pos += vec;
@@ -92,11 +116,11 @@ FrameUpdateCallBackWithVelocityExtractionNonSkinned(AnimBlendFrameData *frame, v
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->association->IsPartial())
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 				totalBlendAmount += (*node)->association->blendAmount;
 
 	for(node = updateData->nodes; *node; node++)
-		if((*node)->sequence && (*node)->sequence->HasTranslation()){
+		if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
 			if((*node)->association->HasTranslation()){
 				(*node)->GetCurrentTranslation(vec, 1.0f-totalBlendAmount);
 				cury += vec.y;
@@ -106,7 +130,7 @@ FrameUpdateCallBackWithVelocityExtractionNonSkinned(AnimBlendFrameData *frame, v
 		}
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence){
+		if((*node)->sequence && !NodeSkipped(frame, *node)){
 			bool nodelooped = (*node)->Update(vec, q, 1.0f-totalBlendAmount);
 #ifdef FIX_BUGS
 			if(DotProduct(rot, q) < 0.0f)
@@ -178,11 +202,11 @@ FrameUpdateCallBackWith3dVelocityExtractionNonSkinned(AnimBlendFrameData *frame,
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->association->IsPartial())
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 				totalBlendAmount += (*node)->association->blendAmount;
 
 	for(node = updateData->nodes; *node; node++)
-		if((*node)->sequence && (*node)->sequence->HasTranslation()){
+		if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
 			if((*node)->association->HasTranslation()){
 				(*node)->GetCurrentTranslation(vec, 1.0f-totalBlendAmount);
 				cur += vec;
@@ -190,7 +214,7 @@ FrameUpdateCallBackWith3dVelocityExtractionNonSkinned(AnimBlendFrameData *frame,
 		}
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence){
+		if((*node)->sequence && !NodeSkipped(frame, *node)){
 			bool nodelooped = (*node)->Update(vec, q, 1.0f-totalBlendAmount);
 #ifdef FIX_BUGS
 			if(DotProduct(rot, q) < 0.0f)
@@ -252,11 +276,11 @@ FrameUpdateCallBackSkinned(AnimBlendFrameData *frame, void *arg)
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->association->IsPartial())
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 				totalBlendAmount += (*node)->association->blendAmount;
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence){
+		if((*node)->sequence && !NodeSkipped(frame, *node)){
 			(*node)->Update(vec, q, 1.0f-totalBlendAmount);
 			if((*node)->sequence->HasTranslation()){
 				pos += vec;
@@ -304,11 +328,11 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->association->IsPartial())
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 				totalBlendAmount += (*node)->association->blendAmount;
 
 	for(node = updateData->nodes; *node; node++)
-		if((*node)->sequence && (*node)->sequence->HasTranslation()){
+		if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
 			if((*node)->association->HasTranslation()){
 				(*node)->GetCurrentTranslation(vec, 1.0f-totalBlendAmount);
 				cury += vec.y;
@@ -318,7 +342,7 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 		}
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence){
+		if((*node)->sequence && !NodeSkipped(frame, *node)){
 			bool nodelooped = (*node)->Update(vec, q, 1.0f-totalBlendAmount);
 			if(DotProduct(rot, q) < 0.0f)
 				rot -= q;
@@ -388,11 +412,11 @@ FrameUpdateCallBackWith3dVelocityExtractionSkinned(AnimBlendFrameData *frame, vo
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->association->IsPartial())
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 				totalBlendAmount += (*node)->association->blendAmount;
 
 	for(node = updateData->nodes; *node; node++)
-		if((*node)->sequence && (*node)->sequence->HasTranslation()){
+		if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
 			if((*node)->association->HasTranslation()){
 				(*node)->GetCurrentTranslation(vec, 1.0f-totalBlendAmount);
 				cur += vec;
@@ -400,7 +424,7 @@ FrameUpdateCallBackWith3dVelocityExtractionSkinned(AnimBlendFrameData *frame, vo
 		}
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence){
+		if((*node)->sequence && !NodeSkipped(frame, *node)){
 			bool nodelooped = (*node)->Update(vec, q, 1.0f-totalBlendAmount);
 #ifdef FIX_BUGS
 			if(DotProduct(rot, q) < 0.0f)
@@ -467,11 +491,11 @@ FrameUpdateCallBackNonSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 	   gpAnimBlendClump->velocity2d){
 		if(updateData->foobar)
 			for(node = updateData->nodes; *node; node++)
-				if((*node)->sequence && (*node)->association->IsPartial())
+				if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 					totalBlendAmount += (*node)->association->blendAmount;
 
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->sequence->HasTranslation()){
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
 				if((*node)->association->HasTranslation()){
 					(*node)->GetCurrentTranslationCompressed(vec, 1.0f-totalBlendAmount);
 					cur += vec;
@@ -479,7 +503,7 @@ FrameUpdateCallBackNonSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 			}
 
 		for(node = updateData->nodes; *node; node++){
-			if((*node)->sequence){
+			if((*node)->sequence && !NodeSkipped(frame, *node)){
 				bool nodelooped = (*node)->UpdateCompressed(vec, q, 1.0f-totalBlendAmount);
 #ifdef FIX_BUGS
 				if(DotProduct(rot, q) < 0.0f)
@@ -520,11 +544,11 @@ FrameUpdateCallBackNonSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 	}else{
 		if(updateData->foobar)
 			for(node = updateData->nodes; *node; node++)
-				if((*node)->sequence && (*node)->association->IsPartial())
+				if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 					totalBlendAmount += (*node)->association->blendAmount;
 
 		for(node = updateData->nodes; *node; node++){
-			if((*node)->sequence){
+			if((*node)->sequence && !NodeSkipped(frame, *node)){
 				(*node)->UpdateCompressed(vec, q, 1.0f-totalBlendAmount);
 				if((*node)->sequence->HasTranslation())
 					pos += vec;
@@ -574,11 +598,11 @@ FrameUpdateCallBackSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 	   gpAnimBlendClump->velocity2d){
 		if(updateData->foobar)
 			for(node = updateData->nodes; *node; node++)
-				if((*node)->sequence && (*node)->association->IsPartial())
+				if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 					totalBlendAmount += (*node)->association->blendAmount;
 
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && (*node)->sequence->HasTranslation()){
+			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
 				if((*node)->association->HasTranslation()){
 					(*node)->GetCurrentTranslationCompressed(vec, 1.0f-totalBlendAmount);
 					cur += vec;
@@ -586,7 +610,7 @@ FrameUpdateCallBackSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 			}
 
 		for(node = updateData->nodes; *node; node++){
-			if((*node)->sequence){
+			if((*node)->sequence && !NodeSkipped(frame, *node)){
 				bool nodelooped = (*node)->UpdateCompressed(vec, q, 1.0f-totalBlendAmount);
 #ifdef FIX_BUGS
 				if(DotProduct(rot, q) < 0.0f)
@@ -630,11 +654,11 @@ FrameUpdateCallBackSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 
 		if(updateData->foobar)
 			for(node = updateData->nodes; *node; node++)
-				if((*node)->sequence && (*node)->association->IsPartial())
+				if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
 					totalBlendAmount += (*node)->association->blendAmount;
 
 		for(node = updateData->nodes; *node; node++){
-			if((*node)->sequence){
+			if((*node)->sequence && !NodeSkipped(frame, *node)){
 				(*node)->UpdateCompressed(vec, q, 1.0f-totalBlendAmount);
 				if((*node)->sequence->HasTranslation()){
 					pos += vec;

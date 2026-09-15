@@ -19,6 +19,7 @@ enum {
 	ASSOC_BLOCK = 0x800,	// unused in assoc description, blocks other anims from being played
 	ASSOC_FRONTAL = 0x1000, // anims that we fall to front
 	ASSOC_DRIVING = 0x2000,	// new in VC
+	ASSOC_UPPERBODY = 0x4000,	// only the bones above the hips, see NodeSkipped in FrameUpdate.cpp
 };
 
 // Anim hierarchy associated with a clump

@@ -134,6 +134,8 @@ static struct {
 	{ "FEZ_ARS", "WEAPON RAISE SPEED" },
 	{ "FEZ_AA", "AIM ASSIST" },
 	{ "FEZ_AAS", "ASSIST STRENGTH" },
+	{ "FEZ_MWA", "MOVE WHILE AIMING" },
+	{ "FEZ_OSH", "OVER SHOULDER AIM" },
 	{ "FEZ_BTS", "SLOW MO SECONDS" },
 	{ "FEZ_BTR", "SLOW MO RECHARGE" },
 	{ "FEZ_ASV", "AUTOSAVE" },

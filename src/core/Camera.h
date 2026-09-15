@@ -549,6 +549,10 @@ public:
 	// UpdatePadInput().  bFreeCamSetting is the FreeCam option in the menu and reVC.ini.
 	static bool bFreeCam;
 	static bool bFreeCamSetting;
+	// OverShoulder under [Display] in reVC.ini: aiming on foot moves the camera out over a
+	// shoulder, 1 the right one and -1 the left, swapped with circle while aiming
+	static bool bOverShoulder;
+	static float m_fShoulderSide;
 	// How hard the car camera pulls itself back in line with the car's pitch, 0 not at
 	// all and 1 as hard as it used to, and how long the right stick has to be still
 	// first.  CarCamFollowVert and CarCamFollowDelay under [Display] in reVC.ini.

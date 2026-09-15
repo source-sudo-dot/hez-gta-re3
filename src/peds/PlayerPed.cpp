@@ -33,6 +33,7 @@
 float CPlayerPed::m_fAimAssistFactor = 1.0f;
 float CPlayerPed::m_fAimRaiseSpeed = 2.0f;
 bool  CPlayerPed::bAimAssist = true;
+bool  CPlayerPed::bMoveWhileAiming = true;
 float CPlayerPed::m_fAimAssistStrength = 0.45f;
 bool  CPlayerPed::bIsAimPosed = false;
 
@@ -937,7 +938,8 @@ CPlayerPed::PlayerControl1stPersonRunAround(CPad *padUsed)
 		return;
 	}
 
-	if (!CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType)->IsFlagSet(WEAPONFLAG_HEAVY) && padUsed->GetSprint()) {
+	if (!CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType)->IsFlagSet(WEAPONFLAG_HEAVY) && padUsed->GetSprint() &&
+		!MovesWhileAiming()) {
 		m_nMoveState = PEDMOVE_SPRINT;
 	}
 	if (m_nPedState != PED_FIGHT)
@@ -1524,6 +1526,41 @@ CPlayerPed::ProcessPlayerWeapon(CPad *padUsed)
 	m_bHasLockOnTarget = m_pPointGunAt != nil;
 }
 
+// Walking with a two handed gun raised.  Vice City only lets the player walk and aim at once with
+// its mouse camera and the handguns; the rifles, the shotguns and the SMGs hold their firing
+// animation over the whole body and stand him still.  With this on, holding aim with one of them
+// walks the way the mouse camera does - facing where the camera looks, stepping sideways and back
+// - and the weapon animation keeps only the body above the hips, see ProcessUpperBodyWeaponAnims.
+// The handguns aim with the arm alone and already walk; the heavy weapons are left as they are.
+bool
+CPlayerPed::MovesWhileAiming(void)
+{
+	if (!bMoveWhileAiming || bInVehicle || bIsDucking || m_pPointGunAt != nil)
+		return false;
+	if (!CPad::GetPad(0)->GetTarget() || TheCamera.Using1stPersonWeaponMode() ||
+	    !TheCamera.Cams[0].Using3rdPersonMouseCam())
+		return false;
+	CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType);
+	return info->IsFlagSet(WEAPONFLAG_CANAIM) && !info->IsFlagSet(WEAPONFLAG_CANAIM_WITHARM) &&
+		!info->IsFlagSet(WEAPONFLAG_HEAVY) && info->m_eWeaponFire != WEAPON_FIRE_MELEE &&
+		info->m_AnimToPlay != ASSOCGRP_STD;
+}
+
+// The weapon's own animations are partial ones that still carry the hips and the legs.  Marked,
+// the frame update leaves those bones to the walk; unmarked again the moment aim is let go.
+void
+CPlayerPed::ProcessUpperBodyWeaponAnims(void)
+{
+	bool upperOnly = MovesWhileAiming();
+	AssocGroupId weaponGroup = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType)->m_AnimToPlay;
+	for (CAnimBlendAssociation *assoc = RpAnimBlendClumpGetFirstAssociation(GetClump()); assoc; assoc = RpAnimBlendGetNextAssociation(assoc)) {
+		if (upperOnly && assoc->IsPartial() && assoc->groupId == weaponGroup)
+			assoc->flags |= ASSOC_UPPERBODY;
+		else
+			assoc->flags &= ~ASSOC_UPPERBODY;
+	}
+}
+
 bool
 CPlayerPed::MovementDisabledBecauseOfTargeting(void)
 {
@@ -1938,6 +1975,8 @@ CPlayerPed::ProcessControl(void)
 		}
 	}
 
+	ProcessUpperBodyWeaponAnims();
+
 	switch (m_nPedState) {
 		case PED_NONE:
 		case PED_IDLE:
@@ -1954,7 +1993,7 @@ CPlayerPed::ProcessControl(void)
 
 				} else if (TheCamera.Cams[0].Using3rdPersonMouseCam()
 #ifdef FREE_CAM
-					&& !CCamera::bFreeCam
+					&& (!CCamera::bFreeCam || MovesWhileAiming())
 #endif
 					) {
 					if (padUsed)

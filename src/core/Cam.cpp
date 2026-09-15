@@ -36,9 +36,14 @@ int16 DebugCamMode;
 extern float fRangePlayerRadius;
 extern float fCloseNearClipLimit;
 
+#include "ControllerConfig.h"
+#include "WeaponInfo.h"
+
 #ifdef FREE_CAM
 bool CCamera::bFreeCam = false;
 bool CCamera::bFreeCamSetting = false;
+bool CCamera::bOverShoulder = true;
+float CCamera::m_fShoulderSide = 1.0f;
 // The car camera does not pull itself back to level behind the car; it stays where it is
 // put.  These are here only so reVC.ini can still ask for the old behaviour.
 float CCamera::m_fCarCamFollowVert = 0.0f;
@@ -1469,6 +1474,37 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 	Front.y = Cos(Alpha) * -Sin(Beta);
 	Front.z = Sin(Alpha);
 	Source = TargetCoors - Front*CamDist;
+
+#ifdef FREE_CAM
+	// Aiming on foot moves the camera out sideways, over the player's shoulder, so a corner or a
+	// wall can be shot round with most of him behind it.  The camera and the point it looks at
+	// move together, so it still looks the same way; the crosshair and the shot follow the camera,
+	// so they stay where they were.  Circle while aiming changes the shoulder.
+	{
+		const float SHOULDER_OFFSET = 0.55f;
+		static float shoulderAmount = 0.0f;
+		static bool circleWasDown = false;
+		CPed *ped = (CPed*)CamTargetEntity;
+		CWeaponInfo *info = CWeaponInfo::GetWeaponInfo(ped->GetWeapon()->m_eWeaponType);
+		bool aiming = CCamera::bOverShoulder && ped == FindPlayerPed() && !ped->bInVehicle &&
+			ped->GetWeapon()->m_eWeaponType != WEAPONTYPE_UNARMED && info->m_eWeaponFire != WEAPON_FIRE_MELEE &&
+			CPad::GetPad(0)->GetTarget() && !CPad::GetPad(0)->ArePlayerControlsDisabled();
+		// circle itself, whatever it is bound to (sprint, usually), see MapIdToButtonId
+		bool circleDown = ControlsManager.m_aButtonStates[0];
+		if(aiming && circleDown && !circleWasDown)
+			CCamera::m_fShoulderSide = -CCamera::m_fShoulderSide;
+		circleWasDown = circleDown;
+		float wanted = aiming ? CCamera::m_fShoulderSide : 0.0f;
+		shoulderAmount += (wanted - shoulderAmount) * Clamp(0.2f * CTimer::GetTimeStep(), 0.0f, 1.0f);
+		if(Abs(shoulderAmount) > 0.001f){
+			CVector right = CrossProduct(Front, CVector(0.0f, 0.0f, 1.0f));
+			right.Normalise();
+			CVector shift = right * (SHOULDER_OFFSET * shoulderAmount);
+			TargetCoors += shift;
+			Source += shift;
+		}
+	}
+#endif
 	m_cvecTargetCoorsForFudgeInter = TargetCoors;
 
 	// Clip Source and fix near clip
