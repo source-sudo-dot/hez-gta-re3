@@ -30,6 +30,44 @@ static const int32 chopperCheckpoints[] = { 6336, 6340, 6344, 6348 };
 static const int32 offRoad[] = { 1356, 1404, 1452, 1456 };
 static const int32 rcMissions[] = { 32624, 32964, 33940 };
 
+// The missions the stats count as passed, all 88 of them.  The count itself is not in the save, so
+// it starts again from nothing on every load; each mission also sets a variable of its own as it
+// is passed, and those are.  First the story, asset, gang and contract missions, set next to
+// REGISTER_MISSION_PASSED (the ice cream factory keeps its flag apart from the others)...
+static const int32 passedMissions[] = {
+	896, 900, 904, 908,			// lawyer
+	916, 920, 924, 928, 932,		// colonel
+	940, 944, 948, 952, 956,		// diaz / baron
+	968,					// kent paul
+	976, 980, 984,				// sergio / texan
+	992, 996, 1000, 1004,			// malibu
+	1016, 1020,				// phil
+	1028, 1032, 1036, 1040,			// film studio
+	1064, 1068, 1072,			// protection
+	1076, 1080,				// print works, the finale
+	1088, 1092,				// counterfeit
+	1100, 1104, 1108,			// bikers
+	1116, 1120, 1124, 1128,			// cubans
+	1136, 1140, 1144,			// haitians
+	1152, 1156, 1160,			// love fist
+	1192, 1196, 1200, 1204, 1208,		// assassinations
+	1232, 1236, 1240,			// kaufman cabs
+	2448,					// ice cream factory
+};
+// ...then the side jobs, set next to REGISTER_ODDJOB_MISSION_PASSED
+static const int32 passedOddJobs[] = {
+	4500, 4504, 4508, 4512,			// import/export lists
+	432,					// shooting range
+	1492, 6324, 6332, 6328,			// taxi, paramedic, firefighter, vigilante
+	6388, 6392, 220,			// hotring, bloodring, dirtring
+	6352, 6356, 6360, 6364, 6368, 6372,	// street races
+	6336, 6340, 6344, 6348,			// chopper checkpoints
+	1452, 1456, 1356, 1404,			// off-road
+	1556,					// pizza boy
+	32624, 32964, 33940,			// rc
+	2428,					// boatyard
+};
+
 // the seven safehouses in the stats' property list, after the eight businesses
 enum { FIRST_SAFEHOUSE = 8, NUM_SAFEHOUSES = 7 };
 
@@ -67,7 +105,11 @@ CCompletion::Collect(tGoal *out)
 	int32 n = 0;
 
 	// one count for all of them; the game keeps no figure per mission giver
-	Add(out, n, "FEZ_CMS", CStats::MissionsPassed, CStats::TotalNumberMissions);
+	int32 missionsTotal = ARRAY_SIZE(passedMissions) + ARRAY_SIZE(passedOddJobs);
+	if (CStats::TotalNumberMissions > 0)
+		missionsTotal = CStats::TotalNumberMissions;
+	Add(out, n, "FEZ_CMS", CountFlags(passedMissions, ARRAY_SIZE(passedMissions)) +
+		CountFlags(passedOddJobs, ARRAY_SIZE(passedOddJobs)), missionsTotal);
 	Add(out, n, "FEZ_CAS", ScriptVar(VAR_ASSETS_DONE), 9);
 	Add(out, n, "FEZ_CHP", player.m_nCollectedPackages, player.m_nTotalPackages);
 
