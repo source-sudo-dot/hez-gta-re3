@@ -30,43 +30,34 @@ static const int32 chopperCheckpoints[] = { 6336, 6340, 6344, 6348 };
 static const int32 offRoad[] = { 1356, 1404, 1452, 1456 };
 static const int32 rcMissions[] = { 32624, 32964, 33940 };
 
-// The missions the stats count as passed, all 88 of them.  The count itself is not in the save, so
-// it starts again from nothing on every load; each mission also sets a variable of its own as it
-// is passed, and those are.  First the story, asset, gang and contract missions, set next to
-// REGISTER_MISSION_PASSED (the ice cream factory keeps its flag apart from the others)...
-static const int32 passedMissions[] = {
-	896, 900, 904, 908,			// lawyer
-	916, 920, 924, 928, 932,		// colonel
-	940, 944, 948, 952, 956,		// diaz / baron
+// The stats' own count of missions passed is not in the save, so it starts again from nothing on
+// every load.  Each mission sets a variable of its own beside REGISTER_MISSION_PASSED, and those
+// are saved, so the missions are counted from them, split the way the game groups them.  The side
+// jobs, the other 31 of the 88, have rows of their own below.
+static const int32 storyMissions[] = {
+	896, 900, 904, 908,			// ken rosenberg
+	916, 920, 924, 928, 932,		// colonel cortez
+	940, 944, 948, 952, 956,		// ricardo diaz
 	968,					// kent paul
-	976, 980, 984,				// sergio / texan
-	992, 996, 1000, 1004,			// malibu
-	1016, 1020,				// phil
-	1028, 1032, 1036, 1040,			// film studio
-	1064, 1068, 1072,			// protection
-	1076, 1080,				// print works, the finale
-	1088, 1092,				// counterfeit
-	1100, 1104, 1108,			// bikers
-	1116, 1120, 1124, 1128,			// cubans
-	1136, 1140, 1144,			// haitians
-	1152, 1156, 1160,			// love fist
-	1192, 1196, 1200, 1204, 1208,		// assassinations
+	976, 980, 984,				// avery carrington
+	1076, 1080,				// cap the collector, keep your friends close
+};
+static const int32 assetMissions[] = {
+	992, 996, 1000, 1004,			// malibu club
+	1016, 1020,				// phil cassidy
+	1028, 1032, 1036, 1040,			// interglobal films
+	1064, 1068, 1072,			// vercetti estate
+	1088, 1092,				// print works
 	1232, 1236, 1240,			// kaufman cabs
 	2448,					// ice cream factory
 };
-// ...then the side jobs, set next to REGISTER_ODDJOB_MISSION_PASSED
-static const int32 passedOddJobs[] = {
-	4500, 4504, 4508, 4512,			// import/export lists
-	432,					// shooting range
-	1492, 6324, 6332, 6328,			// taxi, paramedic, firefighter, vigilante
-	6388, 6392, 220,			// hotring, bloodring, dirtring
-	6352, 6356, 6360, 6364, 6368, 6372,	// street races
-	6336, 6340, 6344, 6348,			// chopper checkpoints
-	1452, 1456, 1356, 1404,			// off-road
-	1556,					// pizza boy
-	32624, 32964, 33940,			// rc
-	2428,					// boatyard
+static const int32 gangMissions[] = {
+	1100, 1104, 1108,			// mitch baker
+	1116, 1120, 1124, 1128,			// umberto robina
+	1136, 1140, 1144,			// auntie poulet
+	1152, 1156, 1160,			// love fist
 };
+static const int32 assassinations[] = { 1192, 1196, 1200, 1204, 1208 };
 
 // the seven safehouses in the stats' property list, after the eight businesses
 enum { FIRST_SAFEHOUSE = 8, NUM_SAFEHOUSES = 7 };
@@ -98,18 +89,18 @@ Add(CCompletion::tGoal *out, int32 &n, const char *key, int32 done, int32 total)
 	n++;
 }
 
+#define ADD_FLAGS(key, list) Add(out, n, key, CountFlags(list, ARRAY_SIZE(list)), ARRAY_SIZE(list))
+
 int32
 CCompletion::Collect(tGoal *out)
 {
 	CPlayerInfo &player = CWorld::Players[CWorld::PlayerInFocus];
 	int32 n = 0;
 
-	// one count for all of them; the game keeps no figure per mission giver
-	int32 missionsTotal = ARRAY_SIZE(passedMissions) + ARRAY_SIZE(passedOddJobs);
-	if (CStats::TotalNumberMissions > 0)
-		missionsTotal = CStats::TotalNumberMissions;
-	Add(out, n, "FEZ_CMS", CountFlags(passedMissions, ARRAY_SIZE(passedMissions)) +
-		CountFlags(passedOddJobs, ARRAY_SIZE(passedOddJobs)), missionsTotal);
+	ADD_FLAGS("FEZ_CSY", storyMissions);
+	ADD_FLAGS("FEZ_CAM", assetMissions);
+	ADD_FLAGS("FEZ_CGM", gangMissions);
+	ADD_FLAGS("FEZ_CCT", assassinations);
 	Add(out, n, "FEZ_CAS", ScriptVar(VAR_ASSETS_DONE), 9);
 	Add(out, n, "FEZ_CHP", player.m_nCollectedPackages, player.m_nTotalPackages);
 
@@ -129,12 +120,12 @@ CCompletion::Collect(tGoal *out)
 	int32 stores = ScriptVar(VAR_STORES_ROBBED);
 	Add(out, n, "FEZ_CST", stores < 0 ? 15 : stores, 15);
 
-	Add(out, n, "FEZ_CIE", CountFlags(importLists, ARRAY_SIZE(importLists)), ARRAY_SIZE(importLists));
-	Add(out, n, "FEZ_CSR", CountFlags(streetRaces, ARRAY_SIZE(streetRaces)), ARRAY_SIZE(streetRaces));
-	Add(out, n, "FEZ_CSD", CountFlags(stadiumEvents, ARRAY_SIZE(stadiumEvents)), ARRAY_SIZE(stadiumEvents));
-	Add(out, n, "FEZ_CHC", CountFlags(chopperCheckpoints, ARRAY_SIZE(chopperCheckpoints)), ARRAY_SIZE(chopperCheckpoints));
-	Add(out, n, "FEZ_COR", CountFlags(offRoad, ARRAY_SIZE(offRoad)), ARRAY_SIZE(offRoad));
-	Add(out, n, "FEZ_CRC", CountFlags(rcMissions, ARRAY_SIZE(rcMissions)), ARRAY_SIZE(rcMissions));
+	ADD_FLAGS("FEZ_CIE", importLists);
+	ADD_FLAGS("FEZ_CSR", streetRaces);
+	ADD_FLAGS("FEZ_CSD", stadiumEvents);
+	ADD_FLAGS("FEZ_CHC", chopperCheckpoints);
+	ADD_FLAGS("FEZ_COR", offRoad);
+	ADD_FLAGS("FEZ_CRC", rcMissions);
 	Add(out, n, "FEZ_CSG", ScriptVar(VAR_SHOOTING_RANGE_DONE) != 0 ? 1 : 0, 1);
 
 	Add(out, n, "FEZ_CPM", CStats::HighestLevelAmbulanceMission, JOB_LEVEL_FOR_COMPLETION);
@@ -145,6 +136,8 @@ CCompletion::Collect(tGoal *out)
 
 	return n;
 }
+
+#undef ADD_FLAGS
 
 // the same figure the stats page shows
 int32
