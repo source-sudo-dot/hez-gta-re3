@@ -5151,13 +5151,9 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 
 	bool correctAlpha = true;
 	//	if (SA checks if we aren't in work car, why?) {
-	if (!isCar || car->GetModelIndex() != MI_VOODOO) {
-		correctAlpha = false;
-	}
-	else {
-		xMovement = 0.0f;
-		yMovement = 0.0f;
-	}
+	// The stick was taken from the camera in the car with hydraulics, since they were on it.
+	// They are on the d-pad now, so the camera keeps the stick there as in any other car.
+	correctAlpha = false;
 	//	} else
 	//		yMovement = 0.0;
 

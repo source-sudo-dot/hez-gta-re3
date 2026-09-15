@@ -4,6 +4,7 @@
 #include "General.h"
 #include "RwHelper.h"
 #include "Pad.h"
+#include "ControllerConfig.h"
 #include "ModelIndices.h"
 #include "VisibilityPlugins.h"
 #include "DMAudio.h"
@@ -3598,9 +3599,20 @@ CAutomobile::HydraulicControl(void)
 	}else{
 		float suspChange[4];
 		float maxDelta = 0.0f;
-		float rear = CPad::GetPad(0)->GetCarGunUpDown()/128.0f;
+		// On a pad the hydraulics took the right stick, which is the camera, so the camera could
+		// not be moved in this car.  They are on the d-pad instead, the way the stick worked: up
+		// lifts the front, left lifts the left side.  The keys stay as they were.
+		int16 hydraulicUpDown = CPad::GetPad(0)->GetCarGunUpDown();
+		int16 hydraulicLeftRight = CPad::GetPad(0)->GetCarGunLeftRight();
+		if(CPad::IsAffectedByController){
+			// the buttons by binding number, see MapIdToButtonId: 13 up, 14 right, 15 down, 16 left
+			bool *buttons = ControlsManager.m_aButtonStates;
+			hydraulicUpDown = CPad::GetPad(0)->ArePlayerControlsDisabled() ? 0 : (buttons[14] ? 128 : 0) - (buttons[12] ? 128 : 0);
+			hydraulicLeftRight = CPad::GetPad(0)->ArePlayerControlsDisabled() ? 0 : (buttons[13] ? 128 : 0) - (buttons[15] ? 128 : 0);
+		}
+		float rear = hydraulicUpDown/128.0f;
 		float front = -rear;
-		float right = CPad::GetPad(0)->GetCarGunLeftRight()/128.0f;
+		float right = hydraulicLeftRight/128.0f;
 		float left = -right;
 		suspChange[CARWHEEL_FRONT_LEFT] = Max(front+left, 0.0f);
 		suspChange[CARWHEEL_REAR_LEFT] = Max(rear+left, 0.0f);
