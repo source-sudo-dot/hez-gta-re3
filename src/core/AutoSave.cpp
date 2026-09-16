@@ -9,6 +9,7 @@
 #include "GenericGameStorage.h"
 #include "Hud.h"
 #include "PCSave.h"
+#include "Pad.h"
 #include "Lists.h"
 #include "PlayerInfo.h"
 #include "PlayerPed.h"
@@ -75,6 +76,16 @@ CAutoSave::WatchProgress(void)
 			if (IsMissionRow(now[i].key) || strcmp(now[i].key, last[i].key) != 0)
 				continue;
 			if (now[i].done > last[i].done) {
+				// which row set it off, while this is looked into (StickDebug=1)
+				if (CPad::m_bStickDebug) {
+					FILE *f = fopen("reVC_debug.log", "a");
+					if (f) {
+						fprintf(f, "autosave progress t=%u %s %d->%d/%d pending=%d
+", CTimer::GetTimeInMilliseconds(),
+							now[i].key, last[i].done, now[i].done, now[i].total, m_bProgressPending);
+						fclose(f);
+					}
+				}
 				m_bProgressPending = true;
 				m_nProgressEarliest = CTimer::GetTimeInMilliseconds() + SETTLE_MS;
 			}
@@ -162,6 +173,14 @@ CAutoSave::Process(void)
 		if (FindPlayerSpeed().Magnitude() > 0.05f)
 			return;
 		m_bProgressPending = false;
-		Save(PROGRESS_AUTOSAVE_SLOT, "FEZ_APD");
+		bool saved = Save(PROGRESS_AUTOSAVE_SLOT, "FEZ_ASD");
+		if (CPad::m_bStickDebug) {
+			FILE *f = fopen("reVC_debug.log", "a");
+			if (f) {
+				fprintf(f, "autosave progress written t=%u ok=%d
+", CTimer::GetTimeInMilliseconds(), saved);
+				fclose(f);
+			}
+		}
 	}
 }
