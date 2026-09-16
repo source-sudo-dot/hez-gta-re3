@@ -12,6 +12,7 @@
 #include "World.h"
 #include "RpAnimBlend.h"
 #include "AnimBlendAssociation.h"
+#include "AnimBlendClumpData.h"
 #include "General.h"
 #include "Pools.h"
 #include "PedModelInfo.h"
@@ -1795,8 +1796,15 @@ WritePlayerDebugLog(CPlayerPed *ped, CPad *pad)
 
 	CVector pos = ped->GetPosition();
 	if (startReason) {
-		fprintf(f, "\n=== %s start, time %u ms, weapon %d ===\n", startReason, CTimer::GetTimeInMilliseconds(),
-			(int)ped->GetWeapon()->m_eWeaponType);
+		fprintf(f, "\n=== %s start, time %u ms, weapon %d weapongroup %d ===\n", startReason, CTimer::GetTimeInMilliseconds(),
+			(int)ped->GetWeapon()->m_eWeaponType, (int)CWeaponInfo::GetWeaponInfo(ped->GetWeapon()->m_eWeaponType)->m_AnimToPlay);
+		// the bone each frame stands for, to check the upper body split against
+		CAnimBlendClumpData *clumpData = *RPANIMBLENDCLUMPDATA(ped->GetClump());
+		fprintf(f, "frames:");
+		for (int i = 0; i < clumpData->numFrames; i++)
+			fprintf(f, " %d=%d%s", i, clumpData->frames[i].nodeID,
+				(clumpData->frames[i].flag & AnimBlendFrameData::VELOCITY_EXTRACTION) ? "v" : "");
+		fprintf(f, "\n");
 		lastPos = pos;
 	}
 
@@ -1816,8 +1824,9 @@ WritePlayerDebugLog(CPlayerPed *ped, CPad *pad)
 		gIKDebugUaYaw, gIKDebugUaPitch, gIKDebugClavYaw, gIKDebugUaStatus, ped->m_fFPSMoveHeading,
 		(int)ped->bIsAimingGun, (int)ped->bIsPointingGunAt, (int)ped->bIsLooking);
 
+	fprintf(f, "mwa %d animgroup %d | ", (int)ped->MovesWhileAiming(), (int)ped->m_animGroup);
 	for (CAnimBlendAssociation *a = RpAnimBlendClumpGetFirstAssociation(ped->GetClump()); a; a = RpAnimBlendGetNextAssociation(a))
-		fprintf(f, "a%d:b%.2f/d%.1f/t%.3f/s%.2f/f%x ", (int)a->animId, a->blendAmount, a->blendDelta, a->currentTime, a->speed, (int)a->flags);
+		fprintf(f, "a%d:g%d:b%.2f/d%.1f/t%.3f/s%.2f/f%x ", (int)a->animId, (int)a->groupId, a->blendAmount, a->blendDelta, a->currentTime, a->speed, (int)a->flags);
 	fprintf(f, "\n");
 	fclose(f);
 
