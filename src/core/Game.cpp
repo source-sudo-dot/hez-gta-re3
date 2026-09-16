@@ -887,12 +887,16 @@ void CGame::Process(void)
 	CWindModifiers::Number = 0;
 
 	// The weapon wheel stops the game while it is up, so it is processed before the paused check,
-	// or it could never be closed again.
+	// or it could never be closed again.  The time step of this logical frame was worked out before
+	// that, and a frame that began paused has a step of nothing: closing the wheel in it must not
+	// let the world run on it.  The ropes divide by the step, and a SWAT officer coming down from
+	// a police helicopter ended up nowhere, outside the world.  The world goes on next frame.
+	bool pausedAtFrameStart = CTimer::GetIsPaused();
 	CWeaponWheel::Process();
 	CBulletTime::Process();
 	CAutoSave::Process();
 
-	if (!CTimer::GetIsPaused())
+	if (!CTimer::GetIsPaused() && !pausedAtFrameStart)
 	{
 #ifndef MASTER
 		if (VarUpdatePlayerCoords) {
