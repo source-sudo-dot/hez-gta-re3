@@ -15,6 +15,7 @@
 #include "Script.h"
 #include "Text.h"
 #include "Timer.h"
+#include "Wanted.h"
 #include "World.h"
 
 bool   CAutoSave::bEnabled = true;
@@ -150,9 +151,12 @@ CAutoSave::Process(void)
 
 	// Progress off a mission comes in the middle of things: in the air off a jump, running from a
 	// store.  The game puts the player back where the save was made, so it waits until he is on his
-	// feet or in a vehicle and hardly moving.  The wanted level is not saved, a chase is not an issue.
+	// feet or in a vehicle and hardly moving.  The save does not keep the wanted level, so a load
+	// would shake off the police for free: it also waits until they have given up.
 	if (m_bProgressPending && now >= m_nProgressEarliest && IsQuietMoment()) {
 		CPlayerPed *ped = FindPlayerPed();
+		if (ped->m_pWanted->GetWantedLevel() > 0)
+			return;
 		if (!ped->bInVehicle && (!ped->bIsStanding || ped->bIsInTheAir))
 			return;
 		if (FindPlayerSpeed().Magnitude() > 0.05f)
