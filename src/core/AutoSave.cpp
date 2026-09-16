@@ -80,8 +80,7 @@ CAutoSave::WatchProgress(void)
 				if (CPad::m_bStickDebug) {
 					FILE *f = fopen("reVC_debug.log", "a");
 					if (f) {
-						fprintf(f, "autosave progress t=%u %s %d->%d/%d pending=%d
-", CTimer::GetTimeInMilliseconds(),
+						fprintf(f, "autosave progress t=%u %s %d->%d/%d pending=%d\n", CTimer::GetTimeInMilliseconds(),
 							now[i].key, last[i].done, now[i].done, now[i].total, m_bProgressPending);
 						fclose(f);
 					}
@@ -177,8 +176,7 @@ CAutoSave::Process(void)
 		if (CPad::m_bStickDebug) {
 			FILE *f = fopen("reVC_debug.log", "a");
 			if (f) {
-				fprintf(f, "autosave progress written t=%u ok=%d
-", CTimer::GetTimeInMilliseconds(), saved);
+				fprintf(f, "autosave progress written t=%u ok=%d\n", CTimer::GetTimeInMilliseconds(), saved);
 				fclose(f);
 			}
 		}
