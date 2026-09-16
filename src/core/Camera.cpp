@@ -585,7 +585,8 @@ CCamera::Process(void)
 		CPad::GetPad(0)->GetTarget();
 
 	float aimFovTarget = aimZoom ? m_fAimZoomDegrees : 0.0f;
-	float aimFovBlend = Clamp(0.15f * CTimer::GetTimeStep(), 0.0f, 1.0f);
+	// 0.195 a step, a third faster than the 0.15 it was, as asked for in play
+	float aimFovBlend = Clamp(0.195f * CTimer::GetTimeStep(), 0.0f, 1.0f);
 	aimFovOffset += (aimFovTarget - aimFovOffset) * aimFovBlend;
 
 	if(aimFovOffset > 0.001f && Cams[ActiveCam].Mode == CCam::MODE_FOLLOWPED){

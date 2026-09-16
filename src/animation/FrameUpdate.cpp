@@ -7,10 +7,12 @@
 #include "RpAnimBlend.h"
 #include "Bones.h"
 
-// An animation marked ASSOC_UPPERBODY leaves the hips and the legs to the others.  The player's
-// weapon animations are marked while he walks with a two handed gun raised: they hold the whole
-// body, legs and all, and would stand him still, so the walk plays below the hips and the gun is
-// held above them exactly as the weapon animation holds it, both hands on it.
+// An animation marked ASSOC_UPPERBODY leaves the legs and the root, the bone the movement is read
+// from, to the others.  The player's weapon animations are marked while he walks with a two handed
+// gun raised: they hold the whole body, legs and all, and would stand him still, so the walk plays
+// in the legs and the gun is held exactly as the weapon animation holds it, both hands on it.
+// The hips stay with the weapon animation: the rifles are aimed with the hips turned, and taken
+// from the walk they swung the whole upper body about and pointed the gun off to the side.
 static inline bool
 NodeSkipped(AnimBlendFrameData *frame, CAnimBlendNode *node)
 {
@@ -18,7 +20,6 @@ NodeSkipped(AnimBlendFrameData *frame, CAnimBlendNode *node)
 		return false;
 	switch(frame->nodeID){
 	case BONE_root:
-	case BONE_pelvis:
 	case BONE_l_thigh:
 	case BONE_l_calf:
 	case BONE_l_foot:

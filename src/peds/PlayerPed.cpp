@@ -1551,7 +1551,9 @@ CPlayerPed::MovesWhileAiming(void)
 void
 CPlayerPed::ProcessUpperBodyWeaponAnims(void)
 {
-	bool upperOnly = MovesWhileAiming();
+	// only while he is actually walking: standing still the weapon animation keeps the legs too,
+	// with the stance it was made with
+	bool upperOnly = MovesWhileAiming() && m_fMoveSpeed > 0.01f;
 	AssocGroupId weaponGroup = CWeaponInfo::GetWeaponInfo(GetWeapon()->m_eWeaponType)->m_AnimToPlay;
 	for (CAnimBlendAssociation *assoc = RpAnimBlendClumpGetFirstAssociation(GetClump()); assoc; assoc = RpAnimBlendGetNextAssociation(assoc)) {
 		if (upperOnly && assoc->IsPartial() && assoc->groupId == weaponGroup)
