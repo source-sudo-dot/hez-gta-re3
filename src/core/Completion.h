@@ -21,4 +21,16 @@ public:
 	// fills the goals and says how many there are
 	static int32 Collect(tGoal *out);
 	static int32 Percent(void);
+
+	// Places on the map still to be done, for the map's square toggle: where it is, and the
+	// script variable that is set once it is done.
+	struct tMapMark
+	{
+		float x, y;
+		int32 doneVar;
+	};
+	enum { NUM_STORES = 15, NUM_UNIQUE_JUMPS = 36 };
+	static const tMapMark ms_aStores[NUM_STORES];
+	static const tMapMark ms_aUniqueJumps[NUM_UNIQUE_JUMPS];
+	static bool IsMarkDone(const tMapMark &mark);
 };

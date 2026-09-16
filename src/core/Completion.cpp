@@ -139,6 +139,74 @@ CCompletion::Collect(tGoal *out)
 
 #undef ADD_FLAGS
 
+// The stores that count towards the fifteen.  Twelve are watched by one script, which sets a
+// variable of its own for each when it is robbed; the other three by the hardware store script,
+// where one is an area rather than a point, so the middle of it is used.
+const CCompletion::tMapMark CCompletion::ms_aStores[NUM_STORES] = {
+	{ -859.2f, -632.7f, 6176 },
+	{ -854.3f, 850.0f, 6180 },
+	{ -830.4f, 741.9f, 6184 },
+	{ -846.6f, -72.6f, 6188 },
+	{ 379.9f, 210.2f, 6192 },
+	{ 383.2f, 759.7f, 6196 },
+	{ 449.7f, 781.5f, 6200 },
+	{ 352.7f, 1111.3f, 6204 },
+	{ 423.5f, 1039.4f, 6208 },
+	{ 468.7f, 1206.6f, 6212 },
+	{ -1167.5f, -613.5f, 6216 },
+	{ -1192.2f, -323.7f, 6220 },
+	{ 202.7f, -474.1f, 3544 },
+	{ 384.05f, 1063.5f, 3548 },
+	{ -967.5f, -693.2f, 3552 },
+};
+
+// Where the script starts watching each unique jump for a take off, and the variable it sets
+// once the jump has been done.
+const CCompletion::tMapMark CCompletion::ms_aUniqueJumps[NUM_UNIQUE_JUMPS] = {
+	{ -1487.781f, -1044.546f, 3180 },
+	{ -1352.695f, -755.212f, 3184 },
+	{ -1216.490f, -911.833f, 3188 },
+	{ -1252.139f, -1054.685f, 3192 },
+	{ -1551.685f, -1075.674f, 3196 },
+	{ -1595.712f, -1272.881f, 3200 },
+	{ -1553.337f, -1230.952f, 3204 },
+	{ -1340.022f, -998.257f, 3208 },
+	{ 24.721f, 897.801f, 3212 },
+	{ 317.205f, -223.201f, 3216 },
+	{ -674.345f, 1162.422f, 3220 },
+	{ -529.840f, 830.062f, 3224 },
+	{ -839.022f, 1153.526f, 3228 },
+	{ -312.447f, 1109.196f, 3232 },
+	{ -1011.583f, -30.098f, 3236 },
+	{ -942.702f, -114.506f, 3240 },
+	{ -900.789f, 260.804f, 3244 },
+	{ -1041.895f, -569.323f, 3248 },
+	{ 208.993f, -963.672f, 3252 },
+	{ 46.115f, -964.415f, 3256 },
+	{ 435.854f, -334.321f, 3260 },
+	{ 110.481f, -1230.600f, 3264 },
+	{ 7.435f, -1245.895f, 3268 },
+	{ 9.103f, -1326.505f, 3272 },
+	{ -321.028f, -1379.498f, 3276 },
+	{ -321.028f, -1276.589f, 3280 },
+	{ 218.050f, -1152.000f, 3284 },
+	{ 259.056f, -945.833f, 3288 },
+	{ 444.500f, -118.400f, 3292 },
+	{ 284.473f, -494.114f, 3296 },
+	{ 370.790f, -709.863f, 3300 },
+	{ 461.589f, -522.230f, 3304 },
+	{ 454.105f, -504.736f, 3308 },
+	{ 460.910f, -383.362f, 3312 },
+	{ 259.041f, -480.608f, 3316 },
+	{ -346.818f, -290.741f, 3320 },
+};
+
+bool
+CCompletion::IsMarkDone(const tMapMark &mark)
+{
+	return ScriptVar(mark.doneVar) != 0;
+}
+
 // the same figure the stats page shows
 int32
 CCompletion::Percent(void)

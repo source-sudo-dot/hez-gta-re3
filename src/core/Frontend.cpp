@@ -6118,23 +6118,33 @@ CMenuManager::PrintMap(void)
 
 	CRadar::DrawBlips();
 
-	// A package still out there is a pickup the script made; collecting one takes its type away,
-	// so only those left to find are drawn.
+	// Square shows what is still left to do, each in its own colour: hidden packages in blue,
+	// stores still to rob in orange, unique jumps still to do in pink.  A package still out there
+	// is a pickup the script made, and collecting one takes its type away; a store or a jump is
+	// done once the script has set its variable, see CCompletion.
 	if (bMapShowPackages) {
 		float half = MENU_Y(2.5f);
 		float edge = Max(MENU_Y(1.0f), 1.0f);
+		auto drawMark = [&](float x, float y, const CRGBA &colour) {
+			CVector2D radarPos, screenPos;
+			CRadar::TransformRealWorldPointToRadarSpace(radarPos, CVector2D(x, y));
+			CRadar::TransformRadarPointToScreenSpace(screenPos, radarPos);
+			CSprite2d::DrawRect(CRect(screenPos.x - half - edge, screenPos.y - half - edge, screenPos.x + half + edge, screenPos.y + half + edge),
+				CRGBA(0, 0, 0, FadeIn(255)));
+			CSprite2d::DrawRect(CRect(screenPos.x - half, screenPos.y - half, screenPos.x + half, screenPos.y + half), colour);
+		};
 		for (int32 i = 0; i < NUMPICKUPS; i++) {
 			CPickup &pickup = CPickups::aPickUps[i];
 			if (pickup.m_eType != PICKUP_COLLECTABLE1 || pickup.m_bRemoved)
 				continue;
-			CVector2D radarPos, screenPos;
-			CRadar::TransformRealWorldPointToRadarSpace(radarPos, CVector2D(pickup.m_vecPos));
-			CRadar::TransformRadarPointToScreenSpace(screenPos, radarPos);
-			CSprite2d::DrawRect(CRect(screenPos.x - half - edge, screenPos.y - half - edge, screenPos.x + half + edge, screenPos.y + half + edge),
-				CRGBA(0, 0, 0, FadeIn(255)));
-			CSprite2d::DrawRect(CRect(screenPos.x - half, screenPos.y - half, screenPos.x + half, screenPos.y + half),
-				CRGBA(80, 210, 255, FadeIn(255)));
+			drawMark(pickup.m_vecPos.x, pickup.m_vecPos.y, CRGBA(80, 210, 255, FadeIn(255)));
 		}
+		for (int32 i = 0; i < CCompletion::NUM_STORES; i++)
+			if (!CCompletion::IsMarkDone(CCompletion::ms_aStores[i]))
+				drawMark(CCompletion::ms_aStores[i].x, CCompletion::ms_aStores[i].y, CRGBA(255, 140, 30, FadeIn(255)));
+		for (int32 i = 0; i < CCompletion::NUM_UNIQUE_JUMPS; i++)
+			if (!CCompletion::IsMarkDone(CCompletion::ms_aUniqueJumps[i]))
+				drawMark(CCompletion::ms_aUniqueJumps[i].x, CCompletion::ms_aUniqueJumps[i].y, CRGBA(255, 90, 200, FadeIn(255)));
 	}
 
 #ifdef MAP_ENHANCEMENTS
