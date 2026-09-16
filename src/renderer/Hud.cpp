@@ -386,13 +386,11 @@ void CHud::Draw()
 						RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVDESTALPHA);
 #endif
 						RwRenderStateSet(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(gpLaserDotTex));
-#ifdef FIX_BUGS
-						int intensity = CGeneral::GetRandomNumberInRange(0, 37);
-#else
-						int intensity = CGeneral::GetRandomNumberInRange(0, 35);
-#endif
+						// The dot grew with how close the target was, a twentieth of its size on screen,
+						// and filled the sight up close, flickering as it went.  A plain red dot of one
+						// size instead, where the laser lands.
 						CSprite::RenderOneXLUSprite(dotPos.x, dotPos.y, dotPos.z,
-							SCREEN_SCALE_X(size), SCREEN_SCALE_Y(size), intensity - 36, 0, 0, intensity - 36, 1.0f, 127);
+							SCREEN_SCALE_X(4.0f), SCREEN_SCALE_Y(4.0f), 255, 0, 0, 255, 1.0f, 255);
 
 						RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)FALSE);
 					}

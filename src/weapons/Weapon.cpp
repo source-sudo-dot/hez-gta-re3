@@ -2263,9 +2263,8 @@ CWeapon::LaserScopeDot(CVector *pOutPos, float *pOutSize)
 		{
 			*pOutPos = pos;
 			*pOutSize = w * 0.05f;
-			
-			CCoronas::RegisterCorona((uintptr)this + 7, 128, 0, 0, 255, pos, 1.2f, 50.0f, CCoronas::TYPE_STAR, CCoronas::FLARE_NONE, CCoronas::REFLECTION_ON, CCoronas::LOSCHECK_OFF, CCoronas::STREAK_ON, 0.0f);
-			
+			// the glow put on the target grew with nearness as well; the sight shows a plain dot now
+
 			return true;
 		}
 	}
