@@ -6118,33 +6118,24 @@ CMenuManager::PrintMap(void)
 
 	CRadar::DrawBlips();
 
-	// Square shows what is still left to do, each in its own colour: hidden packages in blue,
-	// stores still to rob in orange, unique jumps still to do in pink.  A package still out there
-	// is a pickup the script made, and collecting one takes its type away; a store or a jump is
-	// done once the script has set its variable, see CCompletion.
+	// Square shows every place still left to do, each kind in its own colour, the progress list
+	// naming the colours meanwhile.  Which places and when they count as done is CCompletion's.
 	if (bMapShowPackages) {
 		float half = MENU_Y(2.5f);
 		float edge = Max(MENU_Y(1.0f), 1.0f);
-		auto drawMark = [&](float x, float y, const CRGBA &colour) {
+		static CCompletion::tMapMark marks[CCompletion::MAX_MAP_MARKS];
+		int32 numMarks = CCompletion::CollectMapMarks(marks, CCompletion::MAX_MAP_MARKS);
+		for (int32 i = 0; i < numMarks; i++) {
+			uint8 r, g, b;
+			CCompletion::MarkColour(marks[i].kind, r, g, b);
 			CVector2D radarPos, screenPos;
-			CRadar::TransformRealWorldPointToRadarSpace(radarPos, CVector2D(x, y));
+			CRadar::TransformRealWorldPointToRadarSpace(radarPos, CVector2D(marks[i].x, marks[i].y));
 			CRadar::TransformRadarPointToScreenSpace(screenPos, radarPos);
 			CSprite2d::DrawRect(CRect(screenPos.x - half - edge, screenPos.y - half - edge, screenPos.x + half + edge, screenPos.y + half + edge),
 				CRGBA(0, 0, 0, FadeIn(255)));
-			CSprite2d::DrawRect(CRect(screenPos.x - half, screenPos.y - half, screenPos.x + half, screenPos.y + half), colour);
-		};
-		for (int32 i = 0; i < NUMPICKUPS; i++) {
-			CPickup &pickup = CPickups::aPickUps[i];
-			if (pickup.m_eType != PICKUP_COLLECTABLE1 || pickup.m_bRemoved)
-				continue;
-			drawMark(pickup.m_vecPos.x, pickup.m_vecPos.y, CRGBA(80, 210, 255, FadeIn(255)));
+			CSprite2d::DrawRect(CRect(screenPos.x - half, screenPos.y - half, screenPos.x + half, screenPos.y + half),
+				CRGBA(r, g, b, FadeIn(255)));
 		}
-		for (int32 i = 0; i < CCompletion::NUM_STORES; i++)
-			if (!CCompletion::IsMarkDone(CCompletion::ms_aStores[i]))
-				drawMark(CCompletion::ms_aStores[i].x, CCompletion::ms_aStores[i].y, CRGBA(255, 140, 30, FadeIn(255)));
-		for (int32 i = 0; i < CCompletion::NUM_UNIQUE_JUMPS; i++)
-			if (!CCompletion::IsMarkDone(CCompletion::ms_aUniqueJumps[i]))
-				drawMark(CCompletion::ms_aUniqueJumps[i].x, CCompletion::ms_aUniqueJumps[i].y, CRGBA(255, 90, 200, FadeIn(255)));
 	}
 
 #ifdef MAP_ENHANCEMENTS
@@ -6206,7 +6197,20 @@ CMenuManager::PrintCompletionOnMap(void)
 			sprintf(buf, "%d", goals[i].done);
 		AsciiToUnicode(buf, wide);
 		CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(12.0f), y, wide);
-		CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(62.0f), y, TheText.Get(goals[i].key));
+		wchar *label = TheText.Get(goals[i].key);
+		CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(62.0f), y, label);
+
+		// while square shows the places, the rows that have some name their colour
+		if (bMapShowPackages && goals[i].markKind != CCompletion::MARK_NONE) {
+			uint8 r, g, b;
+			CCompletion::MarkColour(goals[i].markKind, r, g, b);
+			float half = MENU_Y(3.0f);
+			float edge = Max(MENU_Y(1.0f), 1.0f);
+			float cx = SCREEN_SCALE_FROM_RIGHT(62.0f) - CFont::GetStringWidth(label, true) - MENU_X(8.0f);
+			float cy = y + MENU_Y(5.5f);
+			CSprite2d::DrawRect(CRect(cx - half - edge, cy - half - edge, cx + half + edge, cy + half + edge), CRGBA(0, 0, 0, FadeIn(255)));
+			CSprite2d::DrawRect(CRect(cx - half, cy - half, cx + half, cy + half), CRGBA(r, g, b, FadeIn(255)));
+		}
 		y += lineHeight;
 	}
 

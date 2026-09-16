@@ -1489,6 +1489,15 @@ CCam::Process_FollowPedWithMouse(const CVector &CameraTarget, float TargetOrient
 		bool aiming = CCamera::bOverShoulder && ped == FindPlayerPed() && !ped->bInVehicle &&
 			ped->GetWeapon()->m_eWeaponType != WEAPONTYPE_UNARMED && info->m_eWeaponFire != WEAPON_FIRE_MELEE &&
 			CPad::GetPad(0)->GetTarget() && !CPad::GetPad(0)->ArePlayerControlsDisabled();
+		// every time aim goes down it starts over the right shoulder; circle only changes it for
+		// as long as aim is held
+		// (a frame this camera did not run counts as not aiming, aim may be let go in another mode)
+		static bool wasAiming = false;
+		static uint32 lastFrame = 0;
+		if(aiming && (!wasAiming || CTimer::GetFrameCounter() > lastFrame + 1))
+			CCamera::m_fShoulderSide = 1.0f;
+		wasAiming = aiming;
+		lastFrame = CTimer::GetFrameCounter();
 		// circle itself, whatever it is bound to (sprint, usually), see MapIdToButtonId
 		bool circleDown = ControlsManager.m_aButtonStates[0];
 		if(aiming && circleDown && !circleWasDown)

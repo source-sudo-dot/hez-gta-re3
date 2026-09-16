@@ -3,6 +3,8 @@
 
 #include "Game.h"
 #include "Lists.h"
+#include "ModelIndices.h"
+#include "Pickups.h"
 #include "PlayerInfo.h"
 #include "Script.h"
 #include "Stats.h"
@@ -81,15 +83,16 @@ CountFlags(const int32 *offsets, int32 count)
 }
 
 static void
-Add(CCompletion::tGoal *out, int32 &n, const char *key, int32 done, int32 total)
+Add(CCompletion::tGoal *out, int32 &n, const char *key, int32 done, int32 total, int8 markKind = CCompletion::MARK_NONE)
 {
 	out[n].key = key;
 	out[n].done = Clamp(done, 0, total);
 	out[n].total = total;
+	out[n].markKind = markKind;
 	n++;
 }
 
-#define ADD_FLAGS(key, list) Add(out, n, key, CountFlags(list, ARRAY_SIZE(list)), ARRAY_SIZE(list))
+#define ADD_FLAGS(key, list, kind) Add(out, n, key, CountFlags(list, ARRAY_SIZE(list)), ARRAY_SIZE(list), kind)
 
 int32
 CCompletion::Collect(tGoal *out)
@@ -97,41 +100,41 @@ CCompletion::Collect(tGoal *out)
 	CPlayerInfo &player = CWorld::Players[CWorld::PlayerInFocus];
 	int32 n = 0;
 
-	ADD_FLAGS("FEZ_CSY", storyMissions);
-	ADD_FLAGS("FEZ_CAM", assetMissions);
-	ADD_FLAGS("FEZ_CGM", gangMissions);
-	ADD_FLAGS("FEZ_CCT", assassinations);
+	ADD_FLAGS("FEZ_CSY", storyMissions, MARK_NONE);
+	ADD_FLAGS("FEZ_CAM", assetMissions, MARK_NONE);
+	ADD_FLAGS("FEZ_CGM", gangMissions, MARK_NONE);
+	ADD_FLAGS("FEZ_CCT", assassinations, MARK_NONE);
 	Add(out, n, "FEZ_CAS", ScriptVar(VAR_ASSETS_DONE), 9);
-	Add(out, n, "FEZ_CHP", player.m_nCollectedPackages, player.m_nTotalPackages);
+	Add(out, n, "FEZ_CHP", player.m_nCollectedPackages, player.m_nTotalPackages, MARK_PACKAGE);
 
 	// The rampages are not in the game at all without the blood, and the percentage leaves them
 	// out of its total to match, so they are left out here as well.
 	if (CGame::nastyGame)
-		Add(out, n, "FEZ_CRP", CStats::NumberKillFrenziesPassed, CStats::TotalNumberKillFrenzies);
+		Add(out, n, "FEZ_CRP", CStats::NumberKillFrenziesPassed, CStats::TotalNumberKillFrenzies, MARK_RAMPAGE);
 
-	Add(out, n, "FEZ_CUJ", CStats::NumberOfUniqueJumpsFound, CStats::TotalNumberOfUniqueJumps);
+	Add(out, n, "FEZ_CUJ", CStats::NumberOfUniqueJumpsFound, CStats::TotalNumberOfUniqueJumps, MARK_UNIQUE_JUMP);
 
 	int32 safehouses = 0;
 	for (int32 i = FIRST_SAFEHOUSE; i < FIRST_SAFEHOUSE + NUM_SAFEHOUSES; i++)
 		if (CStats::PropertyOwned[i])
 			safehouses++;
-	Add(out, n, "FEZ_CSH", safehouses, NUM_SAFEHOUSES);
+	Add(out, n, "FEZ_CSH", safehouses, NUM_SAFEHOUSES, MARK_SAFEHOUSE);
 
 	int32 stores = ScriptVar(VAR_STORES_ROBBED);
-	Add(out, n, "FEZ_CST", stores < 0 ? 15 : stores, 15);
+	Add(out, n, "FEZ_CST", stores < 0 ? 15 : stores, 15, MARK_STORE);
 
-	ADD_FLAGS("FEZ_CIE", importLists);
-	ADD_FLAGS("FEZ_CSR", streetRaces);
-	ADD_FLAGS("FEZ_CSD", stadiumEvents);
-	ADD_FLAGS("FEZ_CHC", chopperCheckpoints);
-	ADD_FLAGS("FEZ_COR", offRoad);
-	ADD_FLAGS("FEZ_CRC", rcMissions);
-	Add(out, n, "FEZ_CSG", ScriptVar(VAR_SHOOTING_RANGE_DONE) != 0 ? 1 : 0, 1);
+	ADD_FLAGS("FEZ_CIE", importLists, MARK_IMPORT_EXPORT);
+	ADD_FLAGS("FEZ_CSR", streetRaces, MARK_STREET_RACE);
+	ADD_FLAGS("FEZ_CSD", stadiumEvents, MARK_STADIUM);
+	ADD_FLAGS("FEZ_CHC", chopperCheckpoints, MARK_CHOPPER);
+	ADD_FLAGS("FEZ_COR", offRoad, MARK_OFF_ROAD);
+	ADD_FLAGS("FEZ_CRC", rcMissions, MARK_RC);
+	Add(out, n, "FEZ_CSG", ScriptVar(VAR_SHOOTING_RANGE_DONE) != 0 ? 1 : 0, 1, MARK_SHOOTING_RANGE);
 
 	Add(out, n, "FEZ_CPM", CStats::HighestLevelAmbulanceMission, JOB_LEVEL_FOR_COMPLETION);
 	Add(out, n, "FEZ_CFF", CStats::HighestLevelFireMission, JOB_LEVEL_FOR_COMPLETION);
 	Add(out, n, "FEZ_CVG", CStats::HighestLevelVigilanteMission, JOB_LEVEL_FOR_COMPLETION);
-	Add(out, n, "FEZ_CPZ", ScriptVar(VAR_PIZZA_BOY_DONE) != 0 ? 1 : 0, 1);
+	Add(out, n, "FEZ_CPZ", ScriptVar(VAR_PIZZA_BOY_DONE) != 0 ? 1 : 0, 1, MARK_PIZZA);
 	Add(out, n, "FEZ_CTX", ScriptVar(VAR_TAXI_FARES), 100);
 
 	return n;
@@ -139,10 +142,27 @@ CCompletion::Collect(tGoal *out)
 
 #undef ADD_FLAGS
 
+// the same figure the stats page shows
+int32
+CCompletion::Percent(void)
+{
+	return (int32)CStats::GetPercentageProgress();
+}
+
+// ------------------------------------------------------------------------------------------------
+// Places on the map.  All of them come out of main.scm: where the script watches for the player to
+// start something, and the variable it sets once that is done.
+
+struct tFlagMark
+{
+	float x, y;
+	int32 doneVar;
+};
+
 // The stores that count towards the fifteen.  Twelve are watched by one script, which sets a
 // variable of its own for each when it is robbed; the other three by the hardware store script,
 // where one is an area rather than a point, so the middle of it is used.
-const CCompletion::tMapMark CCompletion::ms_aStores[NUM_STORES] = {
+static const tFlagMark aStores[] = {
 	{ -859.2f, -632.7f, 6176 },
 	{ -854.3f, 850.0f, 6180 },
 	{ -830.4f, 741.9f, 6184 },
@@ -160,9 +180,9 @@ const CCompletion::tMapMark CCompletion::ms_aStores[NUM_STORES] = {
 	{ -967.5f, -693.2f, 3552 },
 };
 
-// Where the script starts watching each unique jump for a take off, and the variable it sets
+// Where the jump script starts watching each unique jump for a take off, and the variable it sets
 // once the jump has been done.
-const CCompletion::tMapMark CCompletion::ms_aUniqueJumps[NUM_UNIQUE_JUMPS] = {
+static const tFlagMark aUniqueJumps[] = {
 	{ -1487.781f, -1044.546f, 3180 },
 	{ -1352.695f, -755.212f, 3184 },
 	{ -1216.490f, -911.833f, 3188 },
@@ -201,15 +221,116 @@ const CCompletion::tMapMark CCompletion::ms_aUniqueJumps[NUM_UNIQUE_JUMPS] = {
 	{ -346.818f, -290.741f, 3320 },
 };
 
-bool
-CCompletion::IsMarkDone(const tMapMark &mark)
+// The safehouses for sale: where the script puts each one's pickup, and its place in the stats'
+// property list, which is set once it is bought.
+struct tPropertyMark
 {
-	return ScriptVar(mark.doneVar) != 0;
+	float x, y;
+	int32 property;
+};
+static const tPropertyMark aSafehouses[] = {
+	{ 531.4f, 1273.7f, 8 },		// 3321 vice point
+	{ 304.5f, 376.3f, 9 },		// links view
+	{ 428.4f, 605.9f, 10 },		// el swanko casa
+	{ 88.5f, -804.7f, 11 },		// 1102 washington street
+	{ 14.0f, -1500.7f, 12 },	// ocean heights
+	{ -560.1f, 703.6f, 13 },	// skumole shack
+	{ -834.8f, 1306.9f, 14 },	// hyman condo
+};
+
+// Places where more than one thing starts, or one thing that has no count of its own: shown while
+// any of the variables is still unset.  The launcher script watches each spot before it starts
+// the mission; for the off-road missions that watch is an area, and its middle is used.
+struct tGroupMark
+{
+	float x, y;
+	int8 kind;
+	int8 numVars;
+	int32 vars[6];
+};
+static const tGroupMark aGroups[] = {
+	{ -967.71f, -827.3f, CCompletion::MARK_STREET_RACE, 6, { 6352, 6356, 6360, 6364, 6368, 6372 } },
+	// the garage behind Sunshine Autos the script turns into each import/export list in turn
+	{ -972.2f, -851.6f, CCompletion::MARK_IMPORT_EXPORT, 4, { 4500, 4504, 4508, 4512 } },
+	{ -1110.33f, 1331.1f, CCompletion::MARK_STADIUM, 3, { 6388, 6392, 220 } },
+	{ -569.15f, 851.09f, CCompletion::MARK_CHOPPER, 1, { 6336 } },
+	{ 28.45f, -1311.76f, CCompletion::MARK_CHOPPER, 1, { 6340 } },
+	{ 375.85f, 332.92f, CCompletion::MARK_CHOPPER, 1, { 6344 } },
+	{ -886.59f, 236.57f, CCompletion::MARK_CHOPPER, 1, { 6348 } },
+	{ -425.0f, 1410.0f, CCompletion::MARK_OFF_ROAD, 2, { 1452, 1456 } },
+	{ 507.4f, -308.8f, CCompletion::MARK_OFF_ROAD, 1, { 1356 } },
+	{ 127.5f, -1157.5f, CCompletion::MARK_OFF_ROAD, 1, { 1404 } },
+	{ -1235.1f, -1235.7f, CCompletion::MARK_RC, 1, { 32624 } },
+	{ 718.47f, 701.4f, CCompletion::MARK_RC, 1, { 32964 } },
+	{ 307.92f, 1254.62f, CCompletion::MARK_RC, 1, { 33940 } },
+	{ -665.63f, 1231.86f, CCompletion::MARK_SHOOTING_RANGE, 1, { 432 } },
+	{ -904.1f, 808.7f, CCompletion::MARK_PIZZA, 1, { 1556 } },
+	{ -1028.7f, 88.6f, CCompletion::MARK_PIZZA, 1, { 1556 } },
+	{ 413.8f, 97.7f, CCompletion::MARK_PIZZA, 1, { 1556 } },
+};
+
+int32
+CCompletion::CollectMapMarks(tMapMark *out, int32 max)
+{
+	int32 n = 0;
+#define PUT(px, py, k) do { if (n < max) { out[n].x = (px); out[n].y = (py); out[n].kind = (k); n++; } } while(0)
+
+	// A package or a rampage still out there is a pickup the script made; doing it takes the
+	// pickup away, so only those left are drawn.
+	for (int32 i = 0; i < NUMPICKUPS; i++) {
+		CPickup &pickup = CPickups::aPickUps[i];
+		if (pickup.m_bRemoved || pickup.m_eType == PICKUP_NONE)
+			continue;
+		if (pickup.m_eType == PICKUP_COLLECTABLE1)
+			PUT(pickup.m_vecPos.x, pickup.m_vecPos.y, MARK_PACKAGE);
+		else if (pickup.m_eModelIndex == MI_PICKUP_KILLFRENZY && CGame::nastyGame)
+			PUT(pickup.m_vecPos.x, pickup.m_vecPos.y, MARK_RAMPAGE);
+	}
+
+	for (int32 i = 0; i < ARRAY_SIZE(aUniqueJumps); i++)
+		if (ScriptVar(aUniqueJumps[i].doneVar) == 0)
+			PUT(aUniqueJumps[i].x, aUniqueJumps[i].y, MARK_UNIQUE_JUMP);
+
+	for (int32 i = 0; i < ARRAY_SIZE(aSafehouses); i++)
+		if (!CStats::PropertyOwned[aSafehouses[i].property])
+			PUT(aSafehouses[i].x, aSafehouses[i].y, MARK_SAFEHOUSE);
+
+	for (int32 i = 0; i < ARRAY_SIZE(aStores); i++)
+		if (ScriptVar(aStores[i].doneVar) == 0)
+			PUT(aStores[i].x, aStores[i].y, MARK_STORE);
+
+	for (int32 i = 0; i < ARRAY_SIZE(aGroups); i++) {
+		const tGroupMark &group = aGroups[i];
+		if (CountFlags(group.vars, group.numVars) < group.numVars)
+			PUT(group.x, group.y, group.kind);
+	}
+#undef PUT
+	return n;
 }
 
-// the same figure the stats page shows
-int32
-CCompletion::Percent(void)
+void
+CCompletion::MarkColour(int32 kind, uint8 &r, uint8 &g, uint8 &b)
 {
-	return (int32)CStats::GetPercentageProgress();
+	static const uint8 colours[NUM_MARK_KINDS][3] = {
+		{ 80, 210, 255 },	// packages, light blue
+		{ 230, 40, 40 },	// rampages, red
+		{ 255, 90, 200 },	// unique jumps, pink
+		{ 120, 230, 60 },	// safehouses, lime
+		{ 255, 140, 30 },	// stores, orange
+		{ 170, 120, 70 },	// import/export, brown
+		{ 255, 230, 40 },	// street races, yellow
+		{ 150, 90, 255 },	// stadium, violet
+		{ 30, 170, 150 },	// chopper checkpoints, teal
+		{ 240, 240, 240 },	// off-road, white
+		{ 40, 60, 200 },	// rc, dark blue
+		{ 130, 130, 130 },	// shooting range, grey
+		{ 250, 200, 150 },	// pizza boy, beige
+	};
+	if (kind < 0 || kind >= NUM_MARK_KINDS) {
+		r = g = b = 255;
+		return;
+	}
+	r = colours[kind][0];
+	g = colours[kind][1];
+	b = colours[kind][2];
 }

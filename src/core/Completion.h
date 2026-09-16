@@ -9,28 +9,47 @@
 class CCompletion
 {
 public:
-	enum { MAX_GOALS = 24 };
+	enum { MAX_GOALS = 24, MAX_MAP_MARKS = 256 };
+
+	// what a place on the map stands for, and so its colour; the progress rows name theirs too
+	enum eMarkKind
+	{
+		MARK_NONE = -1,
+		MARK_PACKAGE,
+		MARK_RAMPAGE,
+		MARK_UNIQUE_JUMP,
+		MARK_SAFEHOUSE,
+		MARK_STORE,
+		MARK_IMPORT_EXPORT,
+		MARK_STREET_RACE,
+		MARK_STADIUM,
+		MARK_CHOPPER,
+		MARK_OFF_ROAD,
+		MARK_RC,
+		MARK_SHOOTING_RANGE,
+		MARK_PIZZA,
+		NUM_MARK_KINDS
+	};
 
 	struct tGoal
 	{
 		const char *key;
 		int32 done;
 		int32 total;	// 0 when the game keeps none
+		int8 markKind;	// MARK_NONE when it has no places on the map
+	};
+
+	struct tMapMark
+	{
+		float x, y;
+		int8 kind;
 	};
 
 	// fills the goals and says how many there are
 	static int32 Collect(tGoal *out);
 	static int32 Percent(void);
 
-	// Places on the map still to be done, for the map's square toggle: where it is, and the
-	// script variable that is set once it is done.
-	struct tMapMark
-	{
-		float x, y;
-		int32 doneVar;
-	};
-	enum { NUM_STORES = 15, NUM_UNIQUE_JUMPS = 36 };
-	static const tMapMark ms_aStores[NUM_STORES];
-	static const tMapMark ms_aUniqueJumps[NUM_UNIQUE_JUMPS];
-	static bool IsMarkDone(const tMapMark &mark);
+	// every place still to be done, for the map's square toggle
+	static int32 CollectMapMarks(tMapMark *out, int32 max);
+	static void MarkColour(int32 kind, uint8 &r, uint8 &g, uint8 &b);
 };
