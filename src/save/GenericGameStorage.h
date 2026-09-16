@@ -8,7 +8,11 @@
 // mission retry keeps for itself, so nothing can write over it by hand or by a failed mission.  The
 // load list is the only place it shows.
 #define AUTOSAVE_SLOT (SLOT_COUNT + 1)
-#define SLOT_TOTAL (AUTOSAVE_SLOT + 1)
+// The second autosave, after every step on the progress list that is not a mission: a package, a
+// rampage, a jump, a store.  Those come in the middle of play rather than at a mission's quiet end,
+// so they are kept apart and can never spoil the mission autosave.
+#define PROGRESS_AUTOSAVE_SLOT (AUTOSAVE_SLOT + 1)
+#define SLOT_TOTAL (PROGRESS_AUTOSAVE_SLOT + 1)
 
 void InitRadioStationPositionList();
 int32 GetSavedRadioStationPosition(int32 station);

@@ -1133,7 +1133,7 @@ CMenuManager::DrawStandardMenus(bool activeScreen)
 
 			if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action != MENUACTION_LABEL && aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName[0] != '\0') {
 
-				if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_1 && aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot <= SAVESLOT_10) {
+				if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_1 && aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot <= SAVESLOT_11) {
 					CFont::SetRightJustifyOff();
 
 					// Which save a row stood for was taken from where the row sat, so a row anywhere
@@ -1147,8 +1147,8 @@ CMenuManager::DrawStandardMenus(bool activeScreen)
 					}
 
 					if (!leftText || leftText[0] == '\0') {
-						// the autosave row carries a name of its own, the numbered ones build theirs
-						if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot == SAVESLOT_10) {
+						// the autosave rows carry a name of their own, the numbered ones build theirs
+						if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_10) {
 							leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
 						} else {
 							sprintf(gString, "FEM_SL%d", slotIndex + 1);
@@ -4998,7 +4998,7 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 			{
 				int saveSlot = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_SaveSlot;
 
-				if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10) {
+				if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_11) {
 					m_nCurrSaveSlot = saveSlot - SAVESLOT_1;
 					if (Slots[m_nCurrSaveSlot] != SLOT_EMPTY && Slots[m_nCurrSaveSlot] != SLOT_CORRUPTED) {
 						if (m_nCurrScreen == MENUPAGE_CHOOSE_LOAD_SLOT) {
@@ -5253,10 +5253,10 @@ CMenuManager::ProcessUserInput(uint8 goDown, uint8 goUp, uint8 optionSelected, u
 		if (!goBack) {
 #ifdef FIX_BUGS
 			int saveSlot = aScreens[currScreen].m_aEntries[currOption].m_SaveSlot;
-			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10 && Slots[saveSlot - SAVESLOT_1] != SLOT_OK)
+			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_11 && Slots[saveSlot - SAVESLOT_1] != SLOT_OK)
 #else
 			int saveSlot = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_SaveSlot;
-			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10 && Slots[saveSlot - SAVESLOT_1] != SLOT_OK)
+			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_11 && Slots[saveSlot - SAVESLOT_1] != SLOT_OK)
 #endif
 				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_FAIL, 0);
 			else
