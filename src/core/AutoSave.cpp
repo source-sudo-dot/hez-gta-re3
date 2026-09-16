@@ -76,9 +76,9 @@ CAutoSave::WatchProgress(void)
 			if (IsMissionRow(now[i].key) || strcmp(now[i].key, last[i].key) != 0)
 				continue;
 			if (now[i].done > last[i].done) {
-				// which row set it off, while this is looked into (StickDebug=1)
-				if (CPad::m_bStickDebug) {
-					FILE *f = fopen("reVC_debug.log", "a");
+				// which row set it off, to reVC_autosave.log while this is looked into
+				{
+					FILE *f = fopen("reVC_autosave.log", "a");
 					if (f) {
 						fprintf(f, "autosave progress t=%u %s %d->%d/%d pending=%d\n", CTimer::GetTimeInMilliseconds(),
 							now[i].key, last[i].done, now[i].done, now[i].total, m_bProgressPending);
@@ -173,8 +173,8 @@ CAutoSave::Process(void)
 			return;
 		m_bProgressPending = false;
 		bool saved = Save(PROGRESS_AUTOSAVE_SLOT, "FEZ_ASD");
-		if (CPad::m_bStickDebug) {
-			FILE *f = fopen("reVC_debug.log", "a");
+		{
+			FILE *f = fopen("reVC_autosave.log", "a");
 			if (f) {
 				fprintf(f, "autosave progress written t=%u ok=%d\n", CTimer::GetTimeInMilliseconds(), saved);
 				fclose(f);
