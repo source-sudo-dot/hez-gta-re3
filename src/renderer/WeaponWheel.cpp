@@ -327,8 +327,14 @@ CWeaponWheel::Draw(void)
 			// The ring's dimmed backdrop and its other icons start from 150, the number from full,
 			// and white on a dark screen stays legible long after the rest has gone.  Taken down
 			// with the cube of the opening, it is still full with the ring open and gone with it.
-			CFont::SetColor(CRGBA(225, 225, 225, (int32)(255.0f * open * open * open)));
+			int32 textAlpha = (int32)(255.0f * open * open * open);
+			CFont::SetColor(CRGBA(225, 225, 225, textAlpha));
+			// The drop shadow was left however the HUD had it, black at full strength, so the number
+			// faded and its black shadow stayed behind until the ring was gone.  It fades with it.
+			CFont::SetDropShadowPosition(1);
+			CFont::SetDropColor(CRGBA(0, 0, 0, textAlpha));
 			CFont::PrintString(centreX, centreY - SCREEN_SCALE_Y(8.0f), wbuf);
+			CFont::SetDropShadowPosition(0);
 		}
 	}
 }
