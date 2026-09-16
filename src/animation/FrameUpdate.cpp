@@ -7,25 +7,33 @@
 #include "RpAnimBlend.h"
 #include "Bones.h"
 
-// An animation marked ASSOC_UPPERBODY leaves the legs and the root, the bone the movement is read
-// from, to the others.  The player's weapon animations are marked while he walks with a two handed
-// gun raised: they hold the whole body, legs and all, and would stand him still, so the walk plays
-// in the legs and the gun is held exactly as the weapon animation holds it, both hands on it.
-// The hips stay with the weapon animation: the rifles are aimed with the hips turned, and taken
-// from the walk they swung the whole upper body about and pointed the gun off to the side.
+// An animation marked ASSOC_UPPERBODY leaves the legs to the others, and of the root it keeps only
+// the turn.  The player's weapon animations are marked while he walks with a two handed gun
+// raised: they hold the whole body, legs and all, and would stand him still, so the walk plays in
+// the legs and the gun is held exactly as the weapon animation holds it, both hands on it.
+// The rifles are aimed with the whole body turned, and that turn is the root's.  Taken from the
+// walk, the gun pointed off to the side and every step's sway went up into it, so the root turns
+// with the weapon animation and only moves with the walk, which is where the movement is read.
+static inline bool
+IsUpperBody(CAnimBlendNode *node)
+{
+	return !!(node->association->flags & ASSOC_UPPERBODY);
+}
+
 static inline bool
 NodeSkipped(AnimBlendFrameData *frame, CAnimBlendNode *node)
 {
-	if(!(node->association->flags & ASSOC_UPPERBODY))
+	if(!IsUpperBody(node))
 		return false;
 	switch(frame->nodeID){
-	case BONE_root:
 	case BONE_l_thigh:
 	case BONE_l_calf:
 	case BONE_l_foot:
 	case BONE_r_thigh:
 	case BONE_r_calf:
 	case BONE_r_foot:
+	case 2000:	// the toes, below the feet
+	case 2001:
 		return true;
 	}
 	return false;
@@ -319,6 +327,9 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 	CVector vec, pos(0.0f, 0.0f, 0.0f);
 	CQuaternion q, rot(0.0f, 0.0f, 0.0f, 0.0f);
 	float totalBlendAmount = 0.0f;
+	// what the partial animations hold of the root's movement, which leaves out the upper body
+	// ones: they turn the root but do not move it, see IsUpperBody
+	float transBlendAmount = 0.0f;
 	float transx = 0.0f, transy = 0.0f;
 	float curx = 0.0f, cury = 0.0f;
 	float endx = 0.0f, endy = 0.0f;
@@ -329,13 +340,16 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 
 	if(updateData->foobar)
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
+			if((*node)->sequence && (*node)->association->IsPartial()){
 				totalBlendAmount += (*node)->association->blendAmount;
+				if(!IsUpperBody(*node))
+					transBlendAmount += (*node)->association->blendAmount;
+			}
 
 	for(node = updateData->nodes; *node; node++)
-		if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
+		if((*node)->sequence && !IsUpperBody(*node) && (*node)->sequence->HasTranslation()){
 			if((*node)->association->HasTranslation()){
-				(*node)->GetCurrentTranslation(vec, 1.0f-totalBlendAmount);
+				(*node)->GetCurrentTranslation(vec, 1.0f-transBlendAmount);
 				cury += vec.y;
 				if((*node)->association->HasXTranslation())
 					curx += vec.x;
@@ -343,13 +357,20 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 		}
 
 	for(node = updateData->nodes; *node; node++){
-		if((*node)->sequence && !NodeSkipped(frame, *node)){
-			bool nodelooped = (*node)->Update(vec, q, 1.0f-totalBlendAmount);
+		if((*node)->sequence){
+			// Taken at full weight and weighted here instead, since a node can only be advanced
+			// once a frame and the turn and the movement are weighted apart.  With no upper body
+			// animation playing the two weights are the same and this is what it always was.
+			bool nodelooped = (*node)->Update(vec, q, 1.0f);
+			if(!(*node)->association->IsPartial()){
+				q *= 1.0f-totalBlendAmount;
+				vec *= 1.0f-transBlendAmount;
+			}
 			if(DotProduct(rot, q) < 0.0f)
 				rot -= q;
 			else
 				rot += q;
-			if((*node)->sequence->HasTranslation()){
+			if((*node)->sequence->HasTranslation() && !IsUpperBody(*node)){
 				pos += vec;
 				if((*node)->association->HasTranslation()){
 					transy += vec.y;
@@ -357,7 +378,7 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 						transx += vec.x;
 					looped |= nodelooped;
 					if(nodelooped){
-						(*node)->GetEndTranslation(vec, 1.0f-totalBlendAmount);
+						(*node)->GetEndTranslation(vec, 1.0f-transBlendAmount);
 						endy += vec.y;
 						if((*node)->association->HasXTranslation())
 							endx += vec.x;
@@ -597,35 +618,46 @@ FrameUpdateCallBackSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 
 	if(frame->flag & AnimBlendFrameData::VELOCITY_EXTRACTION &&
 	   gpAnimBlendClump->velocity2d){
+		// the root: the upper body animations turn it but do not move it, see IsUpperBody and
+		// FrameUpdateCallBackWithVelocityExtractionSkinned
+		float transBlendAmount = 0.0f;
+
 		if(updateData->foobar)
 			for(node = updateData->nodes; *node; node++)
-				if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->association->IsPartial())
+				if((*node)->sequence && (*node)->association->IsPartial()){
 					totalBlendAmount += (*node)->association->blendAmount;
+					if(!IsUpperBody(*node))
+						transBlendAmount += (*node)->association->blendAmount;
+				}
 
 		for(node = updateData->nodes; *node; node++)
-			if((*node)->sequence && !NodeSkipped(frame, *node) && (*node)->sequence->HasTranslation()){
+			if((*node)->sequence && !IsUpperBody(*node) && (*node)->sequence->HasTranslation()){
 				if((*node)->association->HasTranslation()){
-					(*node)->GetCurrentTranslationCompressed(vec, 1.0f-totalBlendAmount);
+					(*node)->GetCurrentTranslationCompressed(vec, 1.0f-transBlendAmount);
 					cur += vec;
 				}
 			}
 
 		for(node = updateData->nodes; *node; node++){
-			if((*node)->sequence && !NodeSkipped(frame, *node)){
-				bool nodelooped = (*node)->UpdateCompressed(vec, q, 1.0f-totalBlendAmount);
+			if((*node)->sequence){
+				bool nodelooped = (*node)->UpdateCompressed(vec, q, 1.0f);
+				if(!(*node)->association->IsPartial()){
+					q *= 1.0f-totalBlendAmount;
+					vec *= 1.0f-transBlendAmount;
+				}
 #ifdef FIX_BUGS
 				if(DotProduct(rot, q) < 0.0f)
 					rot -= q;
 				else
 #endif
 					rot += q;
-				if((*node)->sequence->HasTranslation()){
+				if((*node)->sequence->HasTranslation() && !IsUpperBody(*node)){
 					pos += vec;
 					if((*node)->association->HasTranslation()){
 						trans += vec;
 						looped |= nodelooped;
 						if(nodelooped){
-							(*node)->GetEndTranslationCompressed(vec, 1.0f-totalBlendAmount);
+							(*node)->GetEndTranslationCompressed(vec, 1.0f-transBlendAmount);
 							end += vec;
 						}
 					}
