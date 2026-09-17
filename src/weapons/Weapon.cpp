@@ -2973,7 +2973,7 @@ CWeapon::Update(int32 audioEntity, CPed *pedToAdjustSound)
 			{
 				CAnimBlendAssociation *reloadAssoc = nil;
 				if (pedToAdjustSound) {
-					if (CPed::GetReloadAnim(info) && (!CWorld::Players[CWorld::PlayerInFocus].m_bFastReload || !pedToAdjustSound->IsPlayer())) {
+					if (CPed::GetReloadAnim(info)) {	// the player's reload animation is played under fast reload too now
 						reloadAssoc = RpAnimBlendClumpGetAssociation(pedToAdjustSound->GetClump(), CPed::GetReloadAnim(info));
 						if (!reloadAssoc) {
 							reloadAssoc = RpAnimBlendClumpGetAssociation(pedToAdjustSound->GetClump(), CPed::GetCrouchReloadAnim(info));

@@ -82,6 +82,7 @@ public:
 	void SetInitialState(void);
 	void ProcessControl(void);
 	void ClearAdrenaline(void);
+	static void SpeedUpReloadAnim(class CAnimBlendAssociation *assoc, CWeaponInfo *info);
 	void UseSprintEnergy(void);
 	class CPlayerInfo *GetPlayerInfoForThisPlayerPed();
 	void SetRealMoveAnim(void);

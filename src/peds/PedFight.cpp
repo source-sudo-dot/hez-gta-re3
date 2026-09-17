@@ -975,12 +975,17 @@ CPed::Attack(void)
 	if (weaponAnimTime > animLoopEnd || !weaponAnimAssoc->IsRunning() && ourWeapon->m_eWeaponFire != WEAPON_FIRE_PROJECTILE) {
 		if (GetWeapon()->m_eWeaponState == WEAPONSTATE_RELOADING) {
 			if (GetReloadAnim(ourWeapon) && !reloadAnimAssoc) {
-				if (!CWorld::Players[CWorld::PlayerInFocus].m_bFastReload) {
+				// The fast reload cheat left the animation out, and its sound with it.  It is played
+				// for the player as well now, sped up to fit the quarter of the reload time the cheat
+				// gives, see CPlayerPed::SpeedUpReloadAnim().
+				if (!CWorld::Players[CWorld::PlayerInFocus].m_bFastReload || IsPlayer()) {
 					CAnimBlendAssociation *newReloadAssoc = CAnimManager::BlendAnimation(
 						GetClump(), ourWeapon->m_AnimToPlay,
 						bIsDucking && GetCrouchReloadAnim(ourWeapon) ? GetCrouchReloadAnim(ourWeapon) : GetReloadAnim(ourWeapon),
 						8.0f);
 					newReloadAssoc->SetFinishCallback(FinishedReloadCB, this);
+					if (IsPlayer())
+						CPlayerPed::SpeedUpReloadAnim(newReloadAssoc, ourWeapon);
 				}
 				ClearLookFlag();
 				ClearAimFlag();

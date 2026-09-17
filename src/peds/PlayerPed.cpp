@@ -13,6 +13,7 @@
 #include "RpAnimBlend.h"
 #include "AnimBlendAssociation.h"
 #include "AnimBlendClumpData.h"
+#include "AnimBlendHierarchy.h"
 #include "General.h"
 #include "Pools.h"
 #include "PedModelInfo.h"
@@ -169,6 +170,20 @@ CPlayerPed::AnnoyPlayerPed(bool annoyedByPassingEntity)
 	} else if (annoyedByPassingEntity) {
 		m_pedStats->m_temper = 46;
 	}
+}
+
+// Under the fast reload cheat the reload takes a quarter of its time and the game used to leave
+// the animation out for it.  The animation is played at the pace that fits it into that quarter
+// instead, so the reload looks and sounds like one and still takes no longer than without it.
+void
+CPlayerPed::SpeedUpReloadAnim(CAnimBlendAssociation *assoc, CWeaponInfo *info)
+{
+	if (assoc == nil || !CWorld::Players[CWorld::PlayerInFocus].m_bFastReload)
+		return;
+	float reloadSeconds = info->m_nReload / 4 / 1000.0f;
+	if (reloadSeconds <= 0.0f || assoc->hierarchy->totalLength <= 0.0f)
+		return;
+	assoc->speed = Max(assoc->speed, assoc->hierarchy->totalLength / reloadSeconds);
 }
 
 void
@@ -2780,10 +2795,12 @@ CPlayerPed::ProcessManualReload(CPad *padUsed)
 	// reload cheat.
 	AnimationId reloadAnim = bIsDucking && GetCrouchReloadAnim(info) ? GetCrouchReloadAnim(info) : GetReloadAnim(info);
 	if (reloadAnim != (AnimationId)0) {
-		if (!fastReload && !RpAnimBlendClumpGetAssociation(GetClump(), reloadAnim)) {
+		if (!RpAnimBlendClumpGetAssociation(GetClump(), reloadAnim)) {
 			CAnimBlendAssociation *reloadAssoc = CAnimManager::BlendAnimation(GetClump(), info->m_AnimToPlay, reloadAnim, 8.0f);
-			if (reloadAssoc)
+			if (reloadAssoc) {
 				reloadAssoc->SetFinishCallback(FinishedReloadCB, this);
+				SpeedUpReloadAnim(reloadAssoc, info);
+			}
 		}
 		ClearLookFlag();
 		ClearAimFlag();
