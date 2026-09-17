@@ -2428,6 +2428,7 @@ CPlayerPed::FindMeleeAttackPoint(CPed *victim, CVector &dist, uint32 &endOfAttac
 }
 
 #ifdef COMPATIBLE_SAVES
+#define WANTED_SAVE_TAG 0x444E5457	// "WTND" read backwards: the wanted level follows
 #define CopyFromBuf(buf, data) memcpy(&data, buf, sizeof(data)); SkipSaveBuf(buf, sizeof(data));
 #define CopyToBuf(buf, data) memcpy(buf, &data, sizeof(data)); SkipSaveBuf(buf, sizeof(data));
 void
@@ -2441,7 +2442,18 @@ CPlayerPed::Save(uint8*& buf)
 	CopyToBuf(buf, m_nTargettableObjects[1]);
 	CopyToBuf(buf, m_nTargettableObjects[2]);
 	CopyToBuf(buf, m_nTargettableObjects[3]);
-	ZeroSaveBuf(buf, 164);
+	// The save never kept the wanted level, so loading shook the police off.  It goes into the
+	// start of the unused tail, behind a tag, so a save without it and a game that skips the tail
+	// both go on as before.
+	uint32 tag = WANTED_SAVE_TAG;
+	CopyToBuf(buf, tag);
+	CopyToBuf(buf, m_pWanted->m_nChaos);
+	CopyToBuf(buf, m_pWanted->m_nMinChaos);
+	CopyToBuf(buf, m_pWanted->m_nLastUpdateTime);
+	CopyToBuf(buf, m_pWanted->m_nLastWantedLevelChange);
+	CopyToBuf(buf, m_pWanted->m_nWantedLevel);
+	CopyToBuf(buf, m_pWanted->m_nMinWantedLevel);
+	ZeroSaveBuf(buf, 164 - 7 * sizeof(int32));
 }
 
 void
@@ -2455,7 +2467,20 @@ CPlayerPed::Load(uint8*& buf)
 	CopyFromBuf(buf, m_nTargettableObjects[1]);
 	CopyFromBuf(buf, m_nTargettableObjects[2]);
 	CopyFromBuf(buf, m_nTargettableObjects[3]);
-	SkipSaveBuf(buf, 164);
+	uint32 tag;
+	CopyFromBuf(buf, tag);
+	if (tag == WANTED_SAVE_TAG) {
+		// the level itself is worked out from the chaos again once the highest level allowed,
+		// which comes after the player in the save, has been read (CPools::LoadPedPool)
+		CopyFromBuf(buf, m_pWanted->m_nChaos);
+		CopyFromBuf(buf, m_pWanted->m_nMinChaos);
+		CopyFromBuf(buf, m_pWanted->m_nLastUpdateTime);
+		CopyFromBuf(buf, m_pWanted->m_nLastWantedLevelChange);
+		CopyFromBuf(buf, m_pWanted->m_nWantedLevel);
+		CopyFromBuf(buf, m_pWanted->m_nMinWantedLevel);
+		SkipSaveBuf(buf, 164 - 7 * sizeof(int32));
+	} else
+		SkipSaveBuf(buf, 164 - sizeof(uint32));
 }
 #undef CopyFromBuf
 #undef CopyToBuf
