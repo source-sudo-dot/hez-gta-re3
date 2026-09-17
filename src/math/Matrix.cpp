@@ -425,8 +425,22 @@ CMatrix::Interpolate(const CMatrix &a, const CMatrix &b, float t)
 	RwMatrix ma, mb, m;
 	CQuaternion qa, qb, q;
 
-	ma.right = a.GetRight(); ma.up = a.GetForward(); ma.at = a.GetUp();
-	mb.right = b.GetRight(); mb.up = b.GetForward(); mb.at = b.GetUp();
+	// A quaternion only holds a rotation.  Some matrices are mirrored: the garage doors that swing
+	// up (CGarage::BuildRotatedDoorMatrix) take their right as up x forward, and one of those read as
+	// a rotation turned the door about the wrong axis between logical frames.  The mirrored axis is
+	// turned back for the quaternion and mirrored again after.  A mirrored and a plain matrix can
+	// not be blended at all, the later one is taken.
+	bool mirroredA = DotProduct(CrossProduct(a.GetRight(), a.GetForward()), a.GetUp()) < 0.0f;
+	bool mirroredB = DotProduct(CrossProduct(b.GetRight(), b.GetForward()), b.GetUp()) < 0.0f;
+	if(mirroredA != mirroredB){
+		CopyOnlyMatrix(b);
+		return;
+	}
+	CVector rightA = mirroredA ? -a.GetRight() : a.GetRight();
+	CVector rightB = mirroredB ? -b.GetRight() : b.GetRight();
+
+	ma.right = rightA; ma.up = a.GetForward(); ma.at = a.GetUp();
+	mb.right = rightB; mb.up = b.GetForward(); mb.at = b.GetUp();
 	qa.Set(ma);
 	qb.Set(mb);
 	if(qa.x*qb.x + qa.y*qb.y + qa.z*qb.z + qa.w*qb.w < 0.0f)
@@ -434,7 +448,7 @@ CMatrix::Interpolate(const CMatrix &a, const CMatrix &b, float t)
 	q = qa*(1.0f - t) + qb*t;
 	q.Normalise();
 	q.Get(&m);
-	GetRight() = m.right;
+	GetRight() = mirroredA ? -CVector(m.right) : CVector(m.right);
 	GetForward() = m.up;
 	GetUp() = m.at;
 	GetPosition() = a.GetPosition() + (b.GetPosition() - a.GetPosition())*t;
