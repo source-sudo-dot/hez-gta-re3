@@ -11,6 +11,7 @@
 #include "PCSave.h"
 #include "Pad.h"
 #include "Lists.h"
+#include "Messages.h"
 #include "PlayerInfo.h"
 #include "PlayerPed.h"
 #include "Script.h"
@@ -140,9 +141,45 @@ CAutoSave::Save(int slot, const char *doneKey)
 	return saved;
 }
 
+// While a big message or a help message is up, how the clocks it goes by move against real time,
+// twice a second, to reVC_autosave.log: they stay up far too long and it is not known why.
+static void
+LogMessageClocks(void)
+{
+	static uint32 lastReal = 0;
+	bool big = false;
+	for (int32 style = 0; style < NUMBIGMESSAGES; style++)
+		if (CMessages::BIGMessages[style].m_Stack[0].m_pText != nil)
+			big = true;
+	if (!big && CHud::m_HelpMessageState == 0)
+		return;
+
+	uint32 real = CTimer::GetCurrentTimeInCycles() / CTimer::GetCyclesPerMillisecond();
+	if (real - lastReal < 500)
+		return;
+	lastReal = real;
+
+	FILE *f = fopen("reVC_autosave.log", "a");
+	if (f == nil)
+		return;
+	fprintf(f, "clocks real=%u game=%u step=%.3f stepms=%u scale=%.3f frame=%u paused=%d help=%u/%u/%.0f",
+		real, CTimer::GetTimeInMilliseconds(), CTimer::GetTimeStep(), CTimer::GetTimeStepInMilliseconds(),
+		CTimer::GetTimeScale(), CTimer::GetFrameCounter(), CTimer::GetIsPaused(),
+		CHud::m_HelpMessageState, CHud::m_HelpMessageTimer, CHud::m_HelpMessageDisplayTime * 1000.0f);
+	for (int32 style = 0; style < NUMBIGMESSAGES; style++) {
+		tMessage &msg = CMessages::BIGMessages[style].m_Stack[0];
+		if (msg.m_pText != nil)
+			fprintf(f, " big%d=%u+%u", style, msg.m_nStartTime, msg.m_nTime);
+	}
+	fprintf(f, "\n");
+	fclose(f);
+}
+
 void
 CAutoSave::Process(void)
 {
+	LogMessageClocks();
+
 	if (bProgressEnabled)
 		WatchProgress();
 	else
