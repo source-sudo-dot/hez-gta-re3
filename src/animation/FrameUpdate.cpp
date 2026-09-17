@@ -363,8 +363,11 @@ FrameUpdateCallBackWithVelocityExtractionSkinned(AnimBlendFrameData *frame, void
 			// animation playing the two weights are the same and this is what it always was.
 			bool nodelooped = (*node)->Update(vec, q, 1.0f);
 			if(!(*node)->association->IsPartial()){
-				q *= 1.0f-totalBlendAmount;
-				vec *= 1.0f-transBlendAmount;
+				// never below nothing: the partial animations can come to more than the whole
+				// between them, and a weight under nothing would turn the movement around.  The
+				// weight handed to Update() was cut off there, so it is cut off here.
+				q *= Max(0.0f, 1.0f-totalBlendAmount);
+				vec *= Max(0.0f, 1.0f-transBlendAmount);
 			}
 			if(DotProduct(rot, q) < 0.0f)
 				rot -= q;
@@ -642,8 +645,9 @@ FrameUpdateCallBackSkinnedCompressed(AnimBlendFrameData *frame, void *arg)
 			if((*node)->sequence){
 				bool nodelooped = (*node)->UpdateCompressed(vec, q, 1.0f);
 				if(!(*node)->association->IsPartial()){
-					q *= 1.0f-totalBlendAmount;
-					vec *= 1.0f-transBlendAmount;
+					// cut off at nothing, see FrameUpdateCallBackWithVelocityExtractionSkinned
+					q *= Max(0.0f, 1.0f-totalBlendAmount);
+					vec *= Max(0.0f, 1.0f-transBlendAmount);
 				}
 #ifdef FIX_BUGS
 				if(DotProduct(rot, q) < 0.0f)
