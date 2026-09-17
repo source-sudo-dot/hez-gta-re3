@@ -22,6 +22,20 @@ float CTimer::ms_fLogicalFrameFraction;
 float CTimer::ms_fRenderFrameLength;
 float CTimer::ms_fRenderTimeStep;
 float CTimer::ms_fRenderTimeStepNonClipped;
+uint32 CTimer::ms_nTimeStepInMilliseconds;
+float CTimer::ms_fTimeStepOfMilliseconds = -1.0f;
+
+// the part of a millisecond each kind of frame has left over, see GetTimeStepInMilliseconds()
+static double logicalStepMsCarry;
+static double renderStepMsCarry;
+
+void CTimer::CarryTimeStepInMilliseconds(double &carry)
+{
+	carry += ms_fTimeStep / 50.0 * 1000.0;
+	ms_nTimeStepInMilliseconds = uint32(carry);
+	carry -= ms_nTimeStepInMilliseconds;
+	ms_fTimeStepOfMilliseconds = ms_fTimeStep;
+}
 
 uint32 _nCyclesPerMS = 1;
 
@@ -210,6 +224,7 @@ void CTimer::UpdateLogicalFrame(void)
 	}
 
 	m_FrameCounter++;
+	CarryTimeStepInMilliseconds(logicalStepMsCarry);
 }
 
 // The camera and everything else that runs once per rendered frame gets the time the
@@ -229,6 +244,7 @@ void CTimer::SetTimeStepForRender(void)
 	m_snTimeInMilliseconds += renderTimeOffset;
 	m_snTimeInMillisecondsNonClipped += renderTimeOffset;
 	m_snTimeInMillisecondsPauseMode += renderPauseTimeOffset;
+	CarryTimeStepInMilliseconds(renderStepMsCarry);
 }
 
 // Whether the next Update() would produce a logical frame if it happened after

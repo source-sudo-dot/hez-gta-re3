@@ -28,6 +28,9 @@ class CTimer
 	static float ms_fRenderFrameLength;
 	static float ms_fRenderTimeStep;
 	static float ms_fRenderTimeStepNonClipped;
+	static uint32 ms_nTimeStepInMilliseconds;
+	static float ms_fTimeStepOfMilliseconds;
+	static void CarryTimeStepInMilliseconds(double &carry);
 public:
 	static bool  m_UserPause;
 	static bool  m_CodePause;
@@ -35,7 +38,10 @@ public:
 	static const float &GetTimeStep(void) { return ms_fTimeStep; }
 	static void SetTimeStep(float ts) { ms_fTimeStep = ts; }
 	static float GetTimeStepInSeconds() { return ms_fTimeStep / 50.0f; }
-	static uint32 GetTimeStepInMilliseconds() { return ms_fTimeStep / 50.0f * 1000.0f; }
+	// Whole milliseconds, with what is cut off carried into the next frame of the same kind.  With
+	// the frame drawn hundreds of times a second each step was cut down to 1 or 0 ms, and whatever
+	// counts itself on by these (the help message, the mission passed text) all but stopped.
+	static uint32 GetTimeStepInMilliseconds() { return ms_fTimeStep == ms_fTimeStepOfMilliseconds ? ms_nTimeStepInMilliseconds : uint32(ms_fTimeStep / 50.0f * 1000.0f); }
 	static const float &GetTimeStepNonClipped(void) { return ms_fTimeStepNonClipped; }
 	static float GetTimeStepNonClippedInSeconds(void) { return ms_fTimeStepNonClipped / 50.0f; }
 	static float GetTimeStepNonClippedInMilliseconds(void) { return ms_fTimeStepNonClipped / 50.0f * 1000.0f; }
