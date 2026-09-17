@@ -8,6 +8,7 @@
 #ifdef MISSION_REPLAY
 #include "GenericGameStorage.h"
 #endif
+#include "PlayerPed.h"
 #include "Population.h"
 #include "ProjectileInfo.h"
 #include "SaveBuf.h"
@@ -143,6 +144,9 @@ INITSAVEBUF
 	ReadSaveBuf(&nNumCars, buf);
 	ReadSaveBuf(&nNumBoats, buf);
 	ReadSaveBuf(&nNumBikes, buf);
+#ifdef MISSION_REPLAY
+	CVehicle *pPlayerVehicle = nil;
+#endif
 	for (int i = 0; i < nNumCars + nNumBoats + nNumBikes; i++) {
 		uint32 type;
 		int16 model;
@@ -238,7 +242,26 @@ INITSAVEBUF
 		CWorld::Add(pVehicle);
 		delete[] vbuf;
 #endif
+#ifdef MISSION_REPLAY
+		if (pVehicle->GetStatus() == STATUS_PLAYER && pVehicle->pDriver == nil)
+			pPlayerVehicle = pVehicle;
+#endif
 	}
+#ifdef MISSION_REPLAY
+	// A quick save, which the autosaves are, keeps the vehicle the player sits in, as the player's,
+	// but nothing on the PC puts him back in it: it came back with no one on it, still marked as
+	// the player's.  A bike looks for its rider's weapon at once and the game went down on load.
+	// The player is loaded before the vehicles, so he is sat back on it here.
+	if (pPlayerVehicle) {
+		CPlayerPed *pPlayer = CWorld::Players[CWorld::PlayerInFocus].m_pPed;
+		if (pPlayer && !pPlayer->bInVehicle) {
+			pPlayer->SetObjective(OBJECTIVE_ENTER_CAR_AS_DRIVER, pPlayerVehicle);
+			pPlayer->WarpPedIntoCar(pPlayerVehicle);
+		}
+		if (pPlayerVehicle->pDriver == nil)
+			pPlayerVehicle->SetStatus(STATUS_ABANDONED);
+	}
+#endif
 VALIDATESAVEBUF(size)
 }
 
