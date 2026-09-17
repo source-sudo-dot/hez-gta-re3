@@ -162,6 +162,29 @@ CPhysical::Remove(void)
 #include "PlayerPed.h"
 #include "WeaponWheel.h"
 
+// Lamp posts are reported falling over some 20 m ahead of the player with nothing near them.
+// Each time a collision frees a static object, what freed it goes to reVC_lamps.log, to find what
+// hits them.  Nothing here changes what happens.
+static void
+LogObjectFreed(const char *how, CPhysical *A, CEntity *B, float impulse, float uprootLimit)
+{
+	FILE *f = fopen("reVC_lamps.log", "a");
+	if (f == nil)
+		return;
+	CVector playerPos = FindPlayerCoors();
+	CVector a = A->GetPosition(), b = B->GetPosition();
+	fprintf(f, "t=%u frame=%u %s object model=%d at (%.1f,%.1f,%.1f) dist-to-player=%.1f uproot=%.1f impulse=%.1f"
+		" | by type=%d model=%d status=%d at (%.1f,%.1f,%.1f) dist-to-player=%.1f speed=%.3f stuck=%d hitwall=%d pedphys=%d"
+		" | player speed=%.3f step=%.3f
+",
+		CTimer::GetTimeInMilliseconds(), CTimer::GetFrameCounter(), how, B->GetModelIndex(), b.x, b.y, b.z,
+		(b - playerPos).Magnitude(), uprootLimit, impulse,
+		A->GetType(), A->GetModelIndex(), A->GetStatus(), a.x, a.y, a.z, (a - playerPos).Magnitude(),
+		A->m_vecMoveSpeed.Magnitude(), A->bIsStuck, A->bHasHitWall, A->bPedPhysics,
+		FindPlayerSpeed().Magnitude(), CTimer::GetTimeStep());
+	fclose(f);
+}
+
 // An entity came to be sorted into the world from somewhere outside it, during a fight with the
 // police and, as far as the player could tell, with the weapon wheel up.  What it was and how it
 // was moving is written to reVC_debug.log the moment it happens, before the assert stops the game.
@@ -679,6 +702,7 @@ CPhysical::ApplyCollision(CPhysical *B, CColPoint &colpoint, float &impulseA, fl
 						if(IsGlass(B->GetModelIndex()))
 							CGlass::WindowRespondsToCollision(B, impulseA, A->m_vecMoveSpeed, colpoint.point, false);
 						else if(!B->bInfiniteMass){
+							LogObjectFreed("pedphysics", A, B, impulseA, Bobj->m_fUprootLimit);
 							B->SetIsStatic(false);
 							CWorld::Players[CWorld::PlayerInFocus].m_nHavocLevel += 2;
 							CStats::PropertyDestroyed += CGeneral::GetRandomNumberInRange(30, 60);
@@ -728,8 +752,10 @@ CPhysical::ApplyCollision(CPhysical *B, CColPoint &colpoint, float &impulseA, fl
 					   !B->bInfiniteMass){
 						if(IsGlass(B->GetModelIndex()))
 							CGlass::WindowRespondsToCollision(B, impulseA, A->m_vecMoveSpeed, colpoint.point, false);
-						else
+						else{
+							LogObjectFreed("collision", A, B, impulseA, Bobj->m_fUprootLimit);
 							B->SetIsStatic(false);
+						}
 						int16 model = B->GetModelIndex();
 						if(model == MI_FIRE_HYDRANT && !Bobj->bHasBeenDamaged){
 							CParticleObject::AddObject(POBJECT_FIRE_HYDRANT, B->GetPosition() - CVector(0.0f, 0.0f, 0.5f), true);
