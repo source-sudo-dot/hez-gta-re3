@@ -606,8 +606,8 @@ INITSAVEBUF
 			CopyFromBuf(buf, CWanted::nMaximumWantedLevel);
 			SkipSaveBuf(buf, MAX_MODEL_NAME);
 			// the wanted level the player was saved with, now the highest one allowed is known
-			if (pPed->m_pWanted->m_nChaos > 0)
-				pPed->m_pWanted->UpdateWantedLevel();
+			if (((CPlayerPed*)pPed)->m_pWanted->m_nChaos > 0)
+				((CPlayerPed*)pPed)->m_pWanted->UpdateWantedLevel();
 		}
 
 		if (pedtype == PEDTYPE_PLAYER1) {
