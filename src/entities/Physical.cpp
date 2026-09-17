@@ -175,8 +175,7 @@ LogObjectFreed(const char *how, CPhysical *A, CEntity *B, float impulse, float u
 	CVector a = A->GetPosition(), b = B->GetPosition();
 	fprintf(f, "t=%u frame=%u %s object model=%d at (%.1f,%.1f,%.1f) dist-to-player=%.1f uproot=%.1f impulse=%.1f"
 		" | by type=%d model=%d status=%d at (%.1f,%.1f,%.1f) dist-to-player=%.1f speed=%.3f stuck=%d hitwall=%d pedphys=%d"
-		" | player speed=%.3f step=%.3f
-",
+		" | player speed=%.3f step=%.3f\n",
 		CTimer::GetTimeInMilliseconds(), CTimer::GetFrameCounter(), how, B->GetModelIndex(), b.x, b.y, b.z,
 		(b - playerPos).Magnitude(), uprootLimit, impulse,
 		A->GetType(), A->GetModelIndex(), A->GetStatus(), a.x, a.y, a.z, (a - playerPos).Magnitude(),
