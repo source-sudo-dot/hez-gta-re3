@@ -26,9 +26,21 @@ jobs:
         run: |
           ./premake5.exe vs2019 --with-librw --no-full-paths --glfwdir64=glfw-3.3.2.bin.WIN64
           msbuild -m build/reVC.sln /property:Configuration=Release /property:Platform=win-amd64-librw_gl3_glfw-oal
-          mv bin/win-amd64-librw_gl3_glfw-oal/Release/reVC.exe gamefiles/
+          cp bin/win-amd64-librw_gl3_glfw-oal/Release/reVC.exe gamefiles/
           mv vendor/mpg123/dist/Win64/libmpg123-0.dll gamefiles/
           mv vendor/openal-soft/dist/Win64/OpenAL32.dll gamefiles/
+
+      - name: Resolve crash addresses
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $sym = Get-ChildItem "C:/Program Files/Microsoft Visual Studio/2022" -Recurse -Filter llvm-symbolizer.exe -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'x64' } | Select-Object -First 1
+          if (Test-Path .github/crash-addresses.txt) {
+            Get-Content .github/crash-addresses.txt | ForEach-Object {
+              Write-Output "== $_"
+              & $sym.FullName --obj=bin/win-amd64-librw_gl3_glfw-oal/Release/reVC.exe --inlines --pretty-print $_
+            }
+          }
 
       - name: Pack
         shell: bash
@@ -38,3 +50,8 @@ jobs:
         with:
           name: reVC-windows-amd64
           path: reVC-windows-amd64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reVC-windows-amd64-pdb
+          path: bin/win-amd64-librw_gl3_glfw-oal/Release/reVC.pdb
