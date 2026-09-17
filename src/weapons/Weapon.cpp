@@ -2254,21 +2254,24 @@ CWeapon::LaserScopeDot(CVector *pOutPos, float *pOutSize)
 	target *= range;
 	target += source;
 	
+	// Nothing within the rifle's range, the sky or the far distance, used to leave the sight
+	// without its dot.  It is shown where the range runs out then, in the middle of the sight, and
+	// past the far clip as well.
+	CVector aim = target;
 	if ( CWorld::ProcessLineOfSight(source, target, foundCol, foundEnt, true, true, true, true, false, false, false) )
-	{
-		CVector pos = foundCol.point;
-		float w, h;
-		
-		if ( CSprite::CalcScreenCoors(foundCol.point, &pos, &w, &h, true) )
-		{
-			*pOutPos = pos;
-			*pOutSize = w * 0.05f;
-			// the glow put on the target grew with nearness as well; the sight shows a plain dot now
+		aim = foundCol.point;
 
-			return true;
-		}
+	CVector pos;
+	float w, h;
+	if ( CSprite::CalcScreenCoors(aim, &pos, &w, &h, false) )
+	{
+		*pOutPos = pos;
+		*pOutSize = w * 0.05f;
+		// the glow put on the target grew with nearness as well; the sight shows a plain dot now
+
+		return true;
 	}
-		
+
 	return false;
 }
 

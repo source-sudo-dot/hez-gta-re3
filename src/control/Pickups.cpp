@@ -449,9 +449,8 @@ CPickup::Update(CPlayerPed *player, CVehicle *vehicle, int playerId)
 						break;
 					if (weaponType != WEAPONTYPE_UNARMED) {
 						player->GiveWeapon(weaponType, m_nQuantity != 0 ? m_nQuantity : (m_bWasAmmoCollected ? 0 : AmmoForWeapon_OnStreet[weaponType]), true);
-
-						if (player->m_nSelectedWepSlot == player->GetWeaponSlot(WEAPONTYPE_UNARMED)) 
-							player->m_nSelectedWepSlot = player->GetWeaponSlot(weaponType);
+						// A weapon walked over with the fists out used to go straight into the hand.
+						// It stays in its slot now, to be picked from the weapon wheel.
 
 						DMAudio.PlayFrontEndSound(SOUND_PICKUP_WEAPON, m_pObject->GetModelIndex() - MI_GRENADE);
 					} else if (m_pObject->GetModelIndex() == MI_PICKUP_CAMERA && vehicle != nil) {
@@ -486,8 +485,7 @@ CPickup::Update(CPlayerPed *player, CVehicle *vehicle, int playerId)
 
 					if (weaponType != WEAPONTYPE_UNARMED) {
 						player->GiveWeapon(weaponType, m_nQuantity != 0 ? m_nQuantity : (m_bWasAmmoCollected ? 0 : AmmoForWeapon[weaponType]), true);
-						if (player->m_nSelectedWepSlot == player->GetWeaponSlot(WEAPONTYPE_UNARMED))
-							player->m_nSelectedWepSlot = player->GetWeaponSlot(weaponType);
+						// not put into the hand either, as on the street
 					}
 					if (MI_PICKUP_SAVEGAME != m_pObject->GetModelIndex())
 						DMAudio.PlayFrontEndSound(SOUND_PICKUP_WEAPON, m_pObject->GetModelIndex() - MI_GRENADE);
