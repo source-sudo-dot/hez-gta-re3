@@ -611,6 +611,9 @@ void CPad::UpdateMouse()
 	PCTempMouseControllerState.MMB = glfwGetMouseButton(PSGLOBAL(window), GLFW_MOUSE_BUTTON_MIDDLE);
 	PCTempMouseControllerState.MXB1 = glfwGetMouseButton(PSGLOBAL(window), GLFW_MOUSE_BUTTON_4);
 	PCTempMouseControllerState.MXB2 = glfwGetMouseButton(PSGLOBAL(window), GLFW_MOUSE_BUTTON_5);
+	if ( IsMouseHeldSinceFocus() )
+		PCTempMouseControllerState.LMB = PCTempMouseControllerState.RMB = PCTempMouseControllerState.MMB =
+			PCTempMouseControllerState.MXB1 = PCTempMouseControllerState.MXB2 = 0;
 
 	if ( PSGLOBAL(mouseWheel) > 0 )
 		PCTempMouseControllerState.WHEELUP = 1;

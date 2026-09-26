@@ -12,6 +12,7 @@
 #include "AnimBlendAssocGroup.h"
 #include "AnimBlendClumpData.h"
 #include "Pad.h"
+#include "ControllerConfig.h"
 #include "DMAudio.h"
 #include "World.h"
 #include "PlayerPed.h"
@@ -411,12 +412,17 @@ CCutsceneMgr::Update(void)
 
 	ms_cutsceneTimer += CTimer::GetTimeStepNonClippedInSeconds();
 	if (CGeneral::faststricmp(ms_cutsceneName, "end") && TheCamera.Cams[TheCamera.ActiveCam].Mode == CCam::MODE_FLYBY && ms_cutsceneLoadStatus == CUTSCENE_LOADING_0) {
-		if (CPad::GetPad(0)->GetCrossJustDown()
+		// Only circle and escape skip, so a stray click or fire press cannot throw a
+		// cutscene away
+		if (CPad::GetPad(0)->GetCircleJustDown()
 			|| (CGame::playingIntro && CPad::GetPad(0)->GetStartJustDown())
-			|| CPad::GetPad(0)->GetLeftMouseJustDown()
-			|| CPad::GetPad(0)->GetEnterJustDown()
-			|| CPad::GetPad(0)->GetCharJustDown(' '))
+			|| CPad::GetPad(0)->GetEscapeJustDown()) {
 			FinishCutscene();
+			// the menu is processed right after this and would open on the same escape, and
+			// circle must not reach the game as a fresh press either
+			CPad::OldKeyState.ESC = CPad::NewKeyState.ESC;
+			ControlsManager.HoldOverHeldButtons();
+		}
 	}
 }
 

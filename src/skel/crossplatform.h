@@ -95,6 +95,7 @@ enum eGameState
 extern RwUInt32 gGameState;
 
 RwBool IsForegroundApp();
+RwBool IsMouseHeldSinceFocus();
 
 #ifndef MAX_PATH
     #if !defined _WIN32 || defined __MINGW32__

@@ -78,6 +78,10 @@ rw::EngineOpenParams openParams;
 static RwBool		  ForegroundApp = TRUE;
 static RwBool		  WindowIconified = FALSE;
 static RwBool		  WindowFocused = TRUE;
+// The click that brings the window back to the front is only meant to bring it back, so
+// the mouse buttons stay up to the game until they have all been let go after that.
+static RwBool		  MouseHeldSinceFocus = FALSE;
+static double		  FocusTime = 0.0;
 
 static RwBool		  RwInitialised = FALSE;
 
@@ -685,6 +689,21 @@ void _psSelectScreenVM(RwInt32 videoMode)
 RwBool IsForegroundApp()
 {
 	return !!ForegroundApp;
+}
+
+// The press can come a poll after the focus, so a short while after it counts too
+RwBool IsMouseHeldSinceFocus()
+{
+	if ( !MouseHeldSinceFocus )
+		return FALSE;
+
+	for ( int button = GLFW_MOUSE_BUTTON_1; button <= GLFW_MOUSE_BUTTON_LAST; button++ )
+		if ( glfwGetMouseButton(PSGLOBAL(window), button) == GLFW_PRESS )
+			return TRUE;
+
+	if ( glfwGetTime() - FocusTime > 0.25 )
+		MouseHeldSinceFocus = FALSE;
+	return MouseHeldSinceFocus;
 }
 /*
 UINT GetBestRefreshRate(UINT width, UINT height, UINT depth)
@@ -1891,6 +1910,10 @@ cursorEnterCB(GLFWwindow* window, int entered) {
 void
 windowFocusCB(GLFWwindow* window, int focused) {
 	WindowFocused = !!focused;
+	if ( focused ) {
+		MouseHeldSinceFocus = TRUE;
+		FocusTime = glfwGetTime();
+	}
 }
 
 void
