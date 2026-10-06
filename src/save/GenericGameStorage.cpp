@@ -4,6 +4,7 @@
 #include "main.h"
 
 #include "DMAudio.h"
+#include "AutoSave.h"
 #include "AudioScriptObject.h"
 #include "Camera.h"
 #include "CarGen.h"
@@ -428,6 +429,7 @@ DoGameSpecificStuffAfterSucessLoad()
 	StillToFadeOut = true;
 	JustLoadedDontFadeInYet = true;
 	CTheScripts::Process();
+	CAutoSave::Reset();
 }
 
 bool

@@ -28,8 +28,15 @@ public:
 	// the writing waits for a quiet moment
 	static void Request(eAutoSaveKind kind);
 	static void Process(void);
+	// a new game or a loaded one: what is pending is dropped and the progress is taken
+	// as it stands, so loading a game further along does not count as getting there
+	static void Reset(void);
 
 private:
 	static bool   m_bPending[NUM_AUTOSAVE_KINDS];
 	static uint32 m_nEarliest[NUM_AUTOSAVE_KINDS];
+	static bool   m_bProgressKnown;
+	static int32  m_nProgress;
+
+	static int32 WorldProgress(void);
 };

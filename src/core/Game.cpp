@@ -726,6 +726,7 @@ bool CGame::ShutDown(void)
 
 void CGame::ReInitGameObjectVariables(void)
 {
+	CAutoSave::Reset();
 	CGameLogic::InitAtStartOfGame();
 	CWeaponWheel::Init();
 	CBulletTime::Init();

@@ -2,6 +2,7 @@
 #include "AutoSave.h"
 
 #include "crossplatform.h"
+#include "Completion.h"
 #include "Camera.h"
 #include "CutsceneMgr.h"
 #include "Frontend.h"
@@ -20,6 +21,8 @@
 bool   CAutoSave::bEnabled = true;
 bool   CAutoSave::m_bPending[NUM_AUTOSAVE_KINDS];
 uint32 CAutoSave::m_nEarliest[NUM_AUTOSAVE_KINDS];
+bool   CAutoSave::m_bProgressKnown = false;
+int32  CAutoSave::m_nProgress = 0;
 
 // A mission reports itself passed a good few lines before it has finished with the
 // world, so the state is given a moment to settle before it is written.  A hidden
@@ -40,13 +43,45 @@ CAutoSave::Request(eAutoSaveKind kind)
 }
 
 void
+CAutoSave::Reset(void)
+{
+	for (int i = 0; i < NUM_AUTOSAVE_KINDS; i++)
+		m_bPending[i] = false;
+	m_bProgressKnown = false;
+}
+
+// Everything on the progress list but the story missions, added up.  The missions have
+// the other slot; all the rest - packages, rampages, jumps, off-road, RC, the cars for
+// the garages and the crane, the side jobs - is the world, and whenever this sum goes
+// up, the world slot is written.  Rather than every one of them being hooked where it
+// happens, which missed the rampages: those are passed by the engine, not the script.
+int32
+CAutoSave::WorldProgress(void)
+{
+	CCompletion::tGoal goals[CCompletion::MAX_GOALS];
+	int32 n = CCompletion::Collect(goals);
+	int32 sum = 0;
+	for (int32 i = 0; i < n; i++)
+		if (strcmp(goals[i].key, "FEZ_CMS") != 0 && strcmp(goals[i].key, "FEZ_CMA") != 0)
+			sum += goals[i].done;
+	return sum;
+}
+
+void
 CAutoSave::Process(void)
 {
 	if (!bEnabled) {
 		for (int i = 0; i < NUM_AUTOSAVE_KINDS; i++)
 			m_bPending[i] = false;
+		m_bProgressKnown = false;
 		return;
 	}
+
+	int32 progress = WorldProgress();
+	if (m_bProgressKnown && progress > m_nProgress)
+		Request(AUTOSAVE_WORLD);
+	m_nProgress = progress;
+	m_bProgressKnown = true;
 
 	// the mission one goes first should both be waiting; the other follows a frame later
 	int kind;
