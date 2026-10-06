@@ -47,6 +47,7 @@ const CRGBA DARKMENUOPTION_COLOR(155, 117, 6, 255);
 const CRGBA SLIDERON_COLOR = SELECTEDMENUOPTION_COLOR;
 const CRGBA SLIDEROFF_COLOR(185, 120, 0, 255);
 const CRGBA RECENTSAVE_COLOR(120, 210, 255, 255);
+const CRGBA AUTOSAVE_COLOR(150, 225, 150, 255);
 const CRGBA LIST_BACKGROUND_COLOR(200, 200, 50, 50);
 const CRGBA LIST_OPTION_COLOR(155, 155, 155, 255);
 const CRGBA INACTIVE_RADIO_COLOR(225, 0, 0, 170);
@@ -75,6 +76,9 @@ const CRGBA TEXT_COLOR = CRGBA(150, 110, 30, 255); // PS2 option color
 
 #define hasNativeList(screen) (screen == MENUPAGE_MULTIPLAYER_FIND_GAME || screen == MENUPAGE_SKIN_SELECT \
 		|| screen == MENUPAGE_KEYBOARD_CONTROLS)
+
+// space left above the autosaves in the load list, with a line through it
+#define AUTOSAVE_GAP 14.0f
 		
 #ifdef SCROLLABLE_PAGES
 #define MAX_VISIBLE_OPTION 12
@@ -1720,6 +1724,14 @@ CMenuManager::Draw()
 #endif
 			}
 
+			// The autosaves sit apart from the slots saved by hand, below a line of their own.
+			if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot == SAVESLOT_10) {
+				nextYToUse += AUTOSAVE_GAP;
+				CSprite2d::DrawRect(CRect(MENU_X_LEFT_ALIGNED(columnWidth), MENU_Y(headerHeight + nextYToUse - AUTOSAVE_GAP / 2.0f - 1.0f),
+					MENU_X_RIGHT_ALIGNED(columnWidth), MENU_Y(headerHeight + nextYToUse - AUTOSAVE_GAP / 2.0f + 1.0f)),
+					CRGBA(AUTOSAVE_COLOR.r, AUTOSAVE_COLOR.g, AUTOSAVE_COLOR.b, FadeIn(160)));
+			}
+
 			float nextItemY = headerHeight + nextYToUse;
 			float bitAboveNextItemY = nextItemY - 2.0f;
 			int nextYToCheck = bitAboveNextItemY;
@@ -1739,6 +1751,10 @@ CMenuManager::Draw()
 						strcmp(aScreens[m_nCurrScreen].m_aEntries[rowToCheck].m_EntryName, "FEDS_TB") == 0)
 						break;
 #endif
+
+					// the same gap the drawing leaves above the autosaves
+					if (rowToCheck > i && aScreens[m_nCurrScreen].m_aEntries[rowToCheck].m_SaveSlot == SAVESLOT_10)
+						nextYToCheck += AUTOSAVE_GAP;
 
 					int extraOffset = 0;
 					if (aScreens[m_nCurrScreen].m_aEntries[rowToCheck].m_Action == MENUACTION_RADIO)
@@ -1826,6 +1842,8 @@ CMenuManager::Draw()
 					CFont::SetColor(CRGBA(SELECTEDMENUOPTION_COLOR.r, SELECTEDMENUOPTION_COLOR.g, SELECTEDMENUOPTION_COLOR.b, FadeIn(255)));
 				} else if (i == mostRecentSaveRow) {
 					CFont::SetColor(CRGBA(RECENTSAVE_COLOR.r, RECENTSAVE_COLOR.g, RECENTSAVE_COLOR.b, FadeIn(255)));
+				} else if (aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot >= SAVESLOT_10 && aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot <= SAVESLOT_11) {
+					CFont::SetColor(CRGBA(AUTOSAVE_COLOR.r, AUTOSAVE_COLOR.g, AUTOSAVE_COLOR.b, FadeIn(255)));
 				} else {
 					CFont::SetColor(CRGBA(MENUOPTION_COLOR.r, MENUOPTION_COLOR.g, MENUOPTION_COLOR.b, FadeIn(255)));
 				}
