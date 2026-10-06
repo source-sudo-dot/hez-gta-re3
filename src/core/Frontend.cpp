@@ -1814,6 +1814,13 @@ CMenuManager::Draw()
 #endif
 			}
 
+			// An autosave row whose name and the save's together would run into the date
+			// keeps its own name alone.
+			if (saveSlot >= SAVESLOT_10 && saveSlot <= SAVESLOT_11 && rightText &&
+			    CFont::GetStringWidth(leftText, true) + CFont::GetStringWidth(rightText, true) + MENU_X(20.0f) >
+			    MENU_X_RIGHT_ALIGNED(columnWidth) - MENU_X_LEFT_ALIGNED(columnWidth))
+				leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
+
 			CFont::SetColor(CRGBA(0, 0, 0, FadeIn(90)));
 
 			// Button and it's shadow
