@@ -1383,13 +1383,12 @@ CMenuManager::Draw()
 	static int lastSelectedOpt = m_nCurrOption;
 #endif
 
-	// The load list marks the save that was written last, so the one to carry on from
-	// is seen at a glance.
+	// The slot lists - load, save and delete alike - mark the save that was written last
+	// among the rows they show, so the one to carry on from, or not to write over, is seen
+	// at a glance.
 	int mostRecentSaveRow = -1;
 	uint64 mostRecentSaveStamp = 0;
 	for (int i = 0; i < NUM_MENUROWS; ++i) {
-		if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action != MENUACTION_CHECKSAVE)
-			continue;
 		int saveSlot = aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot;
 		if (saveSlot < SAVESLOT_1 || saveSlot > SAVESLOT_11 || Slots[saveSlot - 1] != SLOT_OK)
 			continue;
