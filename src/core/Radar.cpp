@@ -20,6 +20,7 @@
 #include "Streaming.h"
 #include "SpecialFX.h"
 #include "Pickups.h"
+#include "Completion.h"
 
 float CRadar::m_radarRange;
 sRadarTrace CRadar::ms_RadarTrace[NUMRADARBLIPS];
@@ -769,7 +770,7 @@ void CRadar::DrawBlips()
 			// what is left.  Drawn before the player so his arrow stays on top.
 			float half = SCREEN_SCALE_Y(3.0f);
 			float edge = SCREEN_SCALE_Y(1.0f);
-			for (int32 i = 0; i < NUMPICKUPS; i++) {
+			for (int32 i = 0; CMenuManager::m_bMapShowCompletionMarkers && i < NUMPICKUPS; i++) {
 				if (CPickups::aPickUps[i].m_eType != PICKUP_COLLECTABLE1)
 					continue;
 				CVector2D pin, pout;
@@ -778,7 +779,7 @@ void CRadar::DrawBlips()
 				CSprite2d::DrawRect(CRect(pout.x - half - edge, pout.y - half - edge, pout.x + half + edge, pout.y + half + edge),
 					CRGBA(0, 0, 0, 255));
 				CSprite2d::DrawRect(CRect(pout.x - half, pout.y - half, pout.x + half, pout.y + half),
-					CRGBA(120, 230, 90, 255));
+					CCompletion::LegendColour(CCompletion::LEGEND_PACKAGE));
 			}
 
 			CVector2D in, out;

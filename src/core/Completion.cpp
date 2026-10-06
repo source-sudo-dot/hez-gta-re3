@@ -7,6 +7,8 @@
 #include "Game.h"
 #include "Garages.h"
 #include "Messages.h"
+#include "ModelIndices.h"
+#include "Pickups.h"
 #include "Lists.h"
 #include "PlayerInfo.h"
 #include "Script.h"
@@ -60,6 +62,32 @@ static const struct {
 	{ 410, 1158.0f, -309.0f },	// Mafia Massacre
 	{ 412, 366.0f, -1312.0f },	// Rumpo Rampage
 	{ 411, -633.75f, 64.5625f },	// Casino Calamity
+};
+
+// Where each unique jump takes off, in the order of the script's own numbers for them;
+// the script marks jump n found in the variable 782 + n.
+#define JUMP_FOUND_VAR (783)
+static const CVector2D UniqueJumps[] = {
+	CVector2D(940.375f, -933.6875f),
+	CVector2D(1168.9375f, -1156.875f),
+	CVector2D(789.6875f, -572.25f),
+	CVector2D(470.6875f, -918.375f),
+	CVector2D(1231.8125f, -1129.8125f),
+	CVector2D(1136.5625f, -976.8125f),
+	CVector2D(1375.75f, -952.125f),
+	CVector2D(-1182.4375f, 22.1875f),
+	CVector2D(-1160.5625f, 105.9375f),
+	CVector2D(991.6875f, -470.375f),
+	CVector2D(793.125f, -929.9375f),
+	CVector2D(157.5625f, -998.1875f),
+	CVector2D(271.125f, -607.0f),
+	CVector2D(320.1875f, -896.3125f),
+	CVector2D(-994.75f, 253.5625f),
+	CVector2D(-699.0f, -172.25f),
+	CVector2D(-1100.5f, -847.4375f),
+	CVector2D(-1375.75f, -848.625f),
+	CVector2D(-1379.8125f, -625.0625f),
+	CVector2D(-1177.375f, -569.875f),
 };
 
 // The script hands out a point for every car on the two lists and seven for the crane
@@ -118,14 +146,14 @@ CCompletion::Collect(tGoal *out)
 	} else
 		GOAL("FEZ_CMA", CStats::MissionsPassed, CStats::TotalNumberMissions, LEGEND_NONE);
 
-	GOAL("FEZ_CHP", player.m_nCollectedPackages, player.m_nTotalPackages, LEGEND_NONE);
+	GOAL("FEZ_CHP", player.m_nCollectedPackages, player.m_nTotalPackages, LEGEND_PACKAGE);
 
 	// The rampages are not in the game at all without the blood, and the percentage
 	// leaves them out of its total to match, so they are left out here as well.
 	if (CGame::nastyGame)
-		GOAL("FEZ_CRP", CStats::NumberKillFrenziesPassed, CStats::TotalNumberKillFrenzies, LEGEND_NONE);
+		GOAL("FEZ_CRP", CStats::NumberKillFrenziesPassed, CStats::TotalNumberKillFrenzies, LEGEND_RAMPAGE);
 
-	GOAL("FEZ_CUJ", CStats::NumberOfUniqueJumpsFound, CStats::TotalNumberOfUniqueJumps, LEGEND_NONE);
+	GOAL("FEZ_CUJ", CStats::NumberOfUniqueJumpsFound, CStats::TotalNumberOfUniqueJumps, original ? LEGEND_JUMP : LEGEND_NONE);
 
 	GOAL("FEZ_CIP", PortlandCars(), IMPORT_EXPORT_CARS, LEGEND_IMPORTEXPORT);
 	GOAL("FEZ_CIS", ShoresideCars(), IMPORT_EXPORT_CARS, LEGEND_IMPORTEXPORT);
@@ -163,7 +191,17 @@ CCompletion::CollectMarkers(tMarker *out)
 		for (int32 i = 0; i < (int32)ARRAY_SIZE(RcMissions); i++)
 			if (!ScriptVar(RcMissions[i].var))
 				MARKER(RcMissions[i].x, RcMissions[i].y, LEGEND_RC);
+		for (int32 i = 0; i < (int32)ARRAY_SIZE(UniqueJumps); i++)
+			if (!ScriptVar(JUMP_FOUND_VAR + i))
+				MARKER(UniqueJumps[i].x, UniqueJumps[i].y, LEGEND_JUMP);
 	}
+
+	// The rampages are pickups like the packages: the script puts the skull back down
+	// somewhere else when one is failed and never again once it is passed, so the skulls
+	// in the list are just the ones still to do.
+	for (int32 i = 0; i < NUMPICKUPS && n < MAX_MARKERS; i++)
+		if (CPickups::aPickUps[i].m_eType != PICKUP_NONE && CPickups::aPickUps[i].m_eModelIndex == MI_PICKUP_KILLFRENZY)
+			MARKER(CPickups::aPickUps[i].m_vecPos.x, CPickups::aPickUps[i].m_vecPos.y, LEGEND_RAMPAGE);
 
 	// the two garages by their middles, the crane where it stands on the docks
 	if (PortlandCars() < IMPORT_EXPORT_CARS)
@@ -184,6 +222,9 @@ CCompletion::LegendColour(int32 legend)
 	case LEGEND_OFFROAD: return CRGBA(255, 150, 30, 255);
 	case LEGEND_RC: return CRGBA(240, 70, 220, 255);
 	case LEGEND_IMPORTEXPORT: return CRGBA(60, 210, 255, 255);
+	case LEGEND_PACKAGE: return CRGBA(120, 230, 90, 255);
+	case LEGEND_RAMPAGE: return CRGBA(235, 40, 40, 255);
+	case LEGEND_JUMP: return CRGBA(255, 235, 60, 255);
 	default: return CRGBA(255, 255, 255, 255);
 	}
 }

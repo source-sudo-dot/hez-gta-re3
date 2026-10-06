@@ -4291,7 +4291,14 @@ CMenuManager::PrintCompletionOnMap()
 		if (goals[i].legend != CCompletion::LEGEND_NONE) {
 			CRGBA colour = CCompletion::LegendColour(goals[i].legend);
 			colour.a = FadeIn(m_bMapShowCompletionMarkers ? 255 : 120);
-			DrawCompletionMarker(labelX - CFont::GetStringWidth(label, true) - MENU_X(8.0f), y + MENU_Y(5.0f), MENU_X(3.5f), colour);
+			float sx = labelX - CFont::GetStringWidth(label, true) - MENU_X(8.0f);
+			float sy = y + MENU_Y(5.0f);
+			if (goals[i].legend == CCompletion::LEGEND_PACKAGE) {
+				float half = MENU_X(2.5f), edge = MENU_X(1.0f);
+				CSprite2d::DrawRect(CRect(sx - half - edge, sy - half - edge, sx + half + edge, sy + half + edge), CRGBA(0, 0, 0, colour.a));
+				CSprite2d::DrawRect(CRect(sx - half, sy - half, sx + half, sy + half), colour);
+			} else
+				DrawCompletionMarker(sx, sy, MENU_X(3.5f), colour);
 		}
 		y += lineHeight;
 	}

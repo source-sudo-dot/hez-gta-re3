@@ -9,7 +9,7 @@
 class CCompletion
 {
 public:
-	enum { MAX_GOALS = 16, MAX_MARKERS = 16 };
+	enum { MAX_GOALS = 16, MAX_MARKERS = 64 };
 
 	// what a goal's swatch and its markers on the map look like
 	enum eLegend {
@@ -17,6 +17,9 @@ public:
 		LEGEND_OFFROAD,
 		LEGEND_RC,
 		LEGEND_IMPORTEXPORT,
+		LEGEND_PACKAGE,	// drawn by the radar itself, as the squares it always was
+		LEGEND_RAMPAGE,
+		LEGEND_JUMP,
 		LEGEND_COUNT
 	};
 
