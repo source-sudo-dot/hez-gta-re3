@@ -204,16 +204,20 @@ int8 CRunningScript::ProcessCommands1000To1099(int32 command)
 		return 0;
 	case COMMAND_REGISTER_LIFE_SAVED:
 		CStats::AnotherLifeSavedWithAmbulance();
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_REGISTER_CRIMINAL_CAUGHT:
 		CStats::AnotherCriminalCaught();
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_REGISTER_AMBULANCE_LEVEL:
 		CollectParameters(&m_nIp, 1);
 		CStats::RegisterLevelAmbulanceMission(ScriptParams[0]);
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_REGISTER_FIRE_EXTINGUISHED:
 		CStats::AnotherFireExtinguished();
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_TURN_PHONE_ON:
 		CollectParameters(&m_nIp, 1);

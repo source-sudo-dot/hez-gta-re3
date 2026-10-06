@@ -23,7 +23,10 @@ uint32 CAutoSave::m_nEarliest[NUM_AUTOSAVE_KINDS];
 
 // A mission reports itself passed a good few lines before it has finished with the
 // world, so the state is given a moment to settle before it is written.  A hidden
-// package, a unique jump or a rampage asks for the other slot the same way.
+// package, a unique jump or a rampage asks for the other slot the same way, and so
+// do the side jobs - taxi, ambulance, fire truck, vigilante.  Those never report
+// themselves passed, but every fare, patient, fire or criminal does report in; the
+// request stands until the job is over, so it comes to one save at its end.
 #define SETTLE_MS (2500)
 
 void

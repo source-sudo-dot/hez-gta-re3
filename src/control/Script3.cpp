@@ -2284,6 +2284,7 @@ int8 CRunningScript::ProcessCommands700To799(int32 command)
 		return 0;
 	case COMMAND_REGISTER_PASSENGER_DROPPED_OFF_TAXI:
 		++CStats::PassengersDroppedOffWithTaxi;
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_REGISTER_MONEY_MADE_TAXI:
 		CollectParameters(&m_nIp, 1);
