@@ -274,7 +274,7 @@ CPickup::Update(CPlayerPed *player, CVehicle *vehicle, int playerId)
 				result = true;
 				Remove();
 				DMAudio.PlayFrontEndSound(SOUND_PICKUP_HIDDEN_PACKAGE, 0);
-				CAutoSave::Request();
+				CAutoSave::Request(AUTOSAVE_WORLD);
 				break;
 			case PICKUP_MONEY:
 				CWorld::Players[playerId].m_nMoney += m_nQuantity;

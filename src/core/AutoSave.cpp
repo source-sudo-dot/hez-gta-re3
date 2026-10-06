@@ -18,36 +18,39 @@
 #include "World.h"
 
 bool   CAutoSave::bEnabled = true;
-bool   CAutoSave::m_bPending = false;
-uint32 CAutoSave::m_nEarliest = 0;
+bool   CAutoSave::m_bPending[NUM_AUTOSAVE_KINDS];
+uint32 CAutoSave::m_nEarliest[NUM_AUTOSAVE_KINDS];
 
 // A mission reports itself passed a good few lines before it has finished with the
 // world, so the state is given a moment to settle before it is written.  A hidden
-// package asks for a save the same way.
+// package, a unique jump or a rampage asks for the other slot the same way.
 #define SETTLE_MS (2500)
 
 void
-CAutoSave::Request(void)
+CAutoSave::Request(eAutoSaveKind kind)
 {
 	if (!bEnabled)
 		return;
 
-	m_bPending = true;
-	m_nEarliest = CTimer::GetTimeInMilliseconds() + SETTLE_MS;
+	m_bPending[kind] = true;
+	m_nEarliest[kind] = CTimer::GetTimeInMilliseconds() + SETTLE_MS;
 }
 
 void
 CAutoSave::Process(void)
 {
-	if (!m_bPending)
-		return;
-
 	if (!bEnabled) {
-		m_bPending = false;
+		for (int i = 0; i < NUM_AUTOSAVE_KINDS; i++)
+			m_bPending[i] = false;
 		return;
 	}
 
-	if (CTimer::GetTimeInMilliseconds() < m_nEarliest)
+	// the mission one goes first should both be waiting; the other follows a frame later
+	int kind;
+	for (kind = 0; kind < NUM_AUTOSAVE_KINDS; kind++)
+		if (m_bPending[kind] && CTimer::GetTimeInMilliseconds() >= m_nEarliest[kind])
+			break;
+	if (kind == NUM_AUTOSAVE_KINDS)
 		return;
 
 	// Nothing is written while the game is not the player's to play: another mission
@@ -80,7 +83,7 @@ CAutoSave::Process(void)
 		return;
 #endif
 
-	m_bPending = false;
+	m_bPending[kind] = false;
 
 #ifdef MISSION_REPLAY
 	// A save made from the menu is the player sleeping it off: six hours pass and his
@@ -88,7 +91,7 @@ CAutoSave::Process(void)
 	// flag that leaves all of that alone.
 	IsQuickSave = SAVE_TYPE_QUICKSAVE;
 #endif
-	bool saved = PcSaveHelper.SaveSlot(AUTOSAVE_SLOT);
+	bool saved = PcSaveHelper.SaveSlot(kind == AUTOSAVE_MISSION ? AUTOSAVE_SLOT : AUTOSAVE_WORLD_SLOT);
 #ifdef MISSION_REPLAY
 	IsQuickSave = 0;
 #endif

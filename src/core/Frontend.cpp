@@ -1386,7 +1386,7 @@ CMenuManager::Draw()
 		if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action != MENUACTION_CHECKSAVE)
 			continue;
 		int saveSlot = aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot;
-		if (saveSlot < SAVESLOT_1 || saveSlot > SAVESLOT_10 || Slots[saveSlot - 1] != SLOT_OK)
+		if (saveSlot < SAVESLOT_1 || saveSlot > SAVESLOT_11 || Slots[saveSlot - 1] != SLOT_OK)
 			continue;
 		if (SlotSaveStamp[saveSlot - 2] > mostRecentSaveStamp) {
 			mostRecentSaveStamp = SlotSaveStamp[saveSlot - 2];
@@ -1414,7 +1414,7 @@ CMenuManager::Draw()
 			wchar *leftText;
 
 			int saveSlot = aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot;
-			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10) {
+			if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_11) {
 				CFont::SetRightJustifyOff();
 				// Which save a row stood for was taken from where the row sat, so a row
 				// anywhere but in the numbered run read the wrong one.  It is taken from the
@@ -1424,14 +1424,21 @@ CMenuManager::Draw()
 				if (Slots[saveSlot - 1] != SLOT_EMPTY)
 					rightText = GetSavedGameDateAndTime(saveSlot - 2);
 
-				if (leftText[0] == '\0') {
-					// the autosave row carries a name of its own, the numbered ones build theirs
-					if (saveSlot == SAVESLOT_10) {
-						leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
-					} else {
-						sprintf(gString, "FEM_SL%d", i);
-						leftText = TheText.Get(gString);
+				if (saveSlot >= SAVESLOT_10) {
+					// The autosave rows carry a name of their own, and keep it in front of the
+					// save's once there is one, or the two would look like any other save.
+					static wchar autoSaveText[128];
+					UnicodeStrcpy(autoSaveText, TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName));
+					if (leftText[0] != '\0') {
+						wchar separator[4];
+						AsciiToUnicode(": ", separator);
+						UnicodeStrcat(autoSaveText, separator);
+						UnicodeStrcat(autoSaveText, leftText);
 					}
+					leftText = autoSaveText;
+				} else if (leftText[0] == '\0') {
+					sprintf(gString, "FEM_SL%d", i);
+					leftText = TheText.Get(gString);
 				}
 			} else {
 				leftText = TheText.Get(aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName);
@@ -5180,7 +5187,7 @@ CMenuManager::ProcessButtonPresses(void)
 				{
 					int saveSlot = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_SaveSlot;
 
-					if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_10) {
+					if (saveSlot >= SAVESLOT_1 && saveSlot <= SAVESLOT_11) {
 						m_nCurrSaveSlot = saveSlot - 2;
 						if (Slots[m_nCurrSaveSlot + 1] != SLOT_EMPTY && Slots[m_nCurrSaveSlot + 1] != SLOT_CORRUPTED) {
 							ChangeScreen(aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_TargetMenu, 0, true, true);

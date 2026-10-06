@@ -7,17 +7,29 @@
 // the load list never shows, and because it went off the moment a mission script ended,
 // which is well before the world has finished tidying up after it.  This one waits, and
 // writes to a slot the player can actually load.
+//
+// There are two of those: one for passed missions and one for everything else worth
+// keeping out in the world, so collecting a package never pushes the last mission save
+// out of reach.
+enum eAutoSaveKind
+{
+	AUTOSAVE_MISSION,
+	AUTOSAVE_WORLD,
+	NUM_AUTOSAVE_KINDS
+};
+
 class CAutoSave
 {
 public:
 	// AutoSave under [Display] in re3.ini
 	static bool bEnabled;
 
-	// the script says the mission was passed; the writing waits for a quiet moment
-	static void Request(void);
+	// the script says the mission was passed, or a package, jump or rampage is done;
+	// the writing waits for a quiet moment
+	static void Request(eAutoSaveKind kind);
 	static void Process(void);
 
 private:
-	static bool   m_bPending;
-	static uint32 m_nEarliest;
+	static bool   m_bPending[NUM_AUTOSAVE_KINDS];
+	static uint32 m_nEarliest[NUM_AUTOSAVE_KINDS];
 };

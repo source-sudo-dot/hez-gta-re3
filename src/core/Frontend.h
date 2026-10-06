@@ -169,7 +169,8 @@ enum eSaveSlot
 	SAVESLOT_7,
 	SAVESLOT_8,
 	SAVESLOT_9,
-	SAVESLOT_10,	// the autosave, load only
+	SAVESLOT_10,	// the mission autosave, load only
+	SAVESLOT_11,	// the world autosave, load only
 	SAVESLOT_LABEL = 36,
 };
 

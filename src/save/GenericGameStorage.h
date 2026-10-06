@@ -4,12 +4,15 @@
 #include "PCSave.h"
 
 #define SLOT_COUNT (8)
-// The autosave writes here.  It sits past the eight the player saves into and past
-// the ninth that mission retry keeps for itself, so nothing can write over it by
-// hand and it cannot be written over by a failed mission either.  The load list is
-// the only place it shows.
+// The autosaves write here.  They sit past the eight the player saves into and past
+// the ninth that mission retry keeps for itself, so nothing can write over them by
+// hand and they cannot be written over by a failed mission either.  The load list is
+// the only place they show.  One is written after a mission is passed, the other
+// after anything else worth keeping out in the world - a hidden package, a unique
+// jump, a rampage.
 #define AUTOSAVE_SLOT (SLOT_COUNT + 1)
-#define SLOT_TOTAL (AUTOSAVE_SLOT + 1)
+#define AUTOSAVE_WORLD_SLOT (SLOT_COUNT + 2)
+#define SLOT_TOTAL (AUTOSAVE_WORLD_SLOT + 1)
 
 bool GenericSave(int file);
 bool GenericLoad();

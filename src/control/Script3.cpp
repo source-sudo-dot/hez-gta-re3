@@ -2276,6 +2276,7 @@ int8 CRunningScript::ProcessCommands700To799(int32 command)
 		return 0;
 	case COMMAND_REGISTER_UNIQUE_JUMP_FOUND:
 		++CStats::NumberOfUniqueJumpsFound;
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_SET_UNIQUE_JUMPS_TOTAL:
 		CollectParameters(&m_nIp, 1);
@@ -2299,7 +2300,7 @@ int8 CRunningScript::ProcessCommands700To799(int32 command)
 		strncpy(CStats::LastMissionPassedName, name, KEY_LENGTH_IN_SCRIPT);
 		++CStats::MissionsPassed;
 		CStats::CheckPointReachedSuccessfully();
-		CAutoSave::Request();
+		CAutoSave::Request(AUTOSAVE_MISSION);
 		return 0;
 	}
 	case COMMAND_SET_CHAR_RUNNING:

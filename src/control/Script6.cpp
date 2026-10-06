@@ -28,6 +28,7 @@
 #include "Restart.h"
 #include "SpecialFX.h"
 #include "Stats.h"
+#include "AutoSave.h"
 #include "Streaming.h"
 #include "Weather.h"
 #include "Zones.h"
@@ -356,6 +357,7 @@ int8 CRunningScript::ProcessCommands1000To1099(int32 command)
 	}
 	case COMMAND_REGISTER_KILL_FRENZY_PASSED:
 		CStats::AnotherKillFrenzyPassed();
+		CAutoSave::Request(AUTOSAVE_WORLD);
 		return 0;
 	case COMMAND_SET_CHAR_SAY:
 	{
