@@ -4910,6 +4910,11 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 		TargetCoors += 0.6f * car->GetUp() * colMaxZ;
 	}
 
+	// The RC cars are so small that the distance worked out from their size leaves the
+	// camera right on top of them, so they get it twice as far back.
+	if (camSetArrPos == 5)
+		newDistance *= 2.0f;
+
 	float minDistForVehType = CARCAM_SET[camSetArrPos][4];
 
 	if (TheCamera.CarZoomIndicator == CAM_ZOOM_1 && (camSetArrPos < 2 || camSetArrPos == 7)) {
