@@ -4242,7 +4242,8 @@ CMenuManager::PrintCompletionMarkers()
 }
 
 // Small, in the corner of the map, to be read at a glance rather than studied.  It sits
-// against the right edge of the screen, where the strip along the bottom ends.
+// against the right edge of the screen, where the strip along the bottom ends, with the
+// percentage on top of it.
 void
 CMenuManager::PrintCompletionOnMap()
 {
@@ -4251,7 +4252,7 @@ CMenuManager::PrintCompletionOnMap()
 	char buf[64];
 	wchar wide[64];
 	float valueX = SCREEN_STRETCH_FROM_RIGHT(14.0f);
-	float labelX = valueX - MENU_X(56.0f);
+	float labelX = valueX - MENU_X(45.0f);
 
 	CFont::SetBackgroundOff();
 	CFont::SetPropOn();
@@ -4260,11 +4261,21 @@ CMenuManager::PrintCompletionOnMap()
 	CFont::SetFontStyle(FONT_LOCALE(FONT_BANK));
 	CFont::SetDropShadowPosition(1);
 	CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
-	CFont::SetScale(MENU_X(0.35f), MENU_Y(0.6f));
 
 	// counted up from the strip along the bottom so the two never meet
-	float lineHeight = MENU_Y(12.0f);
-	float y = SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TOP + 18.0f) - count * lineHeight;
+	float lineHeight = MENU_Y(9.6f);
+	float y = SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TOP + 6.0f) - count * lineHeight;
+
+	// the percentage heads it, big and in white so it stands out from the map
+	sprintf(buf, "%d%%", CCompletion::Percent());
+	AsciiToUnicode(buf, wide);
+	CFont::SetDropShadowPosition(2);
+	CFont::SetScale(MENU_X(0.6f), MENU_Y(1.05f));
+	CFont::SetColor(CRGBA(255, 255, 255, FadeIn(255)));
+	CFont::PrintString(valueX, y - lineHeight * 4.4f, wide);
+	CFont::SetDropShadowPosition(1);
+
+	CFont::SetScale(MENU_X(0.28f), MENU_Y(0.48f));
 
 	// what square does, above the list
 	CFont::SetColor(CRGBA(255, 255, 255, FadeIn(150)));
@@ -4291,23 +4302,17 @@ CMenuManager::PrintCompletionOnMap()
 		if (goals[i].legend != CCompletion::LEGEND_NONE) {
 			CRGBA colour = CCompletion::LegendColour(goals[i].legend);
 			colour.a = FadeIn(m_bMapShowCompletionMarkers ? 255 : 120);
-			float sx = labelX - CFont::GetStringWidth(label, true) - MENU_X(8.0f);
-			float sy = y + MENU_Y(5.0f);
+			float sx = labelX - CFont::GetStringWidth(label, true) - MENU_X(6.5f);
+			float sy = y + MENU_Y(4.0f);
 			if (goals[i].legend == CCompletion::LEGEND_PACKAGE) {
-				float half = MENU_X(2.5f), edge = MENU_X(1.0f);
+				float half = MENU_X(2.0f), edge = MENU_X(1.0f);
 				CSprite2d::DrawRect(CRect(sx - half - edge, sy - half - edge, sx + half + edge, sy + half + edge), CRGBA(0, 0, 0, colour.a));
 				CSprite2d::DrawRect(CRect(sx - half, sy - half, sx + half, sy + half), colour);
 			} else
-				DrawCompletionMarker(sx, sy, MENU_X(3.5f), colour);
+				DrawCompletionMarker(sx, sy, MENU_X(2.8f), colour);
 		}
 		y += lineHeight;
 	}
-
-	sprintf(buf, "%d%%", CCompletion::Percent());
-	AsciiToUnicode(buf, wide);
-	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
-	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
-	CFont::PrintString(valueX, y, wide);
 
 	CFont::SetDropShadowPosition(0);
 }
@@ -6706,10 +6711,11 @@ CMenuManager::PrintMap(void)
 	// Because fMapSize is half of the map length, and map consists of 3x3 tiles.
 	float halfTile = fMapSize / 3.0f;
 
-	// Darken background a bit
+	// Cover the menu art altogether: its yellow box showed beside the map wherever the
+	// map ended.  The colour is the water's, so the sea simply runs on past the edges.
 	CSprite2d::DrawRect(CRect(0, 0,
 		SCREEN_WIDTH, SCREEN_HEIGHT),
-		CRGBA(0, 0, 0, FadeIn(128)));
+		CRGBA(44, 43, 58, FadeIn(255)));
 
 	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
 
