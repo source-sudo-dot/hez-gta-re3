@@ -46,6 +46,7 @@ const CRGBA HEADER_COLOR(0, 0, 0, 255);
 const CRGBA DARKMENUOPTION_COLOR(155, 117, 6, 255);
 const CRGBA SLIDERON_COLOR = SELECTEDMENUOPTION_COLOR;
 const CRGBA SLIDEROFF_COLOR(185, 120, 0, 255);
+const CRGBA RECENTSAVE_COLOR(120, 210, 255, 255);
 const CRGBA LIST_BACKGROUND_COLOR(200, 200, 50, 50);
 const CRGBA LIST_OPTION_COLOR(155, 155, 155, 255);
 const CRGBA INACTIVE_RADIO_COLOR(225, 0, 0, 170);
@@ -1377,6 +1378,22 @@ CMenuManager::Draw()
 	static int lastSelectedOpt = m_nCurrOption;
 #endif
 
+	// The load list marks the save that was written last, so the one to carry on from
+	// is seen at a glance.
+	int mostRecentSaveRow = -1;
+	uint64 mostRecentSaveStamp = 0;
+	for (int i = 0; i < NUM_MENUROWS; ++i) {
+		if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action != MENUACTION_CHECKSAVE)
+			continue;
+		int saveSlot = aScreens[m_nCurrScreen].m_aEntries[i].m_SaveSlot;
+		if (saveSlot < SAVESLOT_1 || saveSlot > SAVESLOT_10 || Slots[saveSlot - 1] != SLOT_OK)
+			continue;
+		if (SlotSaveStamp[saveSlot - 2] > mostRecentSaveStamp) {
+			mostRecentSaveStamp = SlotSaveStamp[saveSlot - 2];
+			mostRecentSaveRow = i;
+		}
+	}
+
 #ifdef SCROLLABLE_PAGES
 	int firstOption = SCREEN_HAS_AUTO_SCROLLBAR ? m_nFirstVisibleRowOnList : 0;
 	for (int i = firstOption; i < firstOption + MAX_VISIBLE_OPTION && i < NUM_MENUROWS; ++i) {
@@ -1800,6 +1817,8 @@ CMenuManager::Draw()
 				}
 				if (i == m_nCurrOption && itemsAreSelectable){
 					CFont::SetColor(CRGBA(SELECTEDMENUOPTION_COLOR.r, SELECTEDMENUOPTION_COLOR.g, SELECTEDMENUOPTION_COLOR.b, FadeIn(255)));
+				} else if (i == mostRecentSaveRow) {
+					CFont::SetColor(CRGBA(RECENTSAVE_COLOR.r, RECENTSAVE_COLOR.g, RECENTSAVE_COLOR.b, FadeIn(255)));
 				} else {
 					CFont::SetColor(CRGBA(MENUOPTION_COLOR.r, MENUOPTION_COLOR.g, MENUOPTION_COLOR.b, FadeIn(255)));
 				}

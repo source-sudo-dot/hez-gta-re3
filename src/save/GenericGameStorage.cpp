@@ -53,6 +53,7 @@ char ValidSaveName[260];
 char LoadFileName[256];
 wchar SlotFileName[SLOT_TOTAL][260];
 wchar SlotSaveDate[SLOT_TOTAL][70];
+uint64 SlotSaveStamp[SLOT_TOTAL];
 int CheckSum;
 eLevelName m_LevelToLoad;
 char SaveFileNameJustSaved[260];

@@ -40,6 +40,9 @@ extern char ValidSaveName[260];
 extern char LoadFileName[256];
 extern wchar SlotFileName[SLOT_TOTAL][260];
 extern wchar SlotSaveDate[SLOT_TOTAL][70];
+// When each slot was saved, packed so a bigger number is a later save; 0 for a slot
+// with nothing loadable in it.  The load list marks the latest one with this.
+extern uint64 SlotSaveStamp[SLOT_TOTAL];
 extern int CheckSum;
 extern enum eLevelName m_LevelToLoad;
 extern int Slots[SLOT_TOTAL+1];

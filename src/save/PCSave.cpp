@@ -35,6 +35,7 @@ C_PcSave::DeleteSlot(int32 slot)
 	sprintf(FileName, "%s%i.b", DefaultPCSaveFileName, slot + 1);
 	DeleteFile(FileName);
 	SlotSaveDate[slot][0] = '\0';
+	SlotSaveStamp[slot] = 0;
 	return true;
 }
 
@@ -96,6 +97,7 @@ C_PcSave::PopulateSlotInfo()
 		Slots[i + 1] = SLOT_EMPTY;
 		SlotFileName[i][0] = '\0';
 		SlotSaveDate[i][0] = '\0';
+		SlotSaveStamp[i] = 0;
 	}
 	for (int i = 0; i < SLOT_TOTAL; i++) {
 #ifdef FIX_BUGS
@@ -156,6 +158,9 @@ C_PcSave::PopulateSlotInfo()
 #endif // MORE_LANGUAGES
 					sprintf(date, "%02d %s %04d %02d:%02d:%02d", st.wDay, UnicodeToAsciiForSaveLoad(TheText.Get(month)), st.wYear, st.wHour, st.wMinute, st.wSecond);
 				AsciiToUnicode(date, SlotSaveDate[i]);
+				// milliseconds are left out, the non-Windows builds never fill them in
+				SlotSaveStamp[i] = (uint64)st.wYear << 32 | (uint64)st.wMonth << 26 | (uint64)st.wDay << 20
+					| (uint64)st.wHour << 12 | (uint64)st.wMinute << 6 | st.wSecond;
 
 			} else {
 				CMessages::InsertNumberInString(TheText.Get("FEC_SLC"), i + 1, -1, -1, -1, -1, -1, SlotFileName[i]);
