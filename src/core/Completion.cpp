@@ -157,7 +157,7 @@ CCompletion::Collect(tGoal *out)
 
 	GOAL("FEZ_CIP", PortlandCars(), IMPORT_EXPORT_CARS, LEGEND_IMPORTEXPORT);
 	GOAL("FEZ_CIS", ShoresideCars(), IMPORT_EXPORT_CARS, LEGEND_IMPORTEXPORT);
-	GOAL("FEZ_CEC", CraneCars(), CRANE_CARS, LEGEND_IMPORTEXPORT);
+	GOAL("FEZ_CEC", CraneCars(), CRANE_CARS, LEGEND_CRANE);
 
 	if (original) {
 		GOAL("FEZ_CPM", Min(CStats::HighestLevelAmbulanceMission, 12), 12, LEGEND_NONE);
@@ -209,7 +209,7 @@ CCompletion::CollectMarkers(tMarker *out)
 	if (ShoresideCars() < IMPORT_EXPORT_CARS)
 		MARKER(-1107.5f, 136.0f, LEGEND_IMPORTEXPORT);
 	if (CraneCars() < CRANE_CARS)
-		MARKER(1570.25f, -675.375f, LEGEND_IMPORTEXPORT);
+		MARKER(1570.25f, -675.375f, LEGEND_CRANE);
 
 #undef MARKER
 	return n;
@@ -222,6 +222,7 @@ CCompletion::LegendColour(int32 legend)
 	case LEGEND_OFFROAD: return CRGBA(255, 150, 30, 255);
 	case LEGEND_RC: return CRGBA(240, 70, 220, 255);
 	case LEGEND_IMPORTEXPORT: return CRGBA(60, 210, 255, 255);
+	case LEGEND_CRANE: return CRGBA(150, 120, 255, 255);
 	case LEGEND_PACKAGE: return CRGBA(120, 230, 90, 255);
 	case LEGEND_RAMPAGE: return CRGBA(235, 40, 40, 255);
 	case LEGEND_JUMP: return CRGBA(255, 235, 60, 255);

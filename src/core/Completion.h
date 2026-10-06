@@ -17,6 +17,7 @@ public:
 		LEGEND_OFFROAD,
 		LEGEND_RC,
 		LEGEND_IMPORTEXPORT,
+		LEGEND_CRANE,
 		LEGEND_PACKAGE,	// drawn by the radar itself, as the squares it always was
 		LEGEND_RAMPAGE,
 		LEGEND_JUMP,

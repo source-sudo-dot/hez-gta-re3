@@ -1148,10 +1148,16 @@ CMenuManager::Draw()
 		SET_FONT_FOR_MENU_HEADER
 		float headerY = MENUHEADER_POS_Y;
 #ifdef MENU_MAP
-		if (m_nCurrScreen == MENUPAGE_MAP)
+		if (m_nCurrScreen == MENUPAGE_MAP) {
+			// no strip under it any more, so black would sink into the sea
 			headerY = MAP_STRIP_TEXT_Y;
+			CFont::SetColor(CRGBA(255, 255, 255, FadeIn(255)));
+			CFont::SetDropShadowPosition(2);
+			CFont::SetDropColor(CRGBA(0, 0, 0, FadeIn(255)));
+		}
 #endif
 		CFont::PrintString(PAGE_NAME_X(MENUHEADER_POS_X), SCREEN_SCALE_FROM_BOTTOM(headerY), TheText.Get(aScreens[m_nCurrScreen].m_ScreenName));
+		CFont::SetDropShadowPosition(0);
 
 		// Weird place to put that.
 		nextYToUse += 24.0f + 10.0f;
@@ -4266,20 +4272,28 @@ CMenuManager::PrintCompletionOnMap()
 	float lineHeight = MENU_Y(9.6f);
 	float y = SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TOP + 6.0f) - count * lineHeight;
 
-	// the percentage heads it, big and in white so it stands out from the map
+	// COMPLETION and the percentage head it, bigger and in white so they stand out
+	// from the map, with a rule underneath to set them off from the list
 	sprintf(buf, "%d%%", CCompletion::Percent());
 	AsciiToUnicode(buf, wide);
 	CFont::SetDropShadowPosition(2);
-	CFont::SetScale(MENU_X(0.6f), MENU_Y(1.05f));
+	CFont::SetScale(MENU_X(0.45f), MENU_Y(0.8f));
 	CFont::SetColor(CRGBA(255, 255, 255, FadeIn(255)));
-	CFont::PrintString(valueX, y - lineHeight * 4.4f, wide);
+	float headerY = y - lineHeight * 2.6f;
+	CFont::PrintString(valueX, headerY, wide);
+	wchar *header = TheText.Get("FEZ_CPC");
+	CFont::PrintString(valueX - CFont::GetStringWidth(wide, true) - MENU_X(6.0f), headerY, header);
+	float ruleLeft = valueX - CFont::GetStringWidth(wide, true) - MENU_X(6.0f) - CFont::GetStringWidth(header, true);
 	CFont::SetDropShadowPosition(1);
 
 	CFont::SetScale(MENU_X(0.28f), MENU_Y(0.48f));
-
-	// what square does, above the list
-	CFont::SetColor(CRGBA(255, 255, 255, FadeIn(150)));
-	CFont::PrintString(valueX, y - lineHeight * 1.5f, TheText.Get(m_bMapShowCompletionMarkers ? "FEZ_CMF" : "FEZ_CMN"));
+	for (int32 i = 0; i < count; i++) {
+		float left = labelX - CFont::GetStringWidth(TheText.Get(goals[i].key), true) - MENU_X(10.0f);
+		ruleLeft = Min(ruleLeft, left);
+	}
+	float ruleY = y - lineHeight * 0.55f;
+	CSprite2d::DrawRect(CRect(ruleLeft + MENU_X(1.0f), ruleY + MENU_Y(1.0f), valueX + MENU_X(1.0f), ruleY + MENU_Y(2.0f)), CRGBA(0, 0, 0, FadeIn(255)));
+	CSprite2d::DrawRect(CRect(ruleLeft, ruleY, valueX, ruleY + MENU_Y(1.0f)), CRGBA(255, 255, 255, FadeIn(255)));
 
 	for (int32 i = 0; i < count; i++) {
 		bool done = goals[i].total > 0 && goals[i].done >= goals[i].total;
@@ -4298,10 +4312,10 @@ CMenuManager::PrintCompletionOnMap()
 		wchar *label = TheText.Get(goals[i].key);
 		CFont::PrintString(labelX, y, label);
 
-		// the legend: the same diamond the map shows for it
-		if (goals[i].legend != CCompletion::LEGEND_NONE) {
+		// the legend: the same diamond the map shows for it, only while the map shows them
+		if (m_bMapShowCompletionMarkers && goals[i].legend != CCompletion::LEGEND_NONE) {
 			CRGBA colour = CCompletion::LegendColour(goals[i].legend);
-			colour.a = FadeIn(m_bMapShowCompletionMarkers ? 255 : 120);
+			colour.a = FadeIn(255);
 			float sx = labelX - CFont::GetStringWidth(label, true) - MENU_X(6.5f);
 			float sy = y + MENU_Y(4.0f);
 			if (goals[i].legend == CCompletion::LEGEND_PACKAGE) {
@@ -6866,10 +6880,6 @@ CMenuManager::PrintMap(void)
 	bMenuMapActive = false;
 
 	PrintCompletionOnMap();
-
-	CSprite2d::DrawRect(CRect(MENU_X(14.0f), SCREEN_STRETCH_FROM_BOTTOM(MAP_STRIP_TOP),
-		SCREEN_STRETCH_FROM_RIGHT(11.0f), SCREEN_STRETCH_FROM_BOTTOM(MAP_STRIP_BOTTOM)),
-		CRGBA(235, 170, 50, 255));
 }
 
 #undef ZOOM
