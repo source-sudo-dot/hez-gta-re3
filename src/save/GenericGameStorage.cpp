@@ -1166,6 +1166,10 @@ bool SaveGameForPause(int type)
 		DisplaySaveResult(3, CStats::LastMissionPassedName);
 		return false;
 	}
+	if (type == SAVE_TYPE_QUICKSAVE_FOR_MISSION_REPLAY) {
+		CPlayerPed *pPlayerPed = CWorld::Players[CWorld::PlayerInFocus].m_pPed;
+		missionRetryVehicleRef = pPlayerPed->bInVehicle && pPlayerPed->m_pMyVehicle ? CPools::GetVehicleRef(pPlayerPed->m_pMyVehicle) : -1;
+	}
 	IsQuickSave = type;
 	MissionStartTime = 0;
 	int res = PcSaveHelper.SaveSlot(PAUSE_SAVE_SLOT);

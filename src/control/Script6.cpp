@@ -301,11 +301,24 @@ int8 CRunningScript::ProcessCommands1000To1099(int32 command)
 		return 0;
 	case COMMAND_LOAD_AND_LAUNCH_MISSION_INTERNAL:
 	{
+#ifdef MISSION_REPLAY
+		int32 launchIp = m_nIp - 2;
+#endif
 		CollectParameters(&m_nIp, 1);
 #ifdef MISSION_REPLAY
 		missionRetryScriptIndex = ScriptParams[0];
 		if (missionRetryScriptIndex == 19)
 			CStats::LastMissionPassedName[0] = '\0';
+		// The off-road missions (Patriot Playground, A Ride In The Park, Gripped!, Multistorey
+		// Mayhem) start straight from the car with no cutscene, so nothing saves for a retry.
+		// Save here, with this script set back onto this command, so the retry launches the
+		// mission again the moment the save is loaded.
+		if (missionRetryScriptIndex >= 7 && missionRetryScriptIndex <= 10) {
+			int32 ip = m_nIp;
+			m_nIp = launchIp;
+			SaveGameForPause(SAVE_TYPE_QUICKSAVE_FOR_MISSION_REPLAY);
+			m_nIp = ip;
+		}
 #endif
 		CTimer::Suspend();
 		int offset = CTheScripts::MultiScriptArray[ScriptParams[0]];

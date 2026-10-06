@@ -607,6 +607,7 @@ extern uint32 WaitForSave;
 extern uint32 MissionStartTime;
 extern int missionRetryScriptIndex;
 extern bool doingMissionRetry;
+extern int32 missionRetryVehicleRef;
 
 uint32 AddExtraDeathDelay();
 void RetryMission(int, int unk = 0);

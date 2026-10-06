@@ -88,16 +88,13 @@ static const char* nonMissionScripts[] = {
 	"taxi",
 	"firetru",
 	"rampage",
-	"t4x4_1",
-	"t4x4_2",
-	"t4x4_3",
+	// the off-road missions get a retry too, see COMMAND_LOAD_AND_LAUNCH_MISSION_INTERNAL
 	"rc1",
 	"rc2",
 	"rc3",
 	"rc4",
 	"hj",
-	"usj",
-	"mayhem"
+	"usj"
 };
 
 int AllowMissionReplay;
@@ -109,6 +106,7 @@ float oldTargetX;
 float oldTargetY;
 int missionRetryScriptIndex;
 bool doingMissionRetry;
+int32 missionRetryVehicleRef = -1;
 
 #endif
 
@@ -682,6 +680,16 @@ void CTheScripts::Process()
 	case MISSION_RETRY_STAGE_START_RESTARTING:
 		AllowMissionReplay = MISSION_RETRY_STAGE_WAIT_FOR_TIMER_AFTER_RESTART;
 		TimeToWaitTill = CTimer::GetTimeInMilliseconds() + 500;
+		// The save keeps the car the player sat in, but loading puts him next to the seat,
+		// not on it.  Put him back behind the wheel so the mission starts in that car again.
+		if (missionRetryVehicleRef >= 0) {
+			CPlayerPed *pPlayerPed = CWorld::Players[CWorld::PlayerInFocus].m_pPed;
+			CVehicle *pVehicle = CPools::GetVehiclePool()->GetAt(missionRetryVehicleRef);
+			if (pPlayerPed && pVehicle && !pPlayerPed->bInVehicle && pVehicle->pDriver == nil) {
+				pPlayerPed->SetObjective(OBJECTIVE_ENTER_CAR_AS_DRIVER, pVehicle);
+				pPlayerPed->WarpPedIntoCar(pVehicle);
+			}
+		}
 		break;
 	case MISSION_RETRY_STAGE_WAIT_FOR_TIMER_AFTER_RESTART:
 		if (TimeToWaitTill < CTimer::GetTimeInMilliseconds()) {
@@ -2332,6 +2340,11 @@ int8 CRunningScript::ProcessCommands100To199(int32 command)
 	case COMMAND_PRINT_NOW:
 	{
 		wchar* key = TheText.Get((char*)&CTheScripts::ScriptSpace[m_nIp]);
+#ifdef MISSION_REPLAY
+		// the off-road missions say they failed with this instead of M_FAIL
+		if (strcmp((char*)&CTheScripts::ScriptSpace[m_nIp], "T4X4_F") == 0 && CanAllowMissionReplay())
+			AllowMissionReplay = MISSION_RETRY_STAGE_WAIT_FOR_SCRIPT_TO_TERMINATE;
+#endif
 		m_nIp += KEY_LENGTH_IN_SCRIPT;
 		CollectParameters(&m_nIp, 2);
 		CMessages::AddMessageJumpQ(key, ScriptParams[0], ScriptParams[1]);
