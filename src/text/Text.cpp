@@ -128,6 +128,7 @@ static struct {
 	{ "FEZ_MSS", "MAP SCROLL SPEED" },
 	{ "FEZ_XH", "MODERN CROSSHAIR" },
 	{ "FEZ_HM", "HIT MARKERS" },
+	{ "FEZ_PSH", "PEDS AS AT START" },
 	{ "FEZ_XHS", "CROSSHAIR SIZE" },
 	{ "FEZ_AZ", "AIM ZOOM DEGREES" },
 	{ "FEZ_ARS", "WEAPON RAISE SPEED" },

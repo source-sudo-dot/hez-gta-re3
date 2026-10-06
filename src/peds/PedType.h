@@ -72,7 +72,14 @@ class CPedType
 	uint32 m_avoid;
 
 	static CPedType *ms_apPedType[NUM_PEDTYPES];
+	// what ped.dat has each type fear, before any script added to it
+	static uint32 ms_aStartThreats[NUM_PEDTYPES];
 public:
+	// StartHostility under [Display] in re3.ini: peds the population spawns treat the
+	// player the way they did at the start of the game, however many gangs the story
+	// has turned against him since
+	static bool bStartHostility;
+
 
 	static void Initialise(void);
 	static void Shutdown(void);
@@ -89,6 +96,7 @@ public:
 	static void AddThreat(int type, int threat) { ms_apPedType[type]->m_threats |= threat; }
 	static void RemoveThreat(int type, int threat) { ms_apPedType[type]->m_threats &= ~threat; }
 	static bool IsThreat(int type, int threat) { return ms_apPedType[type]->m_threats & threat; }
+	static uint32 GetThreatsForRandomPed(int type);
 };
 
 VALIDATE_SIZE(CPedType, 0x20);

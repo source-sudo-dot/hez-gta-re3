@@ -37,6 +37,7 @@
 #include "WeaponInfo.h"
 #include "CarCtrl.h"
 #include "Population.h"
+#include "PedType.h"
 
 // Menu screens array is at the bottom of the file.
 
@@ -75,6 +76,7 @@
 #define AUTOSAVE_TOGGLE MENUACTION_CFO_SELECT, "FEZ_ASV", { new CCFOSelect((int8*)&CAutoSave::bEnabled, "Display", "AutoSave", off_on, 2, false) },
 #define AIM_ASSIST_TOGGLE MENUACTION_CFO_SELECT, "FEZ_AA", { new CCFOSelect((int8*)&CPlayerPed::bAimAssist, "Display", "AimAssist", off_on, 2, false) },
 #define HIT_MARKERS_TOGGLE MENUACTION_CFO_SELECT, "FEZ_HM", { new CCFOSelect((int8*)&CCrosshair::bHitMarkers, "Display", "HitMarkers", off_on, 2, false) },
+#define START_HOSTILITY_TOGGLE MENUACTION_CFO_SELECT, "FEZ_PSH", { new CCFOSelect((int8*)&CPedType::bStartHostility, "Display", "StartHostility", off_on, 2, false) },
 
 #ifdef PS2_ALPHA_TEST
 	#define DUALPASS_SELECTOR MENUACTION_CFO_SELECT, "FEM_2PR", { new CCFOSelect((int8*)&gPS2alphaTest, "Graphics", "PS2AlphaTest", off_on, 2, false) },
@@ -972,6 +974,7 @@ CMenuScreenCustom aScreens[MENUPAGES] = {
 		new CCustomScreenLayout({MENUSPRITE_MAINMENU, 90, 165, 0, 20, FONT_BANK, FESCREEN_LEFT_ALIGN, true, MEDIUMTEXT_X_SCALE, MEDIUMTEXT_Y_SCALE}), nil,
 
 		AUTOSAVE_TOGGLE
+		START_HOSTILITY_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_ARS", { new CCFOSlider(&CPlayerPed::m_fAimRaiseSpeed, "Display", "AimRaiseSpeed", 0.5f, 5.0f, nil, 45, true) },
 		AIM_ASSIST_TOGGLE
 		MENUACTION_CFO_SLIDER,	"FEZ_AAS", { new CCFOSlider(&CPlayerPed::m_fAimAssistStrength, "Display", "AimAssistStrength", 0.0f, 0.9f, nil, 45, true) },

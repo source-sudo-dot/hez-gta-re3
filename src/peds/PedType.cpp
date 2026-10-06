@@ -6,6 +6,8 @@
 #include "SaveBuf.h"
 
 CPedType *CPedType::ms_apPedType[NUM_PEDTYPES];
+uint32 CPedType::ms_aStartThreats[NUM_PEDTYPES];
+bool CPedType::bStartHostility = false;
 CPedStats *CPedStats::ms_apPedStats[NUM_PEDSTATS];
 
 void
@@ -28,6 +30,18 @@ CPedType::Initialise(void)
 	debug("Loading ped data...\n");
 	LoadPedData();
 	debug("CPedType ready\n");
+}
+
+uint32
+CPedType::GetThreatsForRandomPed(int type)
+{
+	uint32 threats = ms_apPedType[type]->m_threats;
+	if(!bStartHostility)
+		return threats;
+	// Only how they feel about the player goes back; who hates whom among the peds stays
+	// as the script left it, and so does everything the script itself looks up.
+	const uint32 player = PED_FLAG_PLAYER1 | PED_FLAG_PLAYER2 | PED_FLAG_PLAYER3 | PED_FLAG_PLAYER4;
+	return (threats & ~player) | (ms_aStartThreats[type] & player);
 }
 
 void

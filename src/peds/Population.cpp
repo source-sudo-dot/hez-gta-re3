@@ -487,8 +487,8 @@ CPopulation::PedCreationDistMultiplier()
 	return Clamp(vehSpeed - 0.1f + 1.0f, 1.0f, 1.5f);
 }
 
-CPed*
-CPopulation::AddPed(ePedType pedType, uint32 miOrCopType, CVector const &coors)
+static CPed*
+MakePed(ePedType pedType, uint32 miOrCopType, CVector const &coors)
 {
 	switch (pedType) {
 		case PEDTYPE_CIVMALE:
@@ -566,6 +566,16 @@ CPopulation::AddPed(ePedType pedType, uint32 miOrCopType, CVector const &coors)
 			Error("Unknown ped type, AddPed, Population.cpp");
 			return nil;
 	}
+}
+
+CPed*
+CPopulation::AddPed(ePedType pedType, uint32 miOrCopType, CVector const &coors)
+{
+	CPed *ped = MakePed(pedType, miOrCopType, coors);
+	// Peds out of the population only, the ones a mission makes for itself are left alone
+	if (ped)
+		ped->m_fearFlags = CPedType::GetThreatsForRandomPed(pedType);
+	return ped;
 }
 
 void
