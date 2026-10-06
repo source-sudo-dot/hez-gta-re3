@@ -741,7 +741,8 @@ public:
 	static bool m_bMapKeyHeldOver;
 	// set on the way into the map page, cleared once PrintMap has centred
 	static bool m_bMapCentreOnPlayer;
-	// what is still to be done, drawn on the map; square turns it on and off
+	// what is still to be done, drawn on the map; square turns it on, and it is off
+	// again every time the map is opened
 	static bool m_bMapShowCompletionMarkers;
 	static float m_fMapScrollSpeed;
 	static void RequestMap(void) { m_bStartUpMapRequested = true; }

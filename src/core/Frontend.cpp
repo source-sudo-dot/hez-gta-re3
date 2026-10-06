@@ -333,7 +333,7 @@ const char* MenuFilenames[][2] = {
 // is exactly once, so every later look at the map opened wherever it was left.  Put
 // it back to nothing on the way in.
 #define MAP_TO_PLAYER(screen) \
-		if ((screen) == MENUPAGE_MAP) m_bMapCentreOnPlayer = true;
+		if ((screen) == MENUPAGE_MAP) { m_bMapCentreOnPlayer = true; m_bMapShowCompletionMarkers = false; }
 #else
 #define MAP_TO_PLAYER(screen)
 #endif
