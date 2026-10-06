@@ -190,6 +190,7 @@ bool CMenuManager::m_bStartUpMapRequested;
 bool CMenuManager::m_bMapOpenedDirectly;
 bool CMenuManager::m_bMapKeyHeldOver;
 bool CMenuManager::m_bMapCentreOnPlayer;
+bool CMenuManager::m_bMapShowCompletionMarkers;
 float CMenuManager::m_fMapScrollSpeed = 1.0f;
 #endif
 bool CMenuManager::m_bShutDownFrontEndRequested;
@@ -4209,7 +4210,33 @@ CMenuManager::PrintErrorMessage()
 	CFont::DrawFonts();
 }
 
-// Small, in the corner of the map, to be read at a glance rather than studied.
+// A diamond, so it is not taken for one of the game's own square blips.
+static void
+DrawCompletionMarker(float x, float y, float size, CRGBA colour)
+{
+	float outline = size + MENU_X(1.5f);
+	CSprite2d::Draw2DPolygon(x, y - outline, x + outline, y, x - outline, y, x, y + outline, CRGBA(0, 0, 0, colour.a));
+	CSprite2d::Draw2DPolygon(x, y - size, x + size, y, x - size, y, x, y + size, colour);
+}
+
+void
+CMenuManager::PrintCompletionMarkers()
+{
+	CCompletion::tMarker markers[CCompletion::MAX_MARKERS];
+	int32 count = CCompletion::CollectMarkers(markers);
+
+	for (int32 i = 0; i < count; i++) {
+		CVector2D radar, screen;
+		CRadar::TransformRealWorldPointToRadarSpace(radar, CVector2D(markers[i].x, markers[i].y));
+		CRadar::TransformRadarPointToScreenSpace(screen, radar);
+		CRGBA colour = CCompletion::LegendColour(markers[i].legend);
+		colour.a = FadeIn(255);
+		DrawCompletionMarker(screen.x, screen.y, MENU_X(5.0f), colour);
+	}
+}
+
+// Small, in the corner of the map, to be read at a glance rather than studied.  It sits
+// against the right edge of the screen, where the strip along the bottom ends.
 void
 CMenuManager::PrintCompletionOnMap()
 {
@@ -4217,6 +4244,8 @@ CMenuManager::PrintCompletionOnMap()
 	int32 count = CCompletion::Collect(goals);
 	char buf[64];
 	wchar wide[64];
+	float valueX = SCREEN_STRETCH_FROM_RIGHT(14.0f);
+	float labelX = valueX - MENU_X(56.0f);
 
 	CFont::SetBackgroundOff();
 	CFont::SetPropOn();
@@ -4231,6 +4260,10 @@ CMenuManager::PrintCompletionOnMap()
 	float lineHeight = MENU_Y(12.0f);
 	float y = SCREEN_SCALE_FROM_BOTTOM(MAP_STRIP_TOP + 18.0f) - count * lineHeight;
 
+	// what square does, above the list
+	CFont::SetColor(CRGBA(255, 255, 255, FadeIn(150)));
+	CFont::PrintString(valueX, y - lineHeight * 1.5f, TheText.Get(m_bMapShowCompletionMarkers ? "FEZ_CMF" : "FEZ_CMN"));
+
 	for (int32 i = 0; i < count; i++) {
 		bool done = goals[i].total > 0 && goals[i].done >= goals[i].total;
 
@@ -4244,8 +4277,16 @@ CMenuManager::PrintCompletionOnMap()
 		else
 			sprintf(buf, "%d", goals[i].done);
 		AsciiToUnicode(buf, wide);
-		CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
-		CFont::PrintString(MENU_X_RIGHT_ALIGNED(80.0f), y, TheText.Get(goals[i].key));
+		CFont::PrintString(valueX, y, wide);
+		wchar *label = TheText.Get(goals[i].key);
+		CFont::PrintString(labelX, y, label);
+
+		// the legend: the same diamond the map shows for it
+		if (goals[i].legend != CCompletion::LEGEND_NONE) {
+			CRGBA colour = CCompletion::LegendColour(goals[i].legend);
+			colour.a = FadeIn(m_bMapShowCompletionMarkers ? 255 : 120);
+			DrawCompletionMarker(labelX - CFont::GetStringWidth(label, true) - MENU_X(8.0f), y + MENU_Y(5.0f), MENU_X(3.5f), colour);
+		}
 		y += lineHeight;
 	}
 
@@ -4253,7 +4294,7 @@ CMenuManager::PrintCompletionOnMap()
 	AsciiToUnicode(buf, wide);
 	CFont::SetScale(MENU_X(0.5f), MENU_Y(0.9f));
 	CFont::SetColor(CRGBA(HEADER_COLOR.r, HEADER_COLOR.g, HEADER_COLOR.b, FadeIn(255)));
-	CFont::PrintString(MENU_X_RIGHT_ALIGNED(24.0f), y, wide);
+	CFont::PrintString(valueX, y, wide);
 
 	CFont::SetDropShadowPosition(0);
 }
@@ -6705,6 +6746,8 @@ CMenuManager::PrintMap(void)
 	}
 
 	CRadar::DrawBlips();
+	if (m_bMapShowCompletionMarkers)
+		PrintCompletionMarkers();
 	static CVector2D mapCrosshair;
 
 	if (m_nMenuFadeAlpha != 255 && !m_bShowMouse) {
@@ -6734,6 +6777,10 @@ CMenuManager::PrintMap(void)
 				CRadar::ToggleTargetMarker(x, y);
 				DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_SETTING_CHANGE, 0);
 			}
+		}
+		if (CPad::GetPad(0)->GetSquareJustDown()) {
+			m_bMapShowCompletionMarkers = !m_bMapShowCompletionMarkers;
+			DMAudio.PlayFrontEndSound(SOUND_FRONTEND_MENU_SETTING_CHANGE, 0);
 		}
 	}
 
