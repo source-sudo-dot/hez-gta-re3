@@ -152,7 +152,15 @@ CCam::Process(void)
 		Process_TopDown(CameraTarget, TargetOrientation, SpeedVar, TargetSpeedVar);
 		break;
 	case MODE_BEHINDCAR:
-		Process_BehindCar(CameraTarget, TargetOrientation, SpeedVar, TargetSpeedVar);
+#ifdef FREE_CAM
+		// The script puts the RC cars on this camera, which has no look around of its
+		// own, so with the free camera on they get the car one, RC settings and all.
+		if(CCamera::bFreeCam && !CVehicle::bCheat5 &&
+		   CamTargetEntity->IsVehicle() && CamTargetEntity->GetStatus() == STATUS_PLAYER_REMOTE)
+			Process_FollowCar_SA(CameraTarget, TargetOrientation, SpeedVar, TargetSpeedVar);
+		else
+#endif
+			Process_BehindCar(CameraTarget, TargetOrientation, SpeedVar, TargetSpeedVar);
 		break;
 	case MODE_FOLLOWPED:
 #ifdef PC_PLAYER_CONTROLS
@@ -5169,7 +5177,7 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	}
 
 	if (correctAlpha) {
-		if (nPreviousMode != MODE_CAM_ON_A_STRING)
+		if (nPreviousMode != Mode)
 			alphaCorrected = false;
 
 		if (!alphaCorrected && Abs(zoomModeAlphaOffset + Alpha) > 0.05f) {
