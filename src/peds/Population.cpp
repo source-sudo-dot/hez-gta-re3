@@ -498,7 +498,7 @@ MakePed(ePedType pedType, uint32 miOrCopType, CVector const &coors)
 			ped->SetPosition(coors);
 			ped->SetOrientation(0.0f, 0.0f, 0.0f);
 			CWorld::Add(ped);
-			if (ms_bGivePedsWeapons) {
+			if (CPopulation::ms_bGivePedsWeapons) {
 				eWeaponType weapon = (eWeaponType)CGeneral::GetRandomNumberInRange(WEAPONTYPE_UNARMED, WEAPONTYPE_DETONATOR);
 				if (weapon != WEAPONTYPE_UNARMED) {
 					ped->SetCurrentWeapon(ped->GiveWeapon(weapon, 25001));
