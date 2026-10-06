@@ -1044,7 +1044,16 @@ void CHud::Draw()
 					PagerOn = 0;
 				}
 			}
-			Sprites[HUD_PAGER].Draw(CRect(SCREEN_SCALE_FROM_LEFT(26.0f) - SCREEN_SCALE_X_FIX(PagerXOffset), SCREEN_SCALE_Y(27.0f), SCREEN_SCALE_X(160.0f) + SCREEN_SCALE_FROM_LEFT(26.0f) - SCREEN_SCALE_X_FIX(PagerXOffset), SCREEN_SCALE_Y(80.0f) + SCREEN_SCALE_Y(27.0f)), CRGBA(255, 255, 255, 255));		
+#ifdef FIX_BUGS
+			// 150 left the right end of the 160 wide pager on screen before it slid in, so stretch the slide
+			// to take it all the way past the left edge of the screen, wherever the hud box starts
+			float PagerSlide = PagerXOffset * (26.0f + 160.0f + HUD_LEFT / SCREEN_SCALE_X(1.0f)) / 150.0f;
+			if (PagerXOffset < 150.0f) {
+#else
+			float PagerSlide = PagerXOffset;
+			{
+#endif
+			Sprites[HUD_PAGER].Draw(CRect(SCREEN_SCALE_FROM_LEFT(26.0f) - SCREEN_SCALE_X_FIX(PagerSlide), SCREEN_SCALE_Y(27.0f), SCREEN_SCALE_X(160.0f) + SCREEN_SCALE_FROM_LEFT(26.0f) - SCREEN_SCALE_X_FIX(PagerSlide), SCREEN_SCALE_Y(80.0f) + SCREEN_SCALE_Y(27.0f)), CRGBA(255, 255, 255, 255));		
 			CFont::SetBackgroundOff();
 			CFont::SetScale(SCREEN_SCALE_X(0.84f), SCREEN_SCALE_Y(1.0f));
 			CFont::SetColor(PAGER_COLOR);
@@ -1055,7 +1064,8 @@ void CHud::Draw()
 			CFont::SetJustifyOff();
 			CFont::SetPropOff();
 			CFont::SetFontStyle(FONT_PAGER);
-			CFont::PrintString(SCREEN_SCALE_FROM_LEFT(52.0f) - SCREEN_SCALE_X_FIX(PagerXOffset), SCREEN_SCALE_Y(54.0f), m_PagerMessage);
+			CFont::PrintString(SCREEN_SCALE_FROM_LEFT(52.0f) - SCREEN_SCALE_X_FIX(PagerSlide), SCREEN_SCALE_Y(54.0f), m_PagerMessage);
+			}
 		}
 
 		/*
