@@ -116,11 +116,14 @@ CraneCars(void)
 // The side jobs the way the script counts them: the paramedic is level twelve and then
 // 35 and 70 patients over all, the firefighter twenty fires on each of the three islands,
 // the vigilante twenty criminals on each island and the taxi a hundred fares.  Each
-// island counts only up to its twenty.
+// island is its own line, counted only up to its twenty.  The script keeps them in the
+// order of its level numbers: Portland, Staunton, Shoreside.
+#define PER_ISLAND (20)
+
 static int32
-PerIsland(int32 var1, int32 var2, int32 var3)
+OnIsland(int32 var)
 {
-	return Min(ScriptVar(var1), 20) + Min(ScriptVar(var2), 20) + Min(ScriptVar(var3), 20);
+	return Min(ScriptVar(var), PER_ISLAND);
 }
 
 int32
@@ -162,8 +165,12 @@ CCompletion::Collect(tGoal *out)
 	if (original) {
 		GOAL("FEZ_CPM", Min(CStats::HighestLevelAmbulanceMission, 12), 12, LEGEND_NONE);
 		GOAL("FEZ_CPS", Min(ScriptVar(1078), 70), 70, LEGEND_NONE);
-		GOAL("FEZ_CFF", PerIsland(1083, 1084, 1085), 60, LEGEND_NONE);
-		GOAL("FEZ_CVG", PerIsland(1075, 1076, 1077), 60, LEGEND_NONE);
+		GOAL("FEZ_CFP", OnIsland(1083), PER_ISLAND, LEGEND_NONE);
+		GOAL("FEZ_CFT", OnIsland(1084), PER_ISLAND, LEGEND_NONE);
+		GOAL("FEZ_CFS", OnIsland(1085), PER_ISLAND, LEGEND_NONE);
+		GOAL("FEZ_CVP", OnIsland(1075), PER_ISLAND, LEGEND_NONE);
+		GOAL("FEZ_CVT", OnIsland(1076), PER_ISLAND, LEGEND_NONE);
+		GOAL("FEZ_CVS", OnIsland(1077), PER_ISLAND, LEGEND_NONE);
 		GOAL("FEZ_CTX", Min(ScriptVar(395), 100), 100, LEGEND_NONE);
 	} else {
 		// without the script's own counters these are all there is, and they have no end
