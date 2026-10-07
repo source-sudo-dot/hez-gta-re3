@@ -781,7 +781,12 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_Driving(int32 
 	if (button == GetControllerKeyAssociatedWithAction(TOGGLE_SUBMISSIONS, type))
 		state.RightShock = 255;
 	
-	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_TURRETLEFT, type))
+	// The tank turns its turret from the bindings themselves, see CPad::GetTankTurretLeftRight.
+	// Going through the right stick turned the camera along with it, and on a pad the
+	// stick itself wrote over the value every frame so the binding did nothing at all.
+	bool inTank = FindPlayerVehicle() && FindPlayerVehicle()->GetModelIndex() == MI_RHINO;
+
+	if (!inTank && button == GetControllerKeyAssociatedWithAction(VEHICLE_TURRETLEFT, type))
 	{
 		if (state.RightStickX == 128 || m_aSimCheckers[SIM_X2][type])
 		{
@@ -794,7 +799,7 @@ void CControllerConfigManager::AffectControllerStateOn_ButtonDown_Driving(int32 
 		}
 	}
 
-	if (button == GetControllerKeyAssociatedWithAction(VEHICLE_TURRETRIGHT, type))
+	if (!inTank && button == GetControllerKeyAssociatedWithAction(VEHICLE_TURRETRIGHT, type))
 	{
 		if (state.RightStickX == -128 || m_aSimCheckers[SIM_X2][type])
 		{
@@ -1237,6 +1242,31 @@ void CControllerConfigManager::AffectPadFromMouse()
 		if (GetIsMouseButtonUp((RsKeyCodes)button))
 			AffectControllerStateOn_ButtonUp(button, MOUSE);
 	}
+}
+
+// Whether anything bound to the action is held right now, keys, mouse or pad buttons.
+bool CControllerConfigManager::GetIsActionHeld(e_ControllerAction action)
+{
+	if (FrontEndMenuManager.GetIsMenuActive())
+		return false;
+
+	int32 key = GetControllerKeyAssociatedWithAction(action, KEYBOARD);
+	if (key != rsNULL && GetIsKeyboardKeyDown((RsKeyCodes)key))
+		return true;
+
+	int32 extrakey = GetControllerKeyAssociatedWithAction(action, OPTIONAL_EXTRA);
+	if (extrakey != rsNULL && GetIsKeyboardKeyDown((RsKeyCodes)extrakey))
+		return true;
+
+	int32 mousebutton = GetControllerKeyAssociatedWithAction(action, MOUSE);
+	if (mousebutton != 0 && GetIsMouseButtonDown((RsKeyCodes)mousebutton))
+		return true;
+
+	int32 joybutton = GetControllerKeyAssociatedWithAction(action, JOYSTICK);
+	if (joybutton > 0 && joybutton <= MAX_BUTTONS && m_aButtonStates[joybutton - 1])
+		return true;
+
+	return false;
 }
 
 void CControllerConfigManager::ClearSimButtonPressCheckers()

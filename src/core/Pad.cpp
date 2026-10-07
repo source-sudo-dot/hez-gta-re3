@@ -1684,6 +1684,21 @@ int16 CPad::GetCarGunLeftRight(void)
 	return 0;
 }
 
+// Only the turret left and right bindings, so the tank's turret can be turned without the
+// right stick and with it the camera.
+int16 CPad::GetTankTurretLeftRight(void)
+{
+	if ( ArePlayerControlsDisabled() || this != GetPad(0) )
+		return 0;
+
+	int16 dir = 0;
+	if ( ControlsManager.GetIsActionHeld(VEHICLE_TURRETRIGHT) )
+		dir += 128;
+	if ( ControlsManager.GetIsActionHeld(VEHICLE_TURRETLEFT) )
+		dir -= 128;
+	return dir;
+}
+
 int16 CPad::GetPedWalkLeftRight(void)
 {
 	if ( ArePlayerControlsDisabled() )

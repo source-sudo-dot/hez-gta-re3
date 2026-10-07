@@ -201,6 +201,7 @@ public:
 	bool  GetIsKeyboardKeyJustDown(RsKeyCodes keycode);
 	bool  GetIsMouseButtonDown    (RsKeyCodes keycode);
 	bool  GetIsMouseButtonUp      (RsKeyCodes keycode);
+	bool  GetIsActionHeld         (e_ControllerAction action);
 
 
 	void DeleteMatchingCommonControls           (e_ControllerAction action, int32 key, eControllerType type);

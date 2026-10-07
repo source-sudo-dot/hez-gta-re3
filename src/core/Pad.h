@@ -224,6 +224,7 @@ public:
 	int16 GetSteeringUpDown(void);
 	int16 GetCarGunUpDown(void);
 	int16 GetCarGunLeftRight(void);
+	int16 GetTankTurretLeftRight(void);
 	int16 GetPedWalkLeftRight(void);
 	int16 GetPedWalkUpDown(void);
 	int16 GetAnalogueUpDown(void);

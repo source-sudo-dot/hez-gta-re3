@@ -2492,6 +2492,7 @@ CAutomobile::TankControl(void)
 	if(!CCamera::bFreeCam)
 #endif
 		m_fCarGunLR -= CPad::GetPad(0)->GetCarGunLeftRight() * 0.00015f * CTimer::GetTimeStep();
+	m_fCarGunLR -= CPad::GetPad(0)->GetTankTurretLeftRight() * 0.00015f * CTimer::GetTimeStep();
 
 	if(m_fCarGunLR < 0.0f)
 		m_fCarGunLR += TWOPI;

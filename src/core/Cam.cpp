@@ -5417,7 +5417,8 @@ CCam::Process_FollowCar_SA(const CVector& CameraTarget, float TargetOrientation,
 	// gTargetCoordsForLookingBehind = TargetCoors;
 
 	// SA code from CAutomobile::TankControl/FireTruckControl.
-	if (car->GetModelIndex() == MI_RHINO || car->GetModelIndex() == MI_FIRETRUCK) {
+	// The tank's turret is left alone, it turns on the turret bindings by itself.
+	if (car->GetModelIndex() == MI_FIRETRUCK) {
 
 		float &carGunLR = ((CAutomobile*)car)->m_fCarGunLR;
 		CVector hi = Multiply3x3(Front, car->GetMatrix());
