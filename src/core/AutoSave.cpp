@@ -23,6 +23,11 @@ bool   CAutoSave::m_bPending[NUM_AUTOSAVE_KINDS];
 uint32 CAutoSave::m_nEarliest[NUM_AUTOSAVE_KINDS];
 bool   CAutoSave::m_bProgressKnown = false;
 int32  CAutoSave::m_nProgress = 0;
+uint32 CAutoSave::m_nHintStart = 0;
+
+// The AUTOSAVED line stays this long and fades out over the last part of it.
+#define HINT_MS (3000)
+#define HINT_FADE_MS (600)
 
 // A mission reports itself passed a good few lines before it has finished with the
 // world, so the state is given a moment to settle before it is written.  A hidden
@@ -48,6 +53,20 @@ CAutoSave::Reset(void)
 	for (int i = 0; i < NUM_AUTOSAVE_KINDS; i++)
 		m_bPending[i] = false;
 	m_bProgressKnown = false;
+	m_nHintStart = 0;
+}
+
+int32
+CAutoSave::HintAlpha(void)
+{
+	if (m_nHintStart == 0)
+		return 0;
+	uint32 shown = CTimer::GetTimeInMilliseconds() - m_nHintStart;
+	if (shown >= HINT_MS)
+		return 0;
+	if (shown > HINT_MS - HINT_FADE_MS)
+		return 255 * (HINT_MS - shown) / HINT_FADE_MS;
+	return 255;
 }
 
 // Everything on the progress list but the story missions, added up.  The missions have
@@ -136,6 +155,8 @@ CAutoSave::Process(void)
 
 	PcSaveHelper.PopulateSlotInfo();
 
+	// Drawn by the HUD on its own rather than put in the help box: the side jobs clear
+	// the help box as they wind down, and took the line with it.
 	if (saved)
-		CHud::SetHelpMessage(TheText.Get("FEZ_ASD"), false);
+		m_nHintStart = Max(CTimer::GetTimeInMilliseconds(), 1u);
 }

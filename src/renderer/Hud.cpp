@@ -6,6 +6,7 @@
 #include "Darkel.h"
 #include "Hud.h"
 #include "BulletTime.h"
+#include "AutoSave.h"
 #include "Crosshair.h"
 #include "Messages.h"
 #include "Frontend.h"
@@ -767,6 +768,25 @@ void CHud::Draw()
 					CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f), SCREEN_SCALE_FROM_BOTTOM(ZONE_Y), m_ZoneToPrint);
 				}
 			}
+		}
+
+		/*
+			AUTOSAVED, above the zone name
+		*/
+		int32 autoSaveAlpha = CAutoSave::HintAlpha();
+		if (autoSaveAlpha > 0) {
+			CFont::SetJustifyOff();
+			CFont::SetPropOn();
+			CFont::SetBackgroundOff();
+			CFont::SetScale(SCREEN_SCALE_X(1.0f), SCREEN_SCALE_Y(1.0f));
+			CFont::SetRightJustifyOn();
+			CFont::SetRightJustifyWrap(0.0f);
+			CFont::SetBackGroundOnlyTextOff();
+			CFont::SetFontStyle(FONT_BANK);
+			CFont::SetColor(CRGBA(0, 0, 0, autoSaveAlpha));
+			CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f) + SCREEN_SCALE_X_FIX(1.0f), SCREEN_SCALE_FROM_BOTTOM(ZONE_Y + 32.0f) + SCREEN_SCALE_Y_FIX(1.0f), TheText.Get("FEZ_ASD"));
+			CFont::SetColor(CRGBA(150, 225, 150, autoSaveAlpha));
+			CFont::PrintString(SCREEN_SCALE_FROM_RIGHT(32.0f), SCREEN_SCALE_FROM_BOTTOM(ZONE_Y + 32.0f), TheText.Get("FEZ_ASD"));
 		}
 
 		/*

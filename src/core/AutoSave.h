@@ -31,12 +31,15 @@ public:
 	// a new game or a loaded one: what is pending is dropped and the progress is taken
 	// as it stands, so loading a game further along does not count as getting there
 	static void Reset(void);
+	// how far the AUTOSAVED line the HUD draws has faded in, 0 when there is none
+	static int32 HintAlpha(void);
 
 private:
 	static bool   m_bPending[NUM_AUTOSAVE_KINDS];
 	static uint32 m_nEarliest[NUM_AUTOSAVE_KINDS];
 	static bool   m_bProgressKnown;
 	static int32  m_nProgress;
+	static uint32 m_nHintStart;
 
 	static int32 WorldProgress(void);
 };
