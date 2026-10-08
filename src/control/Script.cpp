@@ -1208,6 +1208,15 @@ int8 CRunningScript::ProcessCommands0To99(int32 command)
 	{
 		int32* ptr = GetPointerToScriptVariable(&m_nIp, VAR_GLOBAL);
 		CollectParameters(&m_nIp, 1);
+		// The off-road missions only let their intro be skipped once it has been seen in
+		// full ($391-$394 == 1); let it be skipped the first time too.
+		if (IsOffroadMission() && ScriptParams[0] == 1) {
+			int32 var = ptr - (int32*)CTheScripts::ScriptSpace;
+			if (var >= 391 && var <= 394) {
+				UpdateCompareFlag(true);
+				return 0;
+			}
+		}
 		UpdateCompareFlag(*ptr == ScriptParams[0]);
 		return 0;
 	}
@@ -2613,6 +2622,10 @@ int8 CRunningScript::ProcessCommands200To299(int32 command)
 			if (CPad::GetPad(0)->GetCircleJustDown())
 				value = true;
 		}
+		// the off-road missions skip their intro on cross, which is the accelerator in a car;
+		// skip it on circle instead, like the cutscenes
+		if (IsOffroadMission() && ScriptParams[0] == 0 && ScriptParams[1] == 16)
+			value = GetPadState(0, 17) != 0;
 		UpdateCompareFlag(value);
 		return 0;
 	}
@@ -2982,6 +2995,12 @@ int8 CRunningScript::ProcessCommands200To299(int32 command)
 		break;
 	}
 	return -1;
+}
+
+bool CRunningScript::IsOffroadMission()
+{
+	return m_bIsMissionScript && (strcmp(m_abScriptName, "T4X4_1") == 0 || strcmp(m_abScriptName, "T4X4_2") == 0 ||
+		strcmp(m_abScriptName, "T4X4_3") == 0 || strcmp(m_abScriptName, "MAYHEM") == 0);
 }
 
 #ifdef MISSION_REPLAY

@@ -367,6 +367,8 @@ public:
 	void CollectiveInAreaCheckCommand(int32, uint32*);
 #endif
 
+	bool IsOffroadMission();
+
 #ifdef MISSION_REPLAY
 	bool CanAllowMissionReplay();
 #endif
